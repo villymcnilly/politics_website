@@ -728,10 +728,6 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-sg-count { font-size: 11.5px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
 .ga-gate { position: absolute; inset: 0; background: var(--bg); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .ga-gate.gone { display: none; }
-.ga-apikey-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.ga-apikey-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
-.ga-apikey-input { flex: 1; font-family: inherit; font-size: 12.5px; color: var(--ink); padding: 7px 10px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--bg); outline: none; transition: border-color 0.15s; }
-.ga-apikey-input:focus { border-color: var(--ink-2); }
 .ga-search-bar { display: flex; gap: 8px; margin-bottom: 18px; }
 .ga-search-input { flex: 1; font-family: inherit; font-size: 14px; color: var(--ink); padding: 10px 13px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--panel); outline: none; transition: border-color 0.15s; }
 .ga-search-input:focus { border-color: var(--ink-2); }
@@ -1308,11 +1304,6 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
   <!-- Main layout (shown after auth) -->
   <div class="ga-layout">
     <div class="ga-main">
-      <!-- API key -->
-      <div class="ga-apikey-row">
-        <span class="ga-apikey-label">Anthropic API-nøgle</span>
-        <input class="ga-apikey-input" id="ga-apikey" type="password" placeholder="sk-ant-…" oninput="try{sessionStorage.setItem('ga_apikey',this.value)}catch(e){}">
-      </div>
       <!-- Search -->
       <div class="ga-search-bar">
         <input class="ga-search-input" id="ga-search-q" type="text" placeholder='fx "kvindelige klimaeksperter" eller "Jakob Ellemann"' onkeydown="if(event.key==='Enter') gaSearch()">
@@ -2456,8 +2447,6 @@ function gaOnSwitch() {
     setTimeout(function(){ document.getElementById('ga-pw-input').focus(); }, 50);
   } else {
     document.getElementById('ga-gate').classList.add('gone');
-    // Restore saved API key
-    try { var k = sessionStorage.getItem('ga_apikey'); if(k) document.getElementById('ga-apikey').value = k; } catch(e){}
     gaRender();
   }
 }
@@ -2686,9 +2675,8 @@ function gaSaveProfile() {
 // ── Claude search ─────────────────────────────────────
 async function gaSearch() {
   var q = document.getElementById('ga-search-q').value.trim();
-  var apiKey = document.getElementById('ga-apikey').value.trim();
+  var apiKey = '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';
   if (!q) return;
-  if (!apiKey) { document.getElementById('ga-results').innerHTML = '<div style="color:var(--loss-ink);font-size:13px;padding:8px 0;">Indtast din Anthropic API-nøgle ovenfor.</div>'; return; }
   var btn = document.getElementById('ga-search-btn');
   btn.disabled = true; btn.textContent = 'Søger…';
   var eps = gaLoadEpisodes();

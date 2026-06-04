@@ -728,6 +728,9 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-sg-count { font-size: 11.5px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
 .ga-gate { position: absolute; inset: 0; background: var(--bg); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .ga-gate.gone { display: none; }
+.ga-search-filters { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.ga-filter-select { font-family: inherit; font-size: 12px; color: var(--ink); padding: 6px 10px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--panel); outline: none; cursor: pointer; transition: border-color 0.15s; }
+.ga-filter-select:focus { border-color: var(--ink-2); }
 .ga-search-bar { display: flex; gap: 8px; margin-bottom: 18px; }
 .ga-search-input { flex: 1; font-family: inherit; font-size: 14px; color: var(--ink); padding: 10px 13px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--panel); outline: none; transition: border-color 0.15s; }
 .ga-search-input:focus { border-color: var(--ink-2); }
@@ -1312,8 +1315,28 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
   <div class="ga-layout">
     <div class="ga-main">
       <!-- Search -->
+      <div class="ga-search-filters">
+        <select class="ga-filter-select" id="ga-f-gender" onchange="gaSearch()">
+          <option value="">Alle køn</option>
+          <option value="mand">Mand</option>
+          <option value="kvinde">Kvinde</option>
+        </select>
+        <select class="ga-filter-select" id="ga-f-cat" onchange="gaSearch()">
+          <option value="">Alle kategorier</option>
+          <option value="politiker">Politiker</option>
+          <option value="ekspert">Ekspert</option>
+          <option value="case">Case</option>
+          <option value="pro-deb">Pro-deb</option>
+        </select>
+        <select class="ga-filter-select" id="ga-f-hk" onchange="gaSearch()">
+          <option value="">Alle havkat</option>
+          <option value="5">5+</option>
+          <option value="7">7+</option>
+          <option value="9">9+</option>
+        </select>
+      </div>
       <div class="ga-search-bar">
-        <input class="ga-search-input" id="ga-search-q" type="text" placeholder='fx "kvindelige klimaeksperter" eller "Jakob Ellemann"' onkeydown="if(event.key==='Enter') gaSearch()">
+        <input class="ga-search-input" id="ga-search-q" type="text" placeholder='fx "kvindelige klimaeksperter" eller "Jakob Ellemann"' oninput="gaSearch()" onkeydown="if(event.key==='Enter') gaSearch()">
         <button class="ga-search-btn" id="ga-search-btn" onclick="gaSearch()">Søg</button>
       </div>
       <div id="ga-results"></div>
@@ -2775,7 +2798,14 @@ function gaSaveProfile() {
 function gaSearch() {
   var rawQ = document.getElementById('ga-search-q').value.trim();
   var el = document.getElementById('ga-results');
-  if (!rawQ) { el.innerHTML = ''; return; }
+
+  // Read dropdown filters
+  var ddGender = (document.getElementById('ga-f-gender')||{}).value || '';
+  var ddCat    = (document.getElementById('ga-f-cat')||{}).value    || '';
+  var ddHk     = (document.getElementById('ga-f-hk')||{}).value     || '';
+
+  var hasFilter = ddGender || ddCat || ddHk;
+  if (!rawQ && !hasFilter) { el.innerHTML = ''; return; }
 
   var eps = gaLoadEpisodes();
   var guests = gaLoadGuests();
@@ -2783,18 +2813,25 @@ function gaSearch() {
   // ── Query parsing ──────────────────────────────────
   var q = rawQ.toLowerCase();
 
-  // Havkatsfaktor threshold detection
-  var hkMin = null;
-  if (/h[øo]j\s+havkat/.test(q) || /havkat[^\d]*h[øo]j/.test(q)) hkMin = 7;
-  var hkExact = q.match(/havkat(?:sfaktor)?\s*[:\-≥>=]\s*(\d+)/);
-  if (hkExact) hkMin = parseInt(hkExact[1], 10);
-  var hkNum = q.match(/\bhavkat(?:sfaktor)?\s+(\d+)/);
-  if (hkNum) hkMin = parseInt(hkNum[1], 10);
+  // Havkatsfaktor threshold detection (text query)
+  var hkMin = ddHk ? parseInt(ddHk, 10) : null;
+  if (!hkMin) {
+    if (/h[øo]j\s+havkat/.test(q) || /havkat[^\d]*h[øo]j/.test(q)) hkMin = 7;
+    var hkExact = q.match(/havkat(?:sfaktor)?\s*[:\-≥>=]\s*(\d+)/);
+    if (hkExact) hkMin = parseInt(hkExact[1], 10);
+    var hkNum = q.match(/\bhavkat(?:sfaktor)?\s+(\d+)/);
+    if (hkNum) hkMin = parseInt(hkNum[1], 10);
+  }
 
-  // Gender normalisation: "kvinder/kvindelig" → match gender "kvinde"
-  var genderFilter = null;
-  if (/\bkvind/.test(q)) genderFilter = 'kvinde';
-  else if (/\bmænd|\bmand\b/.test(q)) genderFilter = 'mand';
+  // Gender filter: dropdown wins; fall back to text hints
+  var genderFilter = ddGender || null;
+  if (!genderFilter) {
+    if (/\bkvind/.test(q)) genderFilter = 'kvinde';
+    else if (/\bmænd|\bmand\b/.test(q)) genderFilter = 'mand';
+  }
+
+  // Category filter from dropdown
+  var catFilter = ddCat || null;
 
   // Strip special-cased tokens so they don't muddy text matching
   var textQ = q
@@ -2836,6 +2873,9 @@ function gaSearch() {
       // Gender filter
       if (genderFilter && g.gender !== genderFilter) return;
 
+      // Category filter
+      if (catFilter && ge.category !== catFilter) return;
+
       // Build a combined text blob for this guest×episode pairing
       var blob = [
         g.name, g.defaultTitle||'', g.gender||'',
@@ -2850,6 +2890,7 @@ function gaSearch() {
       // Hard filters already passed — credit them
       if (hkMin !== null) { hitFields.push('havkatsfaktor '+hk); score += 2; }
       if (genderFilter)   { hitFields.push(g.gender); score += 1; }
+      if (catFilter)      { hitFields.push(ge.category); score += 1; }
 
       // Token matching
       tokens.forEach(function(tok) {

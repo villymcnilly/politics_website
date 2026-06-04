@@ -780,6 +780,13 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-kw { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; color: var(--muted); background: var(--hover); padding: 2px 7px; border-radius: 4px; }
 .ga-ep-del { background: none; border: none; cursor: pointer; color: var(--faint); font-size: 12px; padding: 3px 5px; border-radius: 4px; transition: color 0.12s; flex-shrink: 0; margin-top: 1px; }
 .ga-ep-del:hover { color: var(--loss-ink); }
+.ga-ep-edit { background: none; border: none; cursor: pointer; color: var(--faint); font-size: 14px; padding: 3px 5px; border-radius: 4px; transition: color 0.12s; flex-shrink: 0; margin-top: 1px; }
+.ga-ep-edit:hover { color: var(--ink); }
+.ga-ac-wrap { position: relative; }
+.ga-ac-drop { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.12); margin-top: 2px; }
+.ga-ac-drop.open { display: block; }
+.ga-ac-item { padding: 7px 10px; font-size: 13px; color: var(--ink); cursor: pointer; }
+.ga-ac-item:hover { background: var(--bg); }
 .ga-ep-guests { padding: 8px 16px 12px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 5px; }
 .ga-gchip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 500; padding: 3px 10px 3px 7px; border-radius: 20px; background: var(--hover); color: var(--ink-2); border: 1px solid var(--line-2); cursor: pointer; transition: all 0.12s; }
 .ga-gchip:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
@@ -1347,7 +1354,7 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
             Tilføj gæst
           </button>
           <div>
-            <button class="ga-save-btn" onclick="gaSaveEpisode()">Gem udsendelse</button>
+            <button class="ga-save-btn" id="ga-form-save-btn" onclick="gaSaveEpisode()">Gem udsendelse</button>
           </div>
         </div>
       </div>
@@ -2454,12 +2461,51 @@ function gaOnSwitch() {
 // ── Add form ──────────────────────────────────────────
 var gaFormOpen = false;
 var gaGuestRows = [];
+var gaEditingId = null;
 
 function gaToggleForm() {
+  if (gaFormOpen && gaEditingId) { gaCloseForm(); return; }
   gaFormOpen = !gaFormOpen;
   document.getElementById('ga-add-toggle').classList.toggle('open', gaFormOpen);
   document.getElementById('ga-add-form').classList.toggle('on', gaFormOpen);
   if (gaFormOpen && gaGuestRows.length === 0) gaAddGuestRow();
+}
+
+function gaCloseForm() {
+  gaEditingId = null;
+  gaFormOpen = false;
+  document.getElementById('ga-add-toggle').classList.remove('open');
+  document.getElementById('ga-add-form').classList.remove('on');
+  document.getElementById('ga-form-save-btn').textContent = 'Gem udsendelse';
+  document.getElementById('ga-form-date').value  = '';
+  document.getElementById('ga-form-title').value = '';
+  document.getElementById('ga-form-kw').value    = '';
+  document.getElementById('ga-form-desc').value  = '';
+  gaGuestRows = [];
+  gaRenderGuestRows();
+}
+
+function gaOpenEdit(epId) {
+  var eps = gaLoadEpisodes();
+  var ep = eps.find(function(e){ return e.id === epId; });
+  if (!ep) return;
+  var guests = gaLoadGuests();
+  gaEditingId = epId;
+  gaFormOpen = true;
+  document.getElementById('ga-add-toggle').classList.add('open');
+  document.getElementById('ga-add-form').classList.add('on');
+  document.getElementById('ga-form-save-btn').textContent = 'Opdater udsendelse';
+  document.getElementById('ga-form-date').value  = ep.date || '';
+  document.getElementById('ga-form-title').value = ep.title || '';
+  document.getElementById('ga-form-kw').value    = (ep.keywords||[]).join(', ');
+  document.getElementById('ga-form-desc').value  = ep.desc || '';
+  gaGuestRows = (ep.guests||[]).map(function(ge) {
+    var g = guests.find(function(x){ return x.id === ge.guestId; });
+    return { name: g ? g.name : '', role: ge.role||'', gender: g ? g.gender : 'kvinde', category: ge.category||'ekspert', party: ge.party||'', havkat: ge.havkat!=null?ge.havkat:5 };
+  });
+  if (gaGuestRows.length === 0) gaGuestRows.push({ name:'', role:'', gender:'kvinde', category:'ekspert', party:'', havkat:5 });
+  gaRenderGuestRows();
+  document.getElementById('ga-add-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function gaAddGuestRow() {
@@ -2501,7 +2547,7 @@ function gaRenderGuestRows() {
     var div = document.createElement('div');
     div.className = 'ga-guest-row';
     div.innerHTML =
-      '<input type="text" placeholder="Navn" id="ga-gr-name-'+i+'" value="'+gaEscHtml(row.name)+'">' +
+      '<div class="ga-ac-wrap"><input type="text" placeholder="Navn" id="ga-gr-name-'+i+'" value="'+gaEscHtml(row.name)+'" autocomplete="off"><div class="ga-ac-drop" id="ga-ac-drop-'+i+'"></div></div>' +
       '<input type="text" placeholder="Titel/rolle" id="ga-gr-title-'+i+'" value="'+gaEscHtml(row.role)+'">' +
       '<select id="ga-gr-gender-'+i+'">'+genderOpts.map(function(v){ return '<option value="'+v+'"'+(row.gender===v?' selected':'')+'>'+v.charAt(0).toUpperCase()+v.slice(1)+'</option>'; }).join('')+'</select>' +
       '<select id="ga-gr-cat-'+i+'">'+catOpts.map(function(v){ return '<option value="'+v+'"'+(row.category===v?' selected':'')+'>'+v+'</option>'; }).join('')+'</select>' +
@@ -2509,7 +2555,61 @@ function gaRenderGuestRows() {
       '<div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:600;">Havkatsfaktor</span><div class="ga-hk-row"><input type="range" min="1" max="10" value="'+hkVal+'" id="ga-gr-hk-'+i+'" class="ga-hk-slider" oninput="document.getElementById(\'ga-gr-hkv-'+i+'\').textContent=this.value"><span class="ga-hk-val" id="ga-gr-hkv-'+i+'">'+hkVal+'</span></div></div>' +
       '<button class="ga-rm-btn" onclick="gaRemoveGuestRow('+i+')" title="Fjern">×</button>';
     container.appendChild(div);
+    gaBindAutocomplete(i);
   });
+}
+
+function gaBindAutocomplete(i) {
+  var inp = document.getElementById('ga-gr-name-'+i);
+  var drop = document.getElementById('ga-ac-drop-'+i);
+  if (!inp || !drop) return;
+  inp.addEventListener('input', function() {
+    var q = inp.value.trim().toLowerCase();
+    drop.innerHTML = '';
+    if (q.length < 1) { drop.classList.remove('open'); return; }
+    var guests = gaLoadGuests();
+    var matches = guests.filter(function(g){ return g.name.toLowerCase().includes(q); }).slice(0, 6);
+    if (matches.length === 0) { drop.classList.remove('open'); return; }
+    matches.forEach(function(g) {
+      var item = document.createElement('div');
+      item.className = 'ga-ac-item';
+      item.textContent = g.name;
+      item.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        gaApplyAutocomplete(i, g);
+        drop.innerHTML = '';
+        drop.classList.remove('open');
+      });
+      drop.appendChild(item);
+    });
+    drop.classList.add('open');
+  });
+  inp.addEventListener('blur', function() {
+    setTimeout(function(){ drop.classList.remove('open'); }, 150);
+  });
+}
+
+function gaApplyAutocomplete(i, guest) {
+  var eps = gaLoadEpisodes();
+  var lastAppearance = null;
+  for (var e = 0; e < eps.length; e++) {
+    var ge = (eps[e].guests||[]).find(function(x){ return x.guestId === guest.id; });
+    if (ge) { lastAppearance = ge; break; }
+  }
+  document.getElementById('ga-gr-name-'+i).value = guest.name;
+  document.getElementById('ga-gr-title-'+i).value = guest.defaultTitle || '';
+  var genderSel = document.getElementById('ga-gr-gender-'+i);
+  if (genderSel) genderSel.value = guest.gender || 'kvinde';
+  if (lastAppearance) {
+    var catSel = document.getElementById('ga-gr-cat-'+i);
+    if (catSel) catSel.value = lastAppearance.category || 'ekspert';
+    var partyInp = document.getElementById('ga-gr-party-'+i);
+    if (partyInp) partyInp.value = lastAppearance.party || '';
+    var hkInp = document.getElementById('ga-gr-hk-'+i);
+    var hkVal = lastAppearance.havkat != null ? lastAppearance.havkat : 5;
+    if (hkInp) { hkInp.value = hkVal; document.getElementById('ga-gr-hkv-'+i).textContent = hkVal; }
+  }
+  gaReadGuestRows();
 }
 
 function gaSaveEpisode() {
@@ -2527,17 +2627,14 @@ function gaSaveEpisode() {
     guestEntries.push({ guestId: g.id, role: row.role.trim(), category: row.category, party: row.party||'', havkat: row.havkat!=null?row.havkat:5 });
   });
   var eps = gaLoadEpisodes();
-  eps.unshift({ id: Date.now()+'_'+Math.random().toString(36).slice(2,6), date: date, title: title, keywords: keywords, desc: desc, guests: guestEntries });
+  if (gaEditingId) {
+    var idx = eps.findIndex(function(e){ return e.id === gaEditingId; });
+    if (idx !== -1) eps[idx] = { id: gaEditingId, date: date, title: title, keywords: keywords, desc: desc, guests: guestEntries };
+  } else {
+    eps.unshift({ id: Date.now()+'_'+Math.random().toString(36).slice(2,6), date: date, title: title, keywords: keywords, desc: desc, guests: guestEntries });
+  }
   gaSaveEpisodes(eps);
-  document.getElementById('ga-form-date').value  = '';
-  document.getElementById('ga-form-title').value = '';
-  document.getElementById('ga-form-kw').value    = '';
-  document.getElementById('ga-form-desc').value  = '';
-  gaGuestRows = [];
-  gaRenderGuestRows();
-  gaFormOpen = false;
-  document.getElementById('ga-add-toggle').classList.remove('open');
-  document.getElementById('ga-add-form').classList.remove('on');
+  gaCloseForm();
   gaRender();
 }
 
@@ -2592,6 +2689,7 @@ function gaRenderEpisodes() {
           (kwHtml?'<div class="ga-kw-list">'+kwHtml+'</div>':'')+
           (ep.desc?'<div class="ga-ep-desc" onclick="this.classList.toggle(\'expanded\')">'+gaEscHtml(ep.desc)+'</div>':'')+
         '</div>'+
+        '<button class="ga-ep-edit" onclick="gaOpenEdit(\''+ep.id+'\')" title="Rediger">✎</button>'+
         '<button class="ga-ep-del" onclick="gaDeleteEpisode(\''+ep.id+'\')" title="Slet">✕</button>'+
       '</div>'+
       (guestHtml?'<div class="ga-ep-guests">'+guestHtml+'</div>':'');

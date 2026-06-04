@@ -714,6 +714,9 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-main::-webkit-scrollbar { width: 9px; }
 .ga-main::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--bg); }
 .ga-sidebar { border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.ga-sidebar-tabs { display: flex; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.ga-sidebar-tab { flex: 1; padding: 12px 0; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: none; border: none; cursor: pointer; transition: color 0.12s; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.ga-sidebar-tab.on { color: var(--ink); border-bottom-color: var(--ink); }
 .ga-sidebar-head { padding: 18px 18px 12px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
 .ga-sidebar-head h3 { font-family: 'Newsreader', serif; font-size: 18px; font-weight: 400; color: var(--ink); }
 .ga-sidebar-search { padding: 10px 14px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
@@ -721,6 +724,25 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-sidebar-list { flex: 1; overflow-y: auto; }
 .ga-sidebar-list::-webkit-scrollbar { width: 8px; }
 .ga-sidebar-list::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--bg); }
+.ga-sidebar-stats { flex: 1; overflow-y: auto; padding: 16px; display: none; flex-direction: column; gap: 20px; }
+.ga-sidebar-stats.on { display: flex; }
+.ga-sidebar-stats::-webkit-scrollbar { width: 8px; }
+.ga-sidebar-stats::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--bg); }
+.ga-stat-block { display: flex; flex-direction: column; gap: 8px; }
+.ga-stat-title { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.ga-stat-daterange { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+.ga-stat-daterange input { flex: 1; font-family: inherit; font-size: 11.5px; color: var(--ink); padding: 5px 7px; border: 1px solid var(--line-2); border-radius: 5px; background: var(--bg); outline: none; min-width: 0; }
+.ga-stat-daterange span { font-size: 11px; color: var(--faint); flex-shrink: 0; }
+.ga-stat-bar-row { display: flex; align-items: center; gap: 7px; }
+.ga-stat-bar-label { font-size: 12px; color: var(--ink); width: 74px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ga-stat-bar-track { flex: 1; height: 6px; background: var(--line-2); border-radius: 3px; overflow: hidden; }
+.ga-stat-bar-fill { height: 100%; background: var(--ink-2); border-radius: 3px; transition: width 0.3s; }
+.ga-stat-bar-count { font-size: 11px; color: var(--muted); width: 28px; text-align: right; flex-shrink: 0; }
+.ga-stat-avg { font-size: 26px; font-weight: 700; color: var(--ink); line-height: 1; }
+.ga-stat-avg-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.ga-stat-kw-list { display: flex; flex-wrap: wrap; gap: 5px; }
+.ga-stat-kw { font-size: 11px; padding: 3px 8px; border-radius: 12px; background: var(--panel); color: var(--ink); border: 1px solid var(--line-2); }
+.ga-stat-empty { font-size: 12px; color: var(--faint); font-style: italic; padding: 4px 0; }
 .ga-sg { display: flex; align-items: center; gap: 8px; padding: 9px 16px; cursor: pointer; transition: background 0.12s; }
 .ga-sg:hover { background: var(--hover); }
 .ga-sg-name { font-size: 13.5px; font-weight: 500; color: var(--ink); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1392,13 +1414,27 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 
     <!-- Sidebar: guest registry -->
     <div class="ga-sidebar">
-      <div class="ga-sidebar-head">
-        <h3>Gæster</h3>
+      <div class="ga-sidebar-tabs">
+        <button class="ga-sidebar-tab on" id="ga-stab-guests" onclick="gaSidebarTab('guests')">Gæster</button>
+        <button class="ga-sidebar-tab" id="ga-stab-stats" onclick="gaSidebarTab('stats')">Statistik</button>
       </div>
-      <div class="ga-sidebar-search">
-        <input type="text" placeholder="Søg i gæster…" oninput="gaRenderSidebar(this.value)">
+      <div id="ga-sidebar-guests-panel" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+        <div class="ga-sidebar-search">
+          <input type="text" placeholder="Søg i gæster…" oninput="gaRenderSidebar(this.value)">
+        </div>
+        <div class="ga-sidebar-list" id="ga-sidebar-list"></div>
       </div>
-      <div class="ga-sidebar-list" id="ga-sidebar-list"></div>
+      <div class="ga-sidebar-stats" id="ga-sidebar-stats-panel">
+        <div class="ga-stat-block">
+          <div class="ga-stat-title">Periode</div>
+          <div class="ga-stat-daterange">
+            <input type="date" id="ga-stat-from" onchange="gaRenderStats()">
+            <span>–</span>
+            <input type="date" id="ga-stat-to" onchange="gaRenderStats()">
+          </div>
+        </div>
+        <div id="ga-stat-body"></div>
+      </div>
     </div>
   </div>
 
@@ -2670,6 +2706,144 @@ function gaDeleteEpisode(id) {
 
 // ── Render ────────────────────────────────────────────
 function gaRender() { gaRenderEpisodes(); gaRenderSidebar(); }
+
+// ── Sidebar tabs ───────────────────────────────────────
+function gaSidebarTab(tab) {
+  var isStats = tab === 'stats';
+  document.getElementById('ga-stab-guests').classList.toggle('on', !isStats);
+  document.getElementById('ga-stab-stats').classList.toggle('on', isStats);
+  document.getElementById('ga-sidebar-guests-panel').style.display = isStats ? 'none' : 'flex';
+  var statsPanel = document.getElementById('ga-sidebar-stats-panel');
+  statsPanel.classList.toggle('on', isStats);
+  if (isStats) gaRenderStats();
+}
+
+// ── Statistics panel ────────────────────────────────────
+function gaRenderStats() {
+  var eps = gaLoadEpisodes();
+  var guests = gaLoadGuests();
+  var from = document.getElementById('ga-stat-from').value;
+  var to   = document.getElementById('ga-stat-to').value;
+
+  // Date filter
+  if (from || to) {
+    eps = eps.filter(function(ep) {
+      if (!ep.date) return false;
+      if (from && ep.date < from) return false;
+      if (to   && ep.date > to)   return false;
+      return true;
+    });
+  }
+
+  // Flatten all guest×episode appearances within range
+  var appearances = [];
+  eps.forEach(function(ep) {
+    (ep.guests||[]).forEach(function(ge) {
+      var g = guests.find(function(x){ return x.id === ge.guestId; });
+      if (!g) return;
+      appearances.push({ guest: g, ge: ge, ep: ep });
+    });
+  });
+
+  var body = document.getElementById('ga-stat-body');
+  if (!body) return;
+
+  if (appearances.length === 0) {
+    body.innerHTML = '<div class="ga-stat-empty">Ingen data i den valgte periode.</div>';
+    return;
+  }
+
+  function barRows(counts, total) {
+    var sorted = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; });
+    return sorted.map(function(k) {
+      var pct = total ? Math.round(counts[k]/total*100) : 0;
+      return '<div class="ga-stat-bar-row">'+
+        '<span class="ga-stat-bar-label" title="'+gaEscHtml(k)+'">'+gaEscHtml(k)+'</span>'+
+        '<div class="ga-stat-bar-track"><div class="ga-stat-bar-fill" style="width:'+pct+'%"></div></div>'+
+        '<span class="ga-stat-bar-count">'+counts[k]+'</span>'+
+        '</div>';
+    }).join('');
+  }
+
+  // Kønsfordeling (unique guests per gender)
+  var genderCount = {};
+  var seenGuests = {};
+  appearances.forEach(function(a) {
+    if (!seenGuests[a.guest.id]) {
+      seenGuests[a.guest.id] = true;
+      var g = a.guest.gender || 'ukendt';
+      genderCount[g] = (genderCount[g]||0) + 1;
+    }
+  });
+  var totalGuests = Object.values(genderCount).reduce(function(s,v){ return s+v; }, 0);
+
+  // Kategorifordeling (by appearance count)
+  var catCount = {};
+  appearances.forEach(function(a) {
+    var c = a.ge.category || 'ekspert';
+    catCount[c] = (catCount[c]||0) + 1;
+  });
+  var totalCat = appearances.length;
+
+  // Partirepræsentation
+  var partyCount = {};
+  appearances.forEach(function(a) {
+    var p = (a.ge.party||'').trim();
+    if (p) partyCount[p] = (partyCount[p]||0) + 1;
+  });
+
+  // Keywords
+  var kwCount = {};
+  eps.forEach(function(ep) {
+    (ep.keywords||[]).forEach(function(k) {
+      var kk = k.trim().toLowerCase();
+      if (kk) kwCount[kk] = (kwCount[kk]||0) + 1;
+    });
+  });
+  var topKw = Object.keys(kwCount).sort(function(a,b){ return kwCount[b]-kwCount[a]; }).slice(0, 20);
+
+  // Havkatsfaktor gennemsnit
+  var hkVals = appearances.map(function(a){ return a.ge.havkat != null ? a.ge.havkat : 5; });
+  var hkAvg = hkVals.length ? (hkVals.reduce(function(s,v){ return s+v; },0) / hkVals.length).toFixed(1) : null;
+
+  var html = '';
+
+  // Kønsfordeling
+  html += '<div class="ga-stat-block"><div class="ga-stat-title">Kønsfordeling</div>'+barRows(genderCount, totalGuests)+'</div>';
+
+  // Kategorifordeling
+  html += '<div class="ga-stat-block"><div class="ga-stat-title">Kategorifordeling</div>'+barRows(catCount, totalCat)+'</div>';
+
+  // Parti
+  if (Object.keys(partyCount).length) {
+    html += '<div class="ga-stat-block"><div class="ga-stat-title">Partirepræsentation</div>'+barRows(partyCount, Object.values(partyCount).reduce(function(s,v){return s+v;},0))+'</div>';
+  } else {
+    html += '<div class="ga-stat-block"><div class="ga-stat-title">Partirepræsentation</div><div class="ga-stat-empty">Ingen partidata endnu.</div></div>';
+  }
+
+  // Emner
+  html += '<div class="ga-stat-block"><div class="ga-stat-title">Emner</div>';
+  if (topKw.length) {
+    html += '<div class="ga-stat-kw-list">'+topKw.map(function(k){
+      var size = Math.round(10 + (kwCount[k]-1) * 1.5);
+      return '<span class="ga-stat-kw" style="font-size:'+size+'px">'+gaEscHtml(k)+(kwCount[k]>1?' ×'+kwCount[k]:'')+'</span>';
+    }).join('')+'</div>';
+  } else {
+    html += '<div class="ga-stat-empty">Ingen emner endnu.</div>';
+  }
+  html += '</div>';
+
+  // Havkatsfaktor gennemsnit
+  html += '<div class="ga-stat-block"><div class="ga-stat-title">Havkatsfaktor — snit</div>';
+  if (hkAvg !== null) {
+    html += '<div class="ga-stat-avg">'+hkAvg+'</div><div class="ga-stat-avg-sub">baseret på '+hkVals.length+' optræden'+(hkVals.length===1?'':'er')+'</div>';
+  } else {
+    html += '<div class="ga-stat-empty">Ingen data endnu.</div>';
+  }
+  html += '</div>';
+
+  body.innerHTML = html;
+}
 
 function gaCatCls(cat) {
   return { politiker:'ga-cat-politiker', ekspert:'ga-cat-ekspert', case:'ga-cat-case', 'pro-deb':'ga-cat-pro-deb' }[cat] || 'ga-cat-ekspert';

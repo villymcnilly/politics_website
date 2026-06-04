@@ -707,8 +707,8 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
   .user-email { display: none; }
 }
 
-/* ── GÆSTARKIV ── */
-#page-gaestarkiv { position: relative; }
+/* ── GÆSTEARKIV ── */
+#page-gaestearkiv { position: relative; }
 .ga-layout { display: grid; grid-template-columns: 1fr 300px; flex: 1; min-height: 0; overflow: hidden; }
 .ga-main { overflow-y: auto; padding: 28px 36px 40px; }
 .ga-main::-webkit-scrollbar { width: 9px; }
@@ -756,8 +756,13 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-form-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 .ga-form-input { font-family: inherit; font-size: 13.5px; color: var(--ink); padding: 8px 10px; border: 1px solid var(--line-2); border-radius: 7px; background: var(--bg); outline: none; transition: border-color 0.15s; }
 .ga-form-input:focus { border-color: var(--ink-2); }
+.ga-form-textarea { font-family: inherit; font-size: 13.5px; color: var(--ink); padding: 8px 10px; border: 1px solid var(--line-2); border-radius: 7px; background: var(--bg); outline: none; transition: border-color 0.15s; width: 100%; min-height: 72px; resize: vertical; line-height: 1.55; }
+.ga-form-textarea:focus { border-color: var(--ink-2); }
+.ga-form-textarea::placeholder { color: var(--faint); }
+.ga-ep-desc { font-size: 12.5px; color: var(--ink-2); line-height: 1.55; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
+.ga-ep-desc.expanded { -webkit-line-clamp: unset; overflow: visible; }
 .ga-guest-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
-.ga-guest-row { display: grid; grid-template-columns: 1fr 1fr 90px 130px 28px; gap: 7px; align-items: center; }
+.ga-guest-row { display: grid; grid-template-columns: 1fr 1fr 90px 110px 120px 100px 28px; gap: 7px; align-items: center; }
 .ga-guest-row input, .ga-guest-row select { font-family: inherit; font-size: 13px; color: var(--ink); padding: 7px 8px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--bg); outline: none; width: 100%; }
 .ga-guest-row input:focus, .ga-guest-row select:focus { border-color: var(--ink-2); }
 .ga-rm-btn { background: none; border: none; cursor: pointer; color: var(--faint); font-size: 18px; line-height: 1; padding: 2px 4px; transition: color 0.12s; width: 100%; text-align: center; }
@@ -783,11 +788,13 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-gchip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 500; padding: 3px 10px 3px 7px; border-radius: 20px; background: var(--hover); color: var(--ink-2); border: 1px solid var(--line-2); cursor: pointer; transition: all 0.12s; }
 .ga-gchip:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .ga-cdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.ga-cat-minister { background: var(--a); }
-.ga-cat-opposition { background: var(--b); }
-.ga-cat-ekspert { background: var(--f); }
-.ga-cat-lived { background: var(--m); }
-.ga-cat-wildcard { background: var(--faint); }
+.ga-cat-politiker { background: var(--a); }
+.ga-cat-ekspert   { background: var(--f); }
+.ga-cat-case      { background: var(--m); }
+.ga-cat-pro-deb   { background: var(--b); }
+.ga-hk-row { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+.ga-hk-slider { flex: 1; accent-color: var(--ink); cursor: pointer; }
+.ga-hk-val { font-size: 12px; font-weight: 600; color: var(--ink); min-width: 18px; text-align: center; }
 .ga-profile { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; max-width: 90%; background: var(--panel); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg); transform: translateX(105%); transition: transform 0.25s cubic-bezier(.4,0,.2,1); z-index: 300; display: flex; flex-direction: column; overflow: hidden; }
 .ga-profile.open { transform: translateX(0); }
 .ga-profile-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); flex-shrink: 0; display: flex; align-items: flex-start; gap: 10px; }
@@ -892,7 +899,7 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
       <button class="dropdown-item" data-page="quiz" onclick="switchTab('quiz');closeDropdowns()">Kabale</button>
     </div>
   </div>
-  <button class="tab" data-page="gaestarkiv" onclick="switchTab('gaestarkiv')">Gæstarkiv</button>
+  <button class="tab" data-page="gaestearkiv" onclick="switchTab('gaestearkiv')">Gæstearkiv</button>
 </nav>
 
 <div class="page on" id="page-home">
@@ -1283,11 +1290,11 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
   </div>
 </div><!-- end page-bets -->
 
-<div class="page" id="page-gaestarkiv">
+<div class="page" id="page-gaestearkiv">
   <!-- Password gate -->
   <div class="ga-gate" id="ga-gate">
     <div class="auth-box">
-      <div class="auth-logo">Gæst<span class="it">arkiv</span></div>
+      <div class="auth-logo">Gæste<span class="it">arkiv</span></div>
       <div class="auth-step on">
         <div class="auth-label">Adgangskode</div>
         <div class="auth-sublabel">Dette arkiv er kun for produktionsteamet.</div>
@@ -1334,6 +1341,12 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
             <div class="ga-form-field full">
               <label class="ga-form-label">Nøgleord <span style="font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;color:var(--faint)">— kommaseparerede</span></label>
               <input class="ga-form-input" id="ga-form-kw" type="text" placeholder="klima, energi, skat">
+            </div>
+          </div>
+          <div class="ga-form-row">
+            <div class="ga-form-field full">
+              <label class="ga-form-label">Programbeskrivelse</label>
+              <textarea class="ga-form-textarea" id="ga-form-desc" placeholder="Kort beskrivelse af hvad programmet handlede om…"></textarea>
             </div>
           </div>
           <div class="ga-form-label" style="margin-bottom:8px">Gæster</div>
@@ -1389,7 +1402,7 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
       <div id="ga-profile-eps"></div>
     </div>
   </div>
-</div><!-- end page-gaestarkiv -->
+</div><!-- end page-gaestearkiv -->
 
 <div class="picker" id="picker" aria-hidden="true">
   <div class="picker-bd" onclick="closePicker()"></div>
@@ -1761,7 +1774,7 @@ function switchTab(id) {
   if(dd) dd.classList.toggle('on', quizPages.indexOf(id) !== -1);
   document.querySelectorAll('.page').forEach(function(p){ p.classList.toggle('on', p.id==='page-'+id); });
   if(id==='bets') renderBets();
-  if(id==='gaestarkiv') gaOnSwitch();
+  if(id==='gaestearkiv') gaOnSwitch();
 }
 function toggleDropdown(id) {
   var dd = document.getElementById(id);
@@ -2394,11 +2407,11 @@ refresh();
 initAuth();
 
 // ═══════════════════════════════════════════════════════
-// GÆSTARKIV
+// GÆSTEARKIV
 // ═══════════════════════════════════════════════════════
 const GA_PASSWORD  = 'REDACTED';
-const GA_EPS_KEY   = 'debatten_gaestarkiv_v1';
-const GA_GUESTS_KEY = 'debatten_gaestarkiv_guests_v1';
+const GA_EPS_KEY   = 'debatten_gaestearkiv_v1';
+const GA_GUESTS_KEY = 'debatten_gaestearkiv_guests_v1';
 
 function gaLoadEpisodes() { try { return JSON.parse(localStorage.getItem(GA_EPS_KEY)) || []; } catch(e) { return []; } }
 function gaSaveEpisodes(v) { localStorage.setItem(GA_EPS_KEY, JSON.stringify(v)); }
@@ -2422,12 +2435,12 @@ function gaFindOrCreateGuest(name, defaultTitle, gender) {
 function gaGetGuest(id) { return gaLoadGuests().find(function(g){ return g.id===id; }); }
 
 // ── Password gate ─────────────────────────────────────
-function gaCheckAuth() { return sessionStorage.getItem('gaestarkiv_auth')==='1'; }
+function gaCheckAuth() { return sessionStorage.getItem('gaestearkiv_auth')==='1'; }
 
 function gaUnlock() {
   var pw = document.getElementById('ga-pw-input').value;
   if (pw === GA_PASSWORD) {
-    sessionStorage.setItem('gaestarkiv_auth','1');
+    sessionStorage.setItem('gaestearkiv_auth','1');
     document.getElementById('ga-gate').classList.add('gone');
     gaRender();
   } else {
@@ -2461,20 +2474,24 @@ function gaToggleForm() {
 }
 
 function gaAddGuestRow() {
-  gaGuestRows.push({ name:'', role:'', gender:'kvinde', category:'ekspert' });
+  gaGuestRows.push({ name:'', role:'', gender:'kvinde', category:'ekspert', party:'', havkat:5 });
   gaRenderGuestRows();
 }
 
 function gaReadGuestRows() {
   gaGuestRows.forEach(function(row, i) {
-    var n = document.getElementById('ga-gr-name-'+i);
-    var t = document.getElementById('ga-gr-title-'+i);
-    var g = document.getElementById('ga-gr-gender-'+i);
-    var c = document.getElementById('ga-gr-cat-'+i);
-    if(n) row.name     = n.value;
-    if(t) row.role     = t.value;
-    if(g) row.gender   = g.value;
-    if(c) row.category = c.value;
+    var n  = document.getElementById('ga-gr-name-'+i);
+    var t  = document.getElementById('ga-gr-title-'+i);
+    var g  = document.getElementById('ga-gr-gender-'+i);
+    var c  = document.getElementById('ga-gr-cat-'+i);
+    var p  = document.getElementById('ga-gr-party-'+i);
+    var hk = document.getElementById('ga-gr-hk-'+i);
+    if(n)  row.name     = n.value;
+    if(t)  row.role     = t.value;
+    if(g)  row.gender   = g.value;
+    if(c)  row.category = c.value;
+    if(p)  row.party    = p.value;
+    if(hk) row.havkat   = parseInt(hk.value, 10);
   });
 }
 
@@ -2489,8 +2506,9 @@ function gaRenderGuestRows() {
   if (!container) return;
   container.innerHTML = '';
   var genderOpts = ['kvinde','mand','andet'];
-  var catOpts = ['ekspert','minister','opposition','lived experience','wildcard'];
+  var catOpts = ['ekspert','politiker','case','pro-deb'];
   gaGuestRows.forEach(function(row, i) {
+    var hkVal = row.havkat != null ? row.havkat : 5;
     var div = document.createElement('div');
     div.className = 'ga-guest-row';
     div.innerHTML =
@@ -2498,6 +2516,8 @@ function gaRenderGuestRows() {
       '<input type="text" placeholder="Titel/rolle" id="ga-gr-title-'+i+'" value="'+gaEscHtml(row.role)+'">' +
       '<select id="ga-gr-gender-'+i+'">'+genderOpts.map(function(v){ return '<option value="'+v+'"'+(row.gender===v?' selected':'')+'>'+v.charAt(0).toUpperCase()+v.slice(1)+'</option>'; }).join('')+'</select>' +
       '<select id="ga-gr-cat-'+i+'">'+catOpts.map(function(v){ return '<option value="'+v+'"'+(row.category===v?' selected':'')+'>'+v+'</option>'; }).join('')+'</select>' +
+      '<input type="text" placeholder="Parti" id="ga-gr-party-'+i+'" value="'+gaEscHtml(row.party||'')+'">' +
+      '<div class="ga-hk-row"><input type="range" min="1" max="10" value="'+hkVal+'" id="ga-gr-hk-'+i+'" class="ga-hk-slider" oninput="document.getElementById(\'ga-gr-hkv-'+i+'\').textContent=this.value"><span class="ga-hk-val" id="ga-gr-hkv-'+i+'">'+hkVal+'</span></div>' +
       '<button class="ga-rm-btn" onclick="gaRemoveGuestRow('+i+')" title="Fjern">×</button>';
     container.appendChild(div);
   });
@@ -2508,20 +2528,22 @@ function gaSaveEpisode() {
   var date  = document.getElementById('ga-form-date').value.trim();
   var title = document.getElementById('ga-form-title').value.trim();
   var kwRaw = document.getElementById('ga-form-kw').value.trim();
+  var desc  = document.getElementById('ga-form-desc').value.trim();
   if (!date || !title) { alert('Dato og titel er påkrævet'); return; }
   var keywords = kwRaw ? kwRaw.split(',').map(function(k){ return k.trim(); }).filter(Boolean) : [];
   var guestEntries = [];
   gaGuestRows.forEach(function(row) {
     if (!row.name.trim()) return;
     var g = gaFindOrCreateGuest(row.name.trim(), row.role.trim(), row.gender);
-    guestEntries.push({ guestId: g.id, role: row.role.trim(), category: row.category });
+    guestEntries.push({ guestId: g.id, role: row.role.trim(), category: row.category, party: row.party||'', havkat: row.havkat!=null?row.havkat:5 });
   });
   var eps = gaLoadEpisodes();
-  eps.unshift({ id: Date.now()+'_'+Math.random().toString(36).slice(2,6), date: date, title: title, keywords: keywords, guests: guestEntries });
+  eps.unshift({ id: Date.now()+'_'+Math.random().toString(36).slice(2,6), date: date, title: title, keywords: keywords, desc: desc, guests: guestEntries });
   gaSaveEpisodes(eps);
   document.getElementById('ga-form-date').value  = '';
   document.getElementById('ga-form-title').value = '';
   document.getElementById('ga-form-kw').value    = '';
+  document.getElementById('ga-form-desc').value  = '';
   gaGuestRows = [];
   gaRenderGuestRows();
   gaFormOpen = false;
@@ -2540,7 +2562,7 @@ function gaDeleteEpisode(id) {
 function gaRender() { gaRenderEpisodes(); gaRenderSidebar(); }
 
 function gaCatCls(cat) {
-  return { minister:'ga-cat-minister', opposition:'ga-cat-opposition', ekspert:'ga-cat-ekspert', 'lived experience':'ga-cat-lived', wildcard:'ga-cat-wildcard' }[cat] || 'ga-cat-wildcard';
+  return { politiker:'ga-cat-politiker', ekspert:'ga-cat-ekspert', case:'ga-cat-case', 'pro-deb':'ga-cat-pro-deb' }[cat] || 'ga-cat-ekspert';
 }
 
 function gaFmtDate(s) {
@@ -2579,6 +2601,7 @@ function gaRenderEpisodes() {
         '<div class="ga-ep-info">'+
           '<div class="ga-ep-title">'+gaEscHtml(ep.title)+'</div>'+
           (kwHtml?'<div class="ga-kw-list">'+kwHtml+'</div>':'')+
+          (ep.desc?'<div class="ga-ep-desc" onclick="this.classList.toggle(\'expanded\')">'+gaEscHtml(ep.desc)+'</div>':'')+
         '</div>'+
         '<button class="ga-ep-del" onclick="gaDeleteEpisode(\''+ep.id+'\')" title="Slet">✕</button>'+
       '</div>'+
@@ -2636,7 +2659,7 @@ function gaOpenProfile(guestId) {
       return '<div class="ga-pep">'+
         '<div class="ga-pep-date">'+gaFmtDate(ep.date)+'</div>'+
         '<div class="ga-pep-title">'+gaEscHtml(ep.title)+'</div>'+
-        (ge&&ge.role?'<div class="ga-pep-role">'+gaEscHtml(ge.role)+(ge.category?' · '+ge.category:'')+'</div>':'')+
+        (ge&&ge.role?'<div class="ga-pep-role">'+gaEscHtml(ge.role)+(ge.category?' · '+ge.category:'')+(ge.party?' · '+gaEscHtml(ge.party):'')+(ge.havkat!=null?' · HK '+ge.havkat:'')+'</div>':'')+
       '</div>';
     }).join('');
   }
@@ -2671,10 +2694,10 @@ async function gaSearch() {
   var eps = gaLoadEpisodes();
   var guests = gaLoadGuests();
   var dataset = eps.map(function(ep) {
-    return { date: ep.date, title: ep.title, keywords: ep.keywords,
+    return { date: ep.date, title: ep.title, keywords: ep.keywords, description: ep.desc||'',
       guests: (ep.guests||[]).map(function(ge) {
         var g = guests.find(function(x){ return x.id===ge.guestId; })||{};
-        return { name: g.name, title: ge.role||g.defaultTitle, gender: g.gender, category: ge.category };
+        return { name: g.name, title: ge.role||g.defaultTitle, gender: g.gender, category: ge.category, party: ge.party||'', havkatsfaktor: ge.havkat!=null?ge.havkat:null };
       })
     };
   });

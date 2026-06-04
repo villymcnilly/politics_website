@@ -2509,6 +2509,7 @@ function gaOpenEdit(epId) {
 }
 
 function gaAddGuestRow() {
+  gaReadGuestRows();
   gaGuestRows.push({ name:'', role:'', gender:'kvinde', category:'ekspert', party:'', havkat:5 });
   gaRenderGuestRows();
 }

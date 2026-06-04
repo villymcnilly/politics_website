@@ -2467,13 +2467,45 @@ initAuth();
 // GÆSTEARKIV
 // ═══════════════════════════════════════════════════════
 const GA_PASSWORD  = 'REDACTED';
-const GA_EPS_KEY   = 'debatten_gaestearkiv_v1';
-const GA_GUESTS_KEY = 'debatten_gaestearkiv_guests_v1';
+const GA_SB_TABLE  = 'gaestearkiv';
 
-function gaLoadEpisodes() { try { return JSON.parse(localStorage.getItem(GA_EPS_KEY)) || []; } catch(e) { return []; } }
-function gaSaveEpisodes(v) { localStorage.setItem(GA_EPS_KEY, JSON.stringify(v)); }
-function gaLoadGuests()   { try { return JSON.parse(localStorage.getItem(GA_GUESTS_KEY)) || []; } catch(e) { return []; } }
-function gaSaveGuests(v)  { localStorage.setItem(GA_GUESTS_KEY, JSON.stringify(v)); }
+// In-memory cache — all sync reads hit this; writes update it then push to Supabase
+var gaEpsCache    = null;
+var gaGuestsCache = null;
+var gaLoaded      = false;
+
+function gaLoadEpisodes() { return gaEpsCache    || []; }
+function gaLoadGuests()   { return gaGuestsCache || []; }
+
+function gaSaveEpisodes(v) {
+  gaEpsCache = v;
+  gaPush('episodes', v);
+}
+function gaSaveGuests(v) {
+  gaGuestsCache = v;
+  gaPush('guests', v);
+}
+
+function gaPush(rowId, data) {
+  fetch(SB_URL + '/rest/v1/' + GA_SB_TABLE, {
+    method: 'POST',
+    headers: SB_POST,
+    body: JSON.stringify({ id: rowId, data: data, updated_at: new Date().toISOString() })
+  }).catch(function(e){ console.error('Gæstearkiv save error', e); });
+}
+
+async function gaFetchAll() {
+  var [epsRes, guestsRes] = await Promise.all([
+    fetch(SB_URL + '/rest/v1/' + GA_SB_TABLE + '?id=eq.episodes&select=data', { headers: SB_GET }),
+    fetch(SB_URL + '/rest/v1/' + GA_SB_TABLE + '?id=eq.guests&select=data',   { headers: SB_GET })
+  ]);
+  if (!epsRes.ok || !guestsRes.ok) throw new Error('Supabase fetch fejl');
+  var epsJson    = await epsRes.json();
+  var guestsJson = await guestsRes.json();
+  gaEpsCache    = (epsJson[0]    && epsJson[0].data)    || [];
+  gaGuestsCache = (guestsJson[0] && guestsJson[0].data) || [];
+  gaLoaded = true;
+}
 
 function gaEscHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
@@ -2507,12 +2539,22 @@ function gaUnlock() {
   }
 }
 
-function gaOnSwitch() {
+async function gaOnSwitch() {
   if (!gaCheckAuth()) {
     document.getElementById('ga-gate').classList.remove('gone');
     setTimeout(function(){ document.getElementById('ga-pw-input').focus(); }, 50);
   } else {
     document.getElementById('ga-gate').classList.add('gone');
+    if (!gaLoaded) {
+      var epList = document.getElementById('ga-ep-list');
+      if (epList) epList.innerHTML = '<div style="color:var(--faint);font-size:13px;font-style:italic;padding:40px 0;text-align:center;">Indlæser…</div>';
+      try {
+        await gaFetchAll();
+      } catch(e) {
+        if (epList) epList.innerHTML = '<div style="color:var(--loss-ink);font-size:13px;padding:20px 0;">Kunne ikke hente data: ' + gaEscHtml(e.message) + '</div>';
+        return;
+      }
+    }
     gaRender();
   }
 }

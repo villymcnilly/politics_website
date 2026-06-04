@@ -2517,7 +2517,7 @@ function gaRenderGuestRows() {
       '<select id="ga-gr-gender-'+i+'">'+genderOpts.map(function(v){ return '<option value="'+v+'"'+(row.gender===v?' selected':'')+'>'+v.charAt(0).toUpperCase()+v.slice(1)+'</option>'; }).join('')+'</select>' +
       '<select id="ga-gr-cat-'+i+'">'+catOpts.map(function(v){ return '<option value="'+v+'"'+(row.category===v?' selected':'')+'>'+v+'</option>'; }).join('')+'</select>' +
       '<input type="text" placeholder="Parti" id="ga-gr-party-'+i+'" value="'+gaEscHtml(row.party||'')+'">' +
-      '<div class="ga-hk-row"><input type="range" min="1" max="10" value="'+hkVal+'" id="ga-gr-hk-'+i+'" class="ga-hk-slider" oninput="document.getElementById(\'ga-gr-hkv-'+i+'\').textContent=this.value"><span class="ga-hk-val" id="ga-gr-hkv-'+i+'">'+hkVal+'</span></div>' +
+      '<div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:600;">Havkatsfaktor</span><div class="ga-hk-row"><input type="range" min="1" max="10" value="'+hkVal+'" id="ga-gr-hk-'+i+'" class="ga-hk-slider" oninput="document.getElementById(\'ga-gr-hkv-'+i+'\').textContent=this.value"><span class="ga-hk-val" id="ga-gr-hkv-'+i+'">'+hkVal+'</span></div></div>' +
       '<button class="ga-rm-btn" onclick="gaRemoveGuestRow('+i+')" title="Fjern">×</button>';
     container.appendChild(div);
   });

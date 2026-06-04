@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debattens minister-quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #FCFBF8;
+  --panel: #FFFFFF;
+  --ink: #1A1916;
+  --ink-2: #56524A;
+  --muted: #8C887D;
+  --faint: #B6B2A6;
+  --line: #E8E5DD;
+  --line-2: #DEDACF;
+  --hover: #F4F2EC;
+  --a: #BC1B2E;
+  --b: #9B3C84;
+  --f: #2E8B57;
+  --m: #5E4A97;
+  --shadow-sm: 0 1px 2px rgba(26,25,22,0.04);
+  --shadow-md: 0 4px 20px rgba(26,25,22,0.07);
+  --shadow-lg: 0 12px 48px rgba(26,25,22,0.12);
+  --win-bg: #EBF7E4; --win-bg2: #F4FBF0; --win-line: #C8E6BC; --win-ink: #2E7D32;
+  --loss-bg: #FDECEA; --loss-bg2: #FEF5F5; --loss-line: #F5C6C6; --loss-ink: #B71C1C;
+  --stake-bg: #FDF4D8; --stake-ink: #7A5800; --stake-line: #F0D878;
+}
+[data-theme="dark"] {
+  --bg: #161412;
+  --panel: #1F1C19;
+  --ink: #F2EEE6;
+  --ink-2: #B8B2A6;
+  --muted: #8A8478;
+  --faint: #5E594F;
+  --line: #2C2823;
+  --line-2: #38332C;
+  --hover: #25211C;
+  --a: #E8556A;
+  --b: #D67FC0;
+  --f: #5CC088;
+  --m: #A88FD8;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.35);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.5);
+  --win-bg: #1B2E1A; --win-bg2: #1F3520; --win-line: #2E4A2C; --win-ink: #7FD89A;
+  --loss-bg: #2E1A1A; --loss-bg2: #351F1F; --loss-line: #4A2C2C; --loss-ink: #E89090;
+  --stake-bg: #2E2818; --stake-ink: #E0C878; --stake-line: #4A4020;
+}
+html, body { height: 100%; }
+body {
+  font-family: 'Hanken Grotesk', sans-serif;
+  color: var(--ink); background: var(--bg);
+  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  -webkit-font-smoothing: antialiased; letter-spacing: -0.01em;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+button, input { font-family: inherit; }
+
+/* ── HEADER ── */
+.head { flex-shrink: 0; padding: 22px 40px 18px; border-bottom: 1px solid var(--line); }
+.head-row { display: flex; align-items: flex-end; gap: 32px; }
+.brand { min-width: 0; flex: 1; }
+.kicker { font-size: 10.5px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 9px; }
+.title {
+  font-family: 'Newsreader', serif; font-weight: 400; font-size: 33px; line-height: 1.08;
+  letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.title .it { font-style: italic; }
+.head-tools { display: flex; align-items: flex-end; gap: 26px; flex-shrink: 0; }
+.namebox { display: flex; flex-direction: column; gap: 5px; }
+.namebox label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.namebox input {
+  font-size: 14.5px; font-weight: 500; color: var(--ink); width: 180px;
+  border: none; border-bottom: 1px solid var(--line-2); background: transparent;
+  padding: 4px 1px; outline: none; transition: border-color 0.2s;
+}
+.namebox input::placeholder { color: var(--faint); font-weight: 400; }
+.namebox input:focus { border-bottom-color: var(--ink); }
+.btns { display: flex; align-items: center; gap: 4px; }
+.tbtn {
+  font-size: 13px; font-weight: 500; color: var(--ink-2); background: none; border: none;
+  padding: 8px 10px; cursor: pointer; border-radius: 6px; transition: color 0.15s, background 0.15s;
+}
+.tbtn:hover { color: var(--ink); background: var(--hover); }
+.pbtn {
+  font-size: 13px; font-weight: 600; color: var(--bg); background: var(--ink); border: 1px solid var(--ink);
+  padding: 9px 16px; cursor: pointer; border-radius: 7px; margin-left: 6px; transition: opacity 0.15s;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.pbtn:hover { opacity: 0.85; }
+.pbtn svg { width: 14px; height: 14px; }
+
+/* ── INTRO ── */
+.intro { flex-shrink: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(.4,0,.2,1); max-height: 130px; border-bottom: 1px solid var(--line); }
+.intro.hide { max-height: 0; border-bottom-color: transparent; }
+.intro-in { padding: 16px 40px 18px; display: flex; align-items: flex-start; gap: 28px; }
+.intro-txt { font-size: 14px; line-height: 1.62; color: var(--ink-2); max-width: 720px; font-weight: 400; }
+.intro-txt strong { color: var(--ink); font-weight: 600; }
+.intro-meta { font-size: 12px; color: var(--muted); margin-top: 9px; letter-spacing: 0.01em; }
+.intro-meta b { color: var(--ink-2); font-weight: 600; }
+.intro-x {
+  margin-left: auto; flex-shrink: 0; background: none; border: none; color: var(--faint);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; padding: 2px 0;
+  transition: color 0.15s;
+}
+.intro-x:hover { color: var(--ink); }
+
+/* ── WORKSPACE ── */
+.work { display: grid; grid-template-columns: 312px 1fr 312px; flex: 1; min-height: 0; }
+.side { display: flex; flex-direction: column; min-height: 0; padding: 22px 22px 0; gap: 18px; overflow: hidden; }
+.side.left { border-right: 1px solid var(--line); }
+.side.right { border-left: 1px solid var(--line); }
+
+.search { position: relative; flex-shrink: 0; }
+.search input {
+  width: 100%; font-size: 13px; color: var(--ink); padding: 7px 8px 7px 24px;
+  border: none; border-bottom: 1px solid var(--line-2); background: transparent; outline: none; transition: border-color 0.2s;
+}
+.search input::placeholder { color: var(--faint); }
+.search input:focus { border-bottom-color: var(--ink-2); }
+.search svg { position: absolute; left: 2px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; color: var(--faint); }
+
+.parties { flex: 1; display: flex; flex-direction: column; gap: 26px; min-height: 0; padding-bottom: 18px; }
+.party { display: flex; flex-direction: column; min-height: 0; }
+.party.lg { flex: 2.3 1 0; }
+.party.sm { flex: 1 1 0; }
+.phead { flex-shrink: 0; display: flex; align-items: center; gap: 9px; padding-bottom: 9px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.phead .pdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.phead .pname { font-size: 11px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink); }
+.phead .pnum { margin-left: auto; font-size: 11px; font-weight: 500; color: var(--faint); letter-spacing: 0.02em; }
+.chips { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -8px; padding: 2px 4px; }
+.chips::-webkit-scrollbar { width: 8px; }
+.chips::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--bg); }
+.chips::-webkit-scrollbar-thumb:hover { background: var(--faint); }
+.chip {
+  display: flex; align-items: center; gap: 11px; padding: 7px 8px; font-size: 13.5px; font-weight: 400;
+  color: var(--ink); cursor: grab; border-radius: 6px; transition: background 0.12s; line-height: 1.2;
+}
+.chip:hover { background: var(--hover); }
+.chip:active { cursor: grabbing; }
+.chip .cdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; opacity: 0.9; }
+.chip.dragging { opacity: 0.35; }
+.chip.assigned { color: var(--faint); cursor: default; pointer-events: none; }
+.chip.assigned .cdot { opacity: 0.3; }
+.chip.assigned .cname { text-decoration: line-through; text-decoration-thickness: 1px; }
+.chip.gone { display: none; }
+.star { color: #C2992E; font-size: 9.5px; line-height: 1; margin-left: 1px; flex-shrink: 0; transform: translateY(-0.5px); }
+.po-star { color: #C2992E; font-size: 11px; }
+.nomatch { font-size: 12px; color: var(--faint); font-style: italic; padding: 6px 8px; display: none; }
+.cdot-a, .pdot-a { background: var(--a); } .cdot-b, .pdot-b { background: var(--b); }
+.cdot-f, .pdot-f { background: var(--f); } .cdot-m, .pdot-m { background: var(--m); }
+
+.chip.ext .cdot { border: 1.5px solid currentColor; background: transparent !important; opacity: 1; }
+.chip.ext .cname { font-style: italic; }
+.write { flex-shrink: 0; padding-top: 8px; margin-top: 2px; border-top: 1px solid var(--line); }
+.write-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; font-size: 12.5px;
+  font-weight: 500; color: var(--muted); background: none; border: none; cursor: pointer; border-radius: 6px;
+  transition: color 0.15s, background 0.15s; text-align: left;
+}
+.write-btn:hover { color: var(--ink); background: var(--hover); }
+.write-btn svg { width: 13px; height: 13px; }
+.write-form { display: none; align-items: center; gap: 6px; padding: 2px 0; }
+.write-form.on { display: flex; }
+.write-form input {
+  flex: 1; min-width: 0; font-size: 13px; color: var(--ink); padding: 6px 8px;
+  border: 1px solid var(--line-2); border-radius: 6px; background: var(--panel); outline: none; transition: border-color 0.15s;
+}
+.write-form input:focus { border-color: var(--ink-2); }
+.write-form button { flex-shrink: 0; border: none; background: var(--ink); color: var(--bg); font-size: 12px; font-weight: 600; padding: 6px 11px; border-radius: 6px; cursor: pointer; }
+.write-form button:hover { opacity: 0.85; }
+
+/* ── CENTER ── */
+.center { overflow-y: auto; padding: 26px 40px 36px; }
+.center::-webkit-scrollbar { width: 9px; }
+.center::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--bg); }
+.c-head { margin-bottom: 22px; }
+.c-head .eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.c-head h2 { font-family: 'Newsreader', serif; font-weight: 400; font-size: 26px; letter-spacing: -0.01em; margin-top: 4px; }
+.c-head p { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+
+.mrow {
+  display: grid; grid-template-columns: 1fr 236px; align-items: center; gap: 28px;
+  padding: 13px 2px; border-bottom: 1px solid var(--line);
+  opacity: 0; animation: fade 0.45s ease forwards;
+}
+.mrow.pm { padding-bottom: 16px; }
+.mname-wrap { min-width: 0; }
+.mname-eyebrow { font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 3px; }
+.mname-line { display: flex; align-items: center; gap: 8px; }
+.mname { font-size: 14.5px; font-weight: 400; color: var(--ink); line-height: 1.3; }
+.mrow.pm .mname { font-weight: 500; }
+.edit { background: none; border: none; cursor: pointer; color: var(--faint); padding: 2px; border-radius: 4px; opacity: 0; transition: opacity 0.12s, color 0.12s; display: inline-flex; flex-shrink: 0; }
+.edit svg { width: 13px; height: 13px; }
+.mrow:hover .edit { opacity: 1; }
+.edit:hover { color: var(--ink); }
+.medit { font-size: 14.5px; font-weight: 400; color: var(--ink); border: none; border-bottom: 1.5px solid var(--ink); background: transparent; padding: 1px 2px; width: 100%; outline: none; }
+
+.zone {
+  min-height: 34px; display: flex; align-items: center; border-radius: 7px;
+  border: 1px dashed transparent; transition: background 0.14s, border-color 0.14s; padding: 0 4px;
+}
+.zone.empty { border-color: var(--line-2); }
+.zone.over { border-color: var(--ink-2); border-style: solid; background: var(--hover); }
+.zone .ph { font-size: 12px; color: var(--faint); padding-left: 6px; pointer-events: none; }
+.tag { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 6px 6px 8px; cursor: grab; border-radius: 7px; transition: background 0.12s; animation: fade 0.25s ease; }
+.tag:hover { background: var(--hover); }
+.tag:active { cursor: grabbing; }
+.tag .tdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.tag .tname { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 500; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag .rm { background: none; border: none; cursor: pointer; font-size: 15px; line-height: 1; color: var(--faint); opacity: 0; transition: opacity 0.12s, color 0.12s; padding: 1px 4px; flex-shrink: 0; }
+.zone:hover .rm { opacity: 1; }
+.tag .rm:hover { color: var(--ink); }
+.tdot-a { background: var(--a); } .tdot-b { background: var(--b); } .tdot-f { background: var(--f); } .tdot-m { background: var(--m); }
+
+/* ── FOOTER ── */
+.foot { flex-shrink: 0; border-top: 1px solid var(--line); padding: 13px 40px; display: flex; align-items: center; gap: 24px; background: var(--bg); }
+.prog { display: flex; align-items: center; gap: 13px; }
+.prog-track { width: 132px; height: 3px; background: var(--line-2); border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; width: 0%; background: var(--ink); transition: width 0.4s cubic-bezier(.3,.8,.3,1); }
+.prog-lbl { font-size: 12.5px; color: var(--muted); font-weight: 500; letter-spacing: 0.01em; }
+.prog-lbl b { color: var(--ink); font-weight: 600; }
+.tallies { margin-left: auto; display: flex; gap: 20px; }
+.tally { display: flex; align-items: center; gap: 7px; font-size: 12.5px; }
+.tally .tldot { width: 7px; height: 7px; border-radius: 50%; }
+.tally .tn { font-weight: 600; color: var(--ink); }
+.tally .tp { color: var(--muted); }
+
+/* ── POSTER ── */
+#poster { position: fixed; left: -99999px; top: 0; width: 940px; background: var(--bg); color: var(--ink); font-family: 'Hanken Grotesk', sans-serif; }
+.po-pad { padding: 46px 52px 40px; }
+.po-kicker { font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.po-titlerow { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-top: 14px; padding-bottom: 22px; border-bottom: 1.5px solid var(--ink); }
+.po-title { font-family: 'Newsreader', serif; font-weight: 400; font-size: 40px; line-height: 1.04; letter-spacing: -0.015em; }
+.po-title .it { font-style: italic; }
+.po-date { font-size: 12.5px; color: var(--muted); letter-spacing: 0.04em; white-space: nowrap; padding-bottom: 6px; }
+.po-pills { display: flex; gap: 22px; margin-top: 18px; }
+.po-pill { display: flex; align-items: center; gap: 9px; font-size: 13px; }
+.po-pill .pd { width: 9px; height: 9px; border-radius: 50%; }
+.po-pill .pnm { color: var(--ink-2); font-weight: 500; }
+.po-pill .pvl { color: var(--ink); font-weight: 600; }
+.po-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0 40px; margin-top: 24px; }
+.po-row { display: flex; align-items: center; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.po-mname { font-size: 13px; color: var(--muted); flex: 1; line-height: 1.25; font-weight: 400; }
+.po-minister { display: flex; align-items: center; gap: 9px; width: 188px; }
+.po-md { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.po-mn { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.po-empty { font-size: 13px; color: var(--faint); width: 188px; }
+.po-foot { margin-top: 26px; padding-top: 18px; border-top: 1.5px solid var(--ink); display: flex; align-items: center; }
+.po-fl { font-family: 'Newsreader', serif; font-style: italic; font-size: 15px; color: var(--ink); }
+.po-fr { margin-left: auto; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+#overlay { display: none; position: fixed; inset: 0; background: rgba(26,25,22,0.42); z-index: 999; align-items: center; justify-content: center; flex-direction: column; gap: 14px; color: #fff; font-size: 14px; }
+#overlay.on { display: flex; }
+.spinner { width: 28px; height: 28px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fade { to { opacity: 1; } }
+/* ── CANDIDATE PICKER (tap-to-assign) ── */
+.picker { position: fixed; inset: 0; z-index: 800; display: none; }
+.picker.on { display: block; }
+.picker-bd { position: absolute; inset: 0; background: rgba(26,25,22,0.34); opacity: 0; transition: opacity 0.22s; }
+.picker.on .picker-bd { opacity: 1; }
+.picker-sheet {
+  position: absolute; background: var(--panel); display: flex; flex-direction: column;
+  left: 50%; top: 50%; transform: translate(-50%,-48%); width: 440px; max-width: calc(100vw - 40px);
+  max-height: 78vh; border-radius: 14px; border: 1px solid var(--line);
+  box-shadow: 0 18px 60px rgba(26,25,22,0.22); opacity: 0; transition: opacity 0.22s, transform 0.22s;
+  overflow: hidden;
+}
+.picker.on .picker-sheet { opacity: 1; transform: translate(-50%,-50%); }
+.picker-head { flex-shrink: 0; padding: 20px 22px 16px; display: flex; align-items: flex-start; gap: 16px; border-bottom: 1px solid var(--line); }
+.picker-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+.picker-title { font-family: 'Newsreader', serif; font-size: 21px; line-height: 1.15; letter-spacing: -0.01em; }
+.picker-close { margin-left: auto; flex-shrink: 0; background: none; border: none; font-size: 24px; line-height: 1; color: var(--muted); cursor: pointer; padding: 0 2px; transition: color 0.15s; }
+.picker-close:hover { color: var(--ink); }
+.picker-search { flex-shrink: 0; position: relative; padding: 12px 22px; border-bottom: 1px solid var(--line); }
+.picker-search input { width: 100%; font-size: 14px; color: var(--ink); padding: 9px 12px 9px 32px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--bg); outline: none; transition: border-color 0.15s; }
+.picker-search input:focus { border-color: var(--ink-2); }
+.picker-search svg { position: absolute; left: 33px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--faint); }
+.picker-body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 12px 16px; -webkit-overflow-scrolling: touch; }
+.psec { margin-top: 12px; }
+.psec:first-child { margin-top: 4px; }
+.psec.hide { display: none; }
+.psec-head { display: flex; align-items: center; gap: 8px; padding: 6px 10px; position: sticky; top: 0; background: var(--panel); z-index: 1; }
+.psec-head .pd { width: 7px; height: 7px; border-radius: 50%; }
+.psec-head .pl { font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase; font-weight: 600; color: var(--ink); }
+.prow {
+  display: flex; align-items: center; gap: 12px; padding: 11px 10px; font-size: 14.5px; color: var(--ink);
+  cursor: pointer; border-radius: 8px; transition: background 0.12s; line-height: 1.2;
+}
+.prow:hover { background: var(--hover); }
+.prow:active { background: var(--line); }
+.prow .pdc { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.prow.ext .pdc { background: transparent !important; border: 1.5px solid currentColor; }
+.prow.ext .pname { font-style: italic; }
+.prow.taken { color: var(--faint); cursor: default; pointer-events: none; }
+.prow.taken .pdc { opacity: 0.3; }
+.prow.taken .pname { text-decoration: line-through; text-decoration-thickness: 1px; }
+.prow .taken-lbl { margin-left: auto; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+.prow.gone { display: none; }
+.pwrite { display: flex; align-items: center; gap: 7px; padding: 8px 10px 4px; }
+.pwrite input { flex: 1; min-width: 0; font-size: 13.5px; color: var(--ink); padding: 9px 10px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--bg); outline: none; }
+.pwrite input:focus { border-color: var(--ink-2); }
+.pwrite button { flex-shrink: 0; border: none; background: var(--ink); color: var(--bg); font-size: 12.5px; font-weight: 600; padding: 9px 13px; border-radius: 8px; cursor: pointer; }
+.picker-empty { text-align: center; font-size: 13px; color: var(--faint); font-style: italic; padding: 30px 0; display: none; }
+
+.zone.empty { cursor: pointer; }
+.tap-hint { display: none; }
+
+@media (max-width: 1120px) and (min-width: 821px) { .work { grid-template-columns: 264px 1fr 264px; } .namebox input { width: 140px; } }
+
+/* ── MOBILE ── */
+@media (max-width: 820px) {
+  body { height: auto; min-height: 100vh; overflow: auto; }
+  .head { padding: 18px 20px 14px; position: sticky; top: 0; background: var(--bg); z-index: 50; }
+  .head-row { flex-direction: column; align-items: stretch; gap: 16px; }
+  .kicker { margin-bottom: 7px; }
+  .title { font-size: 25px; white-space: normal; }
+  .head-tools { flex-direction: column; align-items: stretch; gap: 14px; }
+  .namebox input { width: 100%; }
+  .btns { justify-content: space-between; }
+  .pbtn { margin-left: 0; flex: 1; justify-content: center; }
+  .tbtn { padding: 9px 12px; }
+
+  .intro { max-height: 360px; }
+  .intro-in { padding: 14px 20px 16px; flex-direction: column; gap: 10px; }
+  .intro-x { margin-left: 0; align-self: flex-start; order: -1; }
+
+  .work { display: block; }
+  .side { display: none; }
+  .center { padding: 20px 20px 28px; overflow: visible; }
+  .c-head { margin-bottom: 16px; }
+  .c-head h2 { font-size: 23px; }
+
+  .mrow { grid-template-columns: 1fr; gap: 9px; padding: 14px 0; }
+  .mname { font-size: 15px; }
+  .zone { min-height: 46px; border-radius: 9px; }
+  .zone.empty { border-color: var(--line-2); background: var(--panel); }
+  .zone.empty .ph { display: none; }
+  .zone.empty::after { content: 'Tryk for at vælge minister'; font-size: 13.5px; color: var(--muted); font-weight: 500; padding-left: 10px; }
+  .tag { padding: 10px 8px 10px 10px; }
+  .tag .tname { font-size: 14.5px; }
+  .tag .rm { opacity: 1; color: var(--faint); font-size: 19px; padding: 2px 8px; }
+  .edit { opacity: 1; color: var(--faint); }
+
+  .foot { position: sticky; bottom: 0; padding: 12px 20px; flex-wrap: wrap; gap: 14px; }
+  .tallies { margin-left: 0; gap: 16px; }
+
+  .picker-sheet {
+    left: 0; top: auto; bottom: 0; transform: translateY(100%); width: 100%; max-width: 100%;
+    max-height: 86vh; border-radius: 16px 16px 0 0; border-bottom: none;
+  }
+  .picker.on .picker-sheet { transform: translateY(0); }
+  .picker-bd { background: rgba(26,25,22,0.4); }
+  .prow { padding: 13px 10px; font-size: 15.5px; }
+}
+
+/* ── TABS ── */
+.tabs { display: flex; border-bottom: 1px solid var(--line); background: var(--bg); flex-shrink: 0; padding: 0 40px; gap: 0; }
+.tab { font-size: 13px; font-weight: 500; color: var(--muted); padding: 12px 18px 11px; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; background: none; border-top: none; border-left: none; border-right: none; margin-bottom: -1px; letter-spacing: 0.01em; }
+.tab:hover { color: var(--ink); }
+.tab.on { color: var(--ink); border-bottom-color: var(--ink); font-weight: 600; }
+.page { display: none; flex: 1; min-height: 0; overflow: hidden; flex-direction: column; }
+.page.on { display: flex; }
+
+/* ── HOME / LANDING ── */
+.home-scroll { flex: 1; overflow-y: auto; padding: 0; }
+.home-scroll::-webkit-scrollbar { width: 9px; }
+.home-scroll::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--bg); }
+.home-hero { max-width: 720px; margin: 0 auto; padding: 64px 40px 40px; text-align: center; }
+.home-kicker { font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 18px; }
+.home-title { font-family: 'Newsreader', serif; font-weight: 400; font-size: 44px; line-height: 1.08; letter-spacing: -0.02em; color: var(--ink); }
+.home-title .it { font-style: italic; }
+.home-lead { font-size: 16px; line-height: 1.65; color: var(--ink-2); margin-top: 20px; font-weight: 400; }
+.home-cards { max-width: 860px; margin: 0 auto; padding: 12px 40px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.home-card {
+  text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 24px 24px 22px; cursor: pointer; font-family: inherit; transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
+  display: flex; flex-direction: column; gap: 0;
+}
+.home-card:hover { border-color: var(--line-2); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.home-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.home-card-tag { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; color: var(--muted); background: var(--hover); padding: 4px 9px; border-radius: 5px; }
+.home-card-status { margin-left: auto; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+.home-card-status.live { background: var(--win-bg); color: var(--win-ink); }
+.home-card-status.archived { background: var(--hover); color: var(--muted); }
+.home-card h3 { font-family: 'Newsreader', serif; font-weight: 400; font-size: 24px; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 9px; }
+.home-card p { font-size: 13.5px; line-height: 1.6; color: var(--ink-2); flex: 1; }
+.home-card-go { font-size: 13px; font-weight: 600; color: var(--ink); margin-top: 18px; transition: gap 0.15s; }
+.home-card:hover .home-card-go { text-decoration: underline; text-underline-offset: 3px; }
+.home-foot { max-width: 860px; margin: 36px auto 0; padding: 22px 40px 48px; text-align: center; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); }
+.home-foot b { color: var(--ink-2); font-weight: 600; }
+
+/* Home sections (active / archived) */
+.home-section { max-width: 860px; margin: 0 auto; padding: 0 40px; margin-top: 30px; }
+.home-section-head { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.home-section-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); display: inline-block; }
+.home-section-dot.live { background: var(--f); box-shadow: 0 0 0 3px color-mix(in srgb, var(--f) 22%, transparent); }
+.home-card.archived { opacity: 0.78; }
+.home-card.archived:hover { opacity: 1; }
+
+/* Theme toggle */
+.theme-toggle { background: none; border: 1px solid var(--line-2); border-radius: 8px; width: 34px; height: 34px; cursor: pointer; color: var(--ink-2); display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s, border-color 0.15s, color 0.15s; padding: 0; }
+.theme-toggle:hover { background: var(--hover); color: var(--ink); }
+.theme-toggle svg { width: 16px; height: 16px; }
+.theme-toggle .icon-moon { display: none; }
+[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+
+/* Bets intro (collapsible) */
+.bets-intro { overflow: hidden; transition: max-height 0.4s cubic-bezier(.4,0,.2,1), opacity 0.3s, margin 0.3s; max-height: 320px; margin-bottom: 22px; }
+.bets-intro.hide { max-height: 0; opacity: 0; margin-bottom: 0; }
+.bets-intro-in { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; display: flex; gap: 18px; align-items: flex-start; }
+.bets-intro-txt { flex: 1; }
+.bets-intro-txt p { font-size: 13.5px; line-height: 1.65; color: var(--ink-2); }
+.bets-intro-txt p + p { margin-top: 10px; }
+.bets-intro-txt em { font-style: italic; color: var(--ink); }
+.bets-intro-x { flex-shrink: 0; background: none; border: none; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); cursor: pointer; padding: 2px 0; transition: color 0.15s; }
+.bets-intro-x:hover { color: var(--ink); }
+.bets-show-intro { background: none; border: 1px solid var(--line-2); border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--muted); padding: 6px 12px; cursor: pointer; margin-bottom: 18px; transition: all 0.15s; font-family: inherit; display: none; }
+.bets-show-intro:hover { background: var(--hover); color: var(--ink); }
+.bets-show-intro.show { display: inline-block; }
+
+/* ── QUIZ TOOLBAR ── */
+.quiz-toolbar { flex-shrink: 0; display: flex; align-items: center; padding: 12px 40px; border-bottom: 1px solid var(--line); gap: 16px; }
+.quiz-toolbar-title { font-family: 'Newsreader', serif; font-size: 17px; color: var(--ink); }
+.quiz-toolbar .btns { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+
+/* ── BETTING PAGE ── */
+.bet-layout { display: grid; grid-template-columns: 1fr 360px; flex: 1; min-height: 0; overflow: hidden; }
+.bet-feed { overflow-y: auto; padding: 28px 36px 40px; }
+.bet-feed::-webkit-scrollbar { width: 9px; }
+.bet-feed::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--bg); }
+.bet-sidebar { border-left: 1px solid var(--line); padding: 28px 28px 40px; overflow-y: auto; background: var(--surface); display: flex; flex-direction: column; gap: 26px; }
+
+.feed-head { margin-bottom: 22px; }
+.feed-head .eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.feed-head h2 { font-family: 'Newsreader', serif; font-weight: 400; font-size: 26px; letter-spacing: -0.01em; margin-top: 4px; }
+.feed-head p { font-size: 12.5px; color: var(--muted); margin-top: 5px; }
+
+.bet-empty { text-align: center; padding: 60px 20px; color: var(--faint); font-size: 14px; font-style: italic; }
+
+.bet-card {
+  border: 1px solid var(--line); border-radius: 10px; background: var(--panel);
+  margin-bottom: 14px; overflow: hidden; transition: box-shadow 0.15s;
+}
+.bet-card:hover { box-shadow: var(--shadow-md); border-color: var(--line-2); }
+.bet-card.settled-win { border-color: var(--win-line); background: var(--win-bg); }
+.bet-card.settled-loss { border-color: var(--loss-line); background: var(--loss-bg); }
+.bet-card.settled-void { border-color: var(--line-2); background: var(--hover); }
+
+.bet-body { padding: 16px 18px 14px; }
+.bet-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.bet-author { font-size: 13px; font-weight: 600; color: var(--ink); }
+.bet-ts { font-size: 11px; color: var(--faint); margin-left: auto; }
+.bet-claim { font-size: 15.5px; font-weight: 500; color: var(--ink); line-height: 1.4; margin-bottom: 10px; }
+.bet-claim.settled-win-txt { color: var(--win-ink); }
+.bet-claim.settled-loss-txt { color: var(--loss-ink); }
+.bet-claim.settled-void-txt { color: var(--muted); text-decoration: line-through; }
+.bet-takers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; min-height: 22px; }
+.taker-chip { font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; background: var(--hover); color: var(--ink-2); border: 1px solid var(--line-2); }
+.no-takers { font-size: 12px; color: var(--faint); font-style: italic; padding: 4px 0; }
+
+.bet-foot { padding: 11px 18px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 10px; background: var(--bg); }
+.bet-foot.settled { background: transparent; border-top-color: transparent; padding: 0; }
+.take-btn { font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 7px; border: 1px solid var(--line-2); background: var(--panel); color: var(--ink); cursor: pointer; transition: all 0.14s; }
+.take-btn:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.take-btn.taken { background: var(--hover); color: var(--muted); border-color: var(--line-2); cursor: default; font-weight: 500; }
+.take-count { font-size: 12px; color: var(--muted); }
+.settled-badge { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 11px; border-radius: 20px; }
+.settled-badge.win { background: var(--win-bg); color: var(--win-ink); border: 1px solid var(--win-line); }
+.settled-badge.loss { background: var(--loss-bg); color: var(--loss-ink); border: 1px solid var(--loss-line); }
+.settled-badge.void { background: var(--hover); color: var(--muted); border: 1px solid var(--line-2); }
+
+/* ── VERDICT BANNER ── */
+.verdict { border-radius: 0 0 10px 10px; padding: 18px 20px 16px; display: flex; flex-direction: column; gap: 10px; }
+.verdict.win  { background: linear-gradient(135deg, var(--win-bg), var(--win-bg2)); border-top: 1px solid var(--win-line); }
+.verdict.loss { background: linear-gradient(135deg, var(--loss-bg), var(--loss-bg2)); border-top: 1px solid var(--loss-line); }
+.verdict.void { background: var(--hover); border-top: 1px solid var(--line-2); }
+.verdict-stamp { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.verdict-stamp.win  { color: var(--win-ink); }
+.verdict-stamp.loss { color: var(--loss-ink); }
+.verdict-stamp.void { color: var(--muted); }
+.verdict-stamp svg { width: 14px; height: 14px; }
+.verdict-story { font-family: 'Newsreader', serif; font-size: 17px; font-weight: 400; line-height: 1.5; color: var(--ink); }
+.verdict-story .winner { font-weight: 500; font-style: italic; }
+.verdict-story .loser  { font-weight: 400; }
+.verdict-story .stake-owed { font-weight: 500; color: var(--win-ink); }
+.verdict-story .stake-owed.loss { color: var(--loss-ink); }
+.verdict-admin { display: flex; gap: 7px; margin-top: 4px; }
+
+/* Admin settle controls */
+.admin-btns { margin-left: auto; display: flex; gap: 6px; }
+.settle-btn { font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; border: 1px solid; transition: opacity 0.14s; }
+.settle-btn:hover { opacity: 0.75; }
+.settle-btn.win  { background: var(--win-bg); color: var(--win-ink); border-color: var(--win-line); }
+.settle-btn.loss { background: var(--loss-bg); color: var(--loss-ink); border-color: var(--loss-line); }
+.settle-btn.void { background: var(--hover); color: var(--muted); border-color: var(--line-2); }
+.unsettle-btn { font-size: 11px; padding: 5px 10px; border-radius: 6px; cursor: pointer; border: 1px solid var(--line-2); background: none; color: var(--faint); transition: opacity 0.14s; }
+.unsettle-btn:hover { opacity: 0.7; }
+
+/* NEW BET FORM */
+.new-bet-section { display: flex; flex-direction: column; gap: 8px; }
+.new-bet-section label { font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.new-bet-section textarea { width: 100%; min-height: 80px; resize: vertical; font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; color: var(--ink); line-height: 1.5; padding: 10px 12px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--panel); outline: none; transition: border-color 0.15s; }
+.new-bet-section textarea:focus { border-color: var(--ink-2); }
+.new-bet-section textarea::placeholder { color: var(--faint); }
+.new-bet-section input[type=text] { width: 100%; font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; color: var(--ink); padding: 9px 12px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--panel); outline: none; transition: border-color 0.15s; }
+.new-bet-section input[type=number] { font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; color: var(--ink); padding: 9px 12px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--panel); outline: none; transition: border-color 0.15s; -moz-appearance: textfield; }
+.new-bet-section input[type=number]::-webkit-inner-spin-button { opacity: 0.5; }
+.new-bet-section input:focus { border-color: var(--ink-2); }
+.new-bet-section input::placeholder { color: var(--faint); }
+.label-hint { font-size: 10px; color: var(--faint); font-weight: 400; letter-spacing: 0; text-transform: none; }
+.bet-stake-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.bet-stake-chip { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: var(--stake-bg); color: var(--stake-ink); border: 1px solid var(--stake-line); }
+.bet-max-chip { font-size: 12px; font-weight: 500; color: var(--muted); }
+.new-bet-post { width: 100%; font-size: 14px; font-weight: 600; padding: 11px; border-radius: 8px; border: none; background: var(--ink); color: var(--bg); cursor: pointer; transition: opacity 0.15s; }
+.new-bet-post:hover { opacity: 0.85; }
+.new-bet-post:disabled { opacity: 0.35; cursor: default; }
+
+/* Admin panel in sidebar */
+.admin-panel { border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; }
+.admin-toggle { width: 100%; text-align: left; padding: 12px 15px; background: none; border: none; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: color 0.15s; }
+.admin-toggle:hover { color: var(--ink); }
+.admin-toggle svg { width: 13px; height: 13px; transition: transform 0.2s; }
+.admin-toggle.open svg { transform: rotate(90deg); }
+.admin-inner { display: none; padding: 12px 15px 14px; border-top: 1px solid var(--line); }
+.admin-inner.on { display: block; }
+.admin-inner label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 600; display: block; margin-bottom: 6px; }
+.admin-inner input { width: 100%; font-size: 13px; padding: 8px 10px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--bg); outline: none; font-family: inherit; color: var(--ink); }
+.admin-inner .admin-ok { margin-top: 8px; width: 100%; font-size: 13px; font-weight: 600; padding: 8px; border-radius: 6px; border: none; background: var(--ink); color: var(--bg); cursor: pointer; }
+.admin-status { font-size: 12px; margin-top: 7px; color: var(--muted); min-height: 18px; }
+
+/* Stats strip */
+.stats-strip { display: flex; gap: 18px; flex-wrap: wrap; }
+.stat-box { flex: 1; min-width: 70px; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel); }
+.stat-n { font-family: 'Newsreader', serif; font-size: 26px; font-weight: 400; line-height: 1; }
+.stat-l { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 500; }
+
+/* Leaderboard */
+.lb-head { font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+.lb-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+.lb-row:last-child { border-bottom: none; }
+.lb-rank { font-size: 11px; font-weight: 700; color: var(--faint); width: 16px; flex-shrink: 0; }
+.lb-name { font-size: 14px; font-weight: 500; flex: 1; }
+.lb-score { font-size: 13px; font-weight: 600; }
+.lb-score.pos { color: var(--win-ink); }
+.lb-score.neg { color: var(--loss-ink); }
+.lb-score.zero { color: var(--faint); }
+.lb-detail { font-size: 11px; color: var(--faint); }
+.lb-empty { font-size: 13px; color: var(--faint); font-style: italic; }
+
+@media (max-width: 820px) {
+  .tabs { padding: 0 20px; overflow-x: auto; }
+  .tab { white-space: nowrap; }
+  .bet-layout { grid-template-columns: 1fr; }
+  .bet-sidebar { border-left: none; border-top: 1px solid var(--line); }
+  .home-hero { padding: 40px 22px 28px; }
+  .home-title { font-size: 32px; }
+  .home-lead { font-size: 15px; }
+  .home-cards { grid-template-columns: 1fr; padding: 8px 22px 0; gap: 14px; }
+  .home-foot { padding: 20px 22px 40px; margin-top: 28px; }
+  .quiz-toolbar { padding: 10px 20px; }
+  .quiz-toolbar-title { display: none; }
+  .quiz-toolbar .btns { margin-left: 0; width: 100%; justify-content: space-between; }
+}
+/* ── RESULTS PAGE ── */
+.res-scroll { flex: 1; overflow-y: auto; padding: 0; }
+.res-scroll::-webkit-scrollbar { width: 9px; }
+.res-scroll::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--bg); }
+.res-hero { max-width: 860px; margin: 0 auto; padding: 48px 40px 36px; }
+.res-kicker { font-size: 10.5px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 14px; }
+.res-title { font-family: 'Newsreader', serif; font-weight: 400; font-size: 38px; line-height: 1.1; letter-spacing: -0.015em; }
+.res-title .it { font-style: italic; }
+.res-sub { font-size: 14px; color: var(--ink-2); margin-top: 12px; line-height: 1.6; max-width: 580px; }
+.podium { max-width: 860px; margin: 0 auto; padding: 0 40px 40px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.pod-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 4px; position: relative; overflow: hidden; transition: box-shadow 0.18s; }
+.pod-card:hover { box-shadow: var(--shadow-md); }
+.pod-card.gold { border-color: #D4AA50; background: linear-gradient(135deg, #FFFBEE, var(--panel)); }
+.pod-card.silver { border-color: #C0C0C8; }
+.pod-card.bronze { border-color: #C0916A; }
+[data-theme="dark"] .pod-card.gold { background: linear-gradient(135deg, #2A2210, var(--panel)); border-color: #A8883A; }
+.pod-rank { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 10px; }
+.pod-rank.gold { color: #B8893A; }
+.pod-rank.silver { color: #8A8A96; }
+.pod-rank.bronze { color: #9C6A40; }
+.pod-name { font-family: 'Newsreader', serif; font-size: 26px; font-weight: 400; letter-spacing: -0.01em; color: var(--ink); }
+.pod-pts { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.pod-pts b { color: var(--ink); font-weight: 700; font-size: 22px; }
+.pod-medal { position: absolute; top: 18px; right: 20px; font-size: 28px; opacity: 0.9; }
+.pod-xs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+.pod-x { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; }
+.pod-x.x { background: #D1F0D8; color: #1A6631; }
+.pod-x.s { background: #FDE8C4; color: #8A4E00; }
+[data-theme="dark"] .pod-x.x { background: #1B3B22; color: #7FD89A; }
+[data-theme="dark"] .pod-x.s { background: #332510; color: #E0C878; }
+.res-section { max-width: 860px; margin: 0 auto; padding: 0 40px 48px; }
+.res-section-head { font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.score-wrap { overflow-x: auto; padding-bottom: 4px; }
+.score-wrap::-webkit-scrollbar { height: 8px; }
+.score-wrap::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; }
+.score-table { border-collapse: collapse; }
+.score-table thead tr.sh-row th { vertical-align: bottom; padding-bottom: 6px; border-bottom: none; width: 34px; min-width: 34px; }
+.score-table thead tr.sh-row th.sc-name-h, .score-table thead tr.sh-row th.sc-pts-h { vertical-align: bottom; }
+.rw { display: block; height: 140px; width: 30px; position: relative; }
+.ri { position: absolute; bottom: 4px; left: 4px; transform: rotate(-52deg); transform-origin: left bottom; white-space: nowrap; line-height: 1.2; }
+.ri .rn { font-size: 11px; font-weight: 700; color: var(--ink); display: block; }
+.ri .rt { font-size: 9px; font-weight: 400; color: var(--muted); display: block; font-style: italic; margin-top: 1px; }
+.score-table th.sc-name-h { text-align: left; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: var(--muted); padding: 0 14px 8px 0; vertical-align: bottom; white-space: nowrap; min-width: 110px; }
+.score-table th.sc-pts-h { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: var(--muted); padding: 0 0 8px 10px; text-align: center; vertical-align: bottom; min-width: 50px; }
+.score-table tbody tr { border-top: 1px solid var(--line); }
+.score-table tbody tr:first-child { border-top: 2px solid var(--ink); }
+.score-table tbody tr:last-child { border-bottom: 1px solid var(--line); }
+.score-table tbody tr:hover { background: var(--hover); }
+.score-table tbody tr:nth-child(even) { background: color-mix(in srgb, var(--ink) 2%, transparent); }
+.score-table tbody tr:nth-child(even):hover { background: var(--hover); }
+td.sc-name { font-size: 13px; font-weight: 600; padding: 7px 14px 7px 0; white-space: nowrap; vertical-align: middle; color: var(--ink); }
+.sc-rank { display: inline-block; font-size: 10px; color: var(--muted); margin-right: 5px; font-weight: 500; width: 14px; }
+.sc-rank.gold { color: #B8893A; font-weight: 700; }
+.sc-rank.silver { color: #8A8A96; font-weight: 700; }
+.sc-rank.bronze { color: #9C6A40; font-weight: 700; }
+td.sc-g { width: 34px; min-width: 34px; text-align: center; vertical-align: middle; padding: 3px 2px; font-size: 12px; font-weight: 700; }
+td.sc-x { background: #D1F0D8; color: #1A6631; border-radius: 4px; }
+td.sc-s { background: #FDE8C4; color: #8A4E00; border-radius: 4px; }
+[data-theme="dark"] td.sc-x { background: #1B3B22; color: #7FD89A; }
+[data-theme="dark"] td.sc-s { background: #332510; color: #E0C878; }
+td.sc-pts { font-size: 17px; font-weight: 700; text-align: center; padding: 7px 4px 7px 10px; color: var(--ink); }
+tr.sr-1 td.sc-pts { color: #B8893A; }
+tr.sr-2 td.sc-pts { color: #5A5A68; }
+tr.sr-3 td.sc-pts { color: #9C6A40; }
+.sc-legend { display: flex; gap: 24px; margin-top: 18px; flex-wrap: wrap; align-items: flex-start; }
+.sc-leg-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); }
+.sc-leg-b { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+.sc-leg-b.x { background: #D1F0D8; color: #1A6631; }
+.sc-leg-b.s { background: #FDE8C4; color: #8A4E00; }
+.sc-leg-b.e { background: var(--hover); color: var(--faint); border: 1px solid var(--line); }
+[data-theme="dark"] .sc-leg-b.x { background: #1B3B22; color: #7FD89A; }
+[data-theme="dark"] .sc-leg-b.s { background: #332510; color: #E0C878; }
+.sc-rule { font-size: 11.5px; color: var(--muted); border-left: 1px solid var(--line); padding-left: 18px; line-height: 1.65; }
+@media (max-width: 820px) {
+  .res-hero { padding: 32px 22px 24px; }
+  .res-title { font-size: 28px; }
+  .podium { padding: 0 22px 32px; grid-template-columns: 1fr; gap: 12px; }
+  .res-section { padding: 0 22px 40px; }
+}
+
+/* ── AUTH ── */
+#auth-wall { position: fixed; inset: 0; z-index: 9000; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 24px; }
+#auth-wall.gone { display: none; }
+.auth-box { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 40px 36px 36px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); }
+.auth-logo { font-family: 'Newsreader', serif; font-size: 22px; font-weight: 400; margin-bottom: 28px; color: var(--ink); }
+.auth-logo .it { font-style: italic; }
+.auth-step { display: none; flex-direction: column; gap: 16px; }
+.auth-step.on { display: flex; }
+.auth-label { font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.auth-sublabel { font-size: 13.5px; color: var(--ink-2); line-height: 1.55; margin-top: -8px; }
+.auth-input { font-family: 'Hanken Grotesk', sans-serif; font-size: 15px; color: var(--ink); width: 100%; padding: 11px 14px; border: 1px solid var(--line-2); border-radius: 9px; background: var(--bg); outline: none; transition: border-color 0.15s; }
+.auth-input:focus { border-color: var(--ink); }
+.auth-input::placeholder { color: var(--faint); }
+.auth-btn { font-family: 'Hanken Grotesk', sans-serif; font-size: 14.5px; font-weight: 600; color: var(--bg); background: var(--ink); border: none; border-radius: 9px; padding: 13px; width: 100%; cursor: pointer; transition: opacity 0.15s; }
+.auth-btn:hover { opacity: 0.85; }
+.auth-btn:disabled { opacity: 0.35; cursor: default; }
+.auth-msg { font-size: 13px; line-height: 1.55; min-height: 20px; }
+.auth-msg.ok  { color: var(--win-ink); }
+.auth-msg.err { color: var(--loss-ink); }
+.auth-small { font-size: 12px; color: var(--faint); line-height: 1.5; }
+.auth-back { background: none; border: none; font-size: 13px; color: var(--muted); cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 2px; align-self: flex-start; }
+.auth-back:hover { color: var(--ink); }
+
+/* User bar shown in header when logged in */
+.user-bar { display: flex; align-items: center; gap: 10px; }
+.user-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.user-info { display: flex; flex-direction: column; gap: 1px; }
+.user-displayname { font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.2; }
+.user-email { font-size: 11px; color: var(--muted); }
+.user-signout { font-size: 12px; color: var(--faint); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 2px; }
+.user-signout:hover { color: var(--ink); }
+
+/* On bet cards: email shown small under name */
+.bet-author-email { font-size: 10px; color: var(--faint); font-weight: 400; letter-spacing: 0; text-transform: none; margin-left: 4px; }
+
+.bet-login-prompt { background: var(--hover); border: 1px solid var(--line-2); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.bet-login-prompt p { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+.challenge-badge { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--m); background: var(--m-tint, #F0EAF9); border: 1px solid var(--m-mid, #C7A9EB); padding: 4px 11px; border-radius: 20px; margin-top: 8px; }
+.challenge-email { font-weight: 500; font-style: italic; }
+
+@media (max-width: 820px) {
+  .auth-box { padding: 32px 22px 28px; }
+  .user-email { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH WALL -->
+<div id="auth-wall" class="gone">
+  <div class="auth-box">
+    <div class="auth-logo">Spuriøse <span class="it">projekter</span></div>
+
+    <!-- Step 1: enter email -->
+    <div class="auth-step on" id="auth-step-email">
+      <div class="auth-label">Log ind</div>
+      <div class="auth-sublabel">Skriv din email – du får tilsendt en 6-cifret kode med det samme.</div>
+      <input class="auth-input" id="auth-email-input" type="email" placeholder="din@email.dk" autocomplete="email">
+      <button class="auth-btn" id="auth-send-btn" onclick="sendMagicLink()">Send kode</button>
+      <div class="auth-msg" id="auth-msg"></div>
+    </div>
+
+    <!-- Step 2: enter OTP code -->
+    <div class="auth-step" id="auth-step-sent">
+      <div class="auth-label">Tjek din mail</div>
+      <div class="auth-sublabel">Vi har sendt en 6-cifret kode til <strong id="auth-sent-email"></strong>. Skriv den herunder.</div>
+      <input class="auth-input" id="auth-otp-input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="123456" maxlength="6" autocomplete="one-time-code">
+      <button class="auth-btn" id="auth-otp-btn" onclick="verifyOtp()">Log ind</button>
+      <div class="auth-msg" id="auth-otp-msg"></div>
+      <div class="auth-small">Ingen mail? Tjek din spam-mappe, eller <button class="auth-back" onclick="showStep('email')">prøv igen</button>.</div>
+    </div>
+
+    <!-- Step 3: choose display name (first login) -->
+    <div class="auth-step" id="auth-step-name">
+      <div class="auth-label">Vælg et navn</div>
+      <div class="auth-sublabel">Det er første gang du logger ind. Hvad skal der stå på dine væddemål?</div>
+      <input class="auth-input" id="auth-name-input" type="text" placeholder="fx Christian" maxlength="28" autocomplete="off">
+      <button class="auth-btn" id="auth-name-btn" onclick="saveDisplayName()">Kom ind</button>
+      <div class="auth-msg" id="auth-name-msg"></div>
+    </div>
+  </div>
+</div>
+
+<header class="head">
+  <div class="head-row">
+    <div class="brand">
+      <div class="title" id="title"><span class="it">Spuriøse</span> projekter</div>
+    </div>
+    <div class="head-tools">
+      <div class="user-bar" id="user-bar-loggedin" style="display:none">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-displayname" id="user-displayname">–</div>
+          <div class="user-email" id="user-email-display"></div>
+        </div>
+        <button class="user-signout" onclick="signOut()">Log ud</button>
+      </div>
+      <button class="user-signout" id="user-bar-loggedout" onclick="showAuthWall()" style="font-size:13px;color:var(--ink-2);text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit;font-weight:500;">Log ind</button>
+      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Skift tema" aria-label="Skift mellem lys og mørk tilstand">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <input id="nameInput" type="hidden" value="">
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab on" data-page="home" onclick="switchTab('home')">Forside</button>
+  <button class="tab" data-page="quiz" onclick="switchTab('quiz')">Minister-quiz</button>
+  <button class="tab" data-page="results" onclick="switchTab('results')">Quiz-resultater</button>
+  <button class="tab" data-page="bets" onclick="switchTab('bets')">DKPOL bets</button>
+</nav>
+
+<div class="page on" id="page-home">
+  <div class="home-scroll">
+    <div class="home-hero">
+      <div class="home-kicker">Velkommen</div>
+      <h1 class="home-title">Vilhelms side for <span class="it">spuriøse projekter</span></h1>
+      <p class="home-lead">Et lille hjørne til de halvseriøse indfald, der opstår i hverdagen. Log ind for at deltage.</p>
+    </div>
+
+    <div class="home-section">
+      <div class="home-section-head"><span class="home-section-dot live"></span> Aktive</div>
+      <div class="home-cards">
+        <button class="home-card" onclick="switchTab('bets')">
+          <div class="home-card-top">
+            <span class="home-card-tag">Spil</span>
+            <span class="home-card-status live">Åben</span>
+          </div>
+          <h3>DKPOL bets</h3>
+          <p>Slå politiske væddemål op og tag imod hinandens. Jeg afgør, når sagen er afgjort.</p>
+          <span class="home-card-go">Åbn DKPOL bets →</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="home-section">
+      <div class="home-section-head"><span class="home-section-dot"></span> Afsluttede</div>
+      <div class="home-cards">
+        <button class="home-card" onclick="switchTab('results')">
+          <div class="home-card-top">
+            <span class="home-card-tag">Quiz</span>
+            <span class="home-card-status archived">Afsluttet</span>
+          </div>
+          <h3>Minister-quiz</h3>
+          <p>Vilhelm vandt med 8 point. Se den fulde pointoversigt med hvem der gættede hvad.</p>
+          <span class="home-card-go">Se resultater →</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="home-foot">
+      Log ind for at deltage. &nbsp;·&nbsp; Spørgsmål? <b>vikj@dr.dk</b>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-quiz">
+<section class="intro" id="intro">
+  <div class="intro-in">
+    <div>
+      <div class="intro-txt">
+        <strong>Denne quiz er afsluttet</strong> – ministerholdet er nu sat, så det her står som et arkiv. Du kan stadig lege med dit bud: træk MF'erne over på de ministerposter, du troede de ville lande på i <strong>A·B·F·M-regeringen</strong>, ret i titlerne, og eksportér resultatet.
+      </div>
+      <div class="intro-meta"><span class="star">★</span> = ministererfaring &nbsp;·&nbsp; Quizzen kørte frem til de første ministerudnævnelser &nbsp;·&nbsp; Spørgsmål til <b>vikj@dr.dk</b></div>
+    </div>
+    <button class="intro-x" onclick="toggleIntro()">Skjul</button>
+  </div>
+</section>
+
+<div class="quiz-toolbar">
+  <div class="quiz-toolbar-title">Regeringsbygger</div>
+  <div class="btns">
+    <button class="tbtn" onclick="toggleIntro()">Info</button>
+    <button class="tbtn" onclick="clearAll()">Ryd</button>
+    <button class="tbtn" onclick="exportText()">Tekst</button>
+    <button class="pbtn" onclick="exportPhoto()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Eksportér
+    </button>
+  </div>
+</div>
+
+<main class="work">
+  <div class="side left">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchL" type="text" placeholder="Søg i A og B" oninput="applyFilter('L')" autocomplete="off">
+    </div>
+    <div class="parties">
+      <div class="party lg">
+        <div class="phead"><span class="pdot pdot-a"></span><span class="pname">Socialdemokratiet</span><span class="pnum" id="pn-a"></span></div>
+        <div class="chips" id="chips-a"></div>
+        <div class="nomatch" id="nm-a">Ingen match</div>
+        <div class="write">
+          <button class="write-btn" id="wbtn-a" onclick="openWrite('a')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+            Skriv en kandidat uden for tinget
+          </button>
+          <div class="write-form" id="wform-a">
+            <input id="winput-a" type="text" placeholder="Navn" autocomplete="off" maxlength="40" onkeydown="writeKey(event,'a')">
+            <button onclick="addWrite('a')">Tilføj</button>
+          </div>
+        </div>
+      </div>
+      <div class="party sm">
+        <div class="phead"><span class="pdot pdot-b"></span><span class="pname">Radikale Venstre</span><span class="pnum" id="pn-b"></span></div>
+        <div class="chips" id="chips-b"></div>
+        <div class="nomatch" id="nm-b">Ingen match</div>
+        <div class="write">
+          <button class="write-btn" id="wbtn-b" onclick="openWrite('b')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+            Skriv en kandidat uden for tinget
+          </button>
+          <div class="write-form" id="wform-b">
+            <input id="winput-b" type="text" placeholder="Navn" autocomplete="off" maxlength="40" onkeydown="writeKey(event,'b')">
+            <button onclick="addWrite('b')">Tilføj</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="center">
+    <div class="c-head">
+      <div class="eyebrow">Dit kabinet</div>
+      <h2>Regeringen 2026</h2>
+      <p>Træk navne til posterne · klik blyanten for at rette en titel</p>
+    </div>
+    <div id="mlist"></div>
+  </div>
+
+  <div class="side right">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchR" type="text" placeholder="Søg i F og M" oninput="applyFilter('R')" autocomplete="off">
+    </div>
+    <div class="parties">
+      <div class="party lg">
+        <div class="phead"><span class="pdot pdot-f"></span><span class="pname">SF</span><span class="pnum" id="pn-f"></span></div>
+        <div class="chips" id="chips-f"></div>
+        <div class="nomatch" id="nm-f">Ingen match</div>
+        <div class="write">
+          <button class="write-btn" id="wbtn-f" onclick="openWrite('f')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+            Skriv en kandidat uden for tinget
+          </button>
+          <div class="write-form" id="wform-f">
+            <input id="winput-f" type="text" placeholder="Navn" autocomplete="off" maxlength="40" onkeydown="writeKey(event,'f')">
+            <button onclick="addWrite('f')">Tilføj</button>
+          </div>
+        </div>
+      </div>
+      <div class="party sm">
+        <div class="phead"><span class="pdot pdot-m"></span><span class="pname">Moderaterne</span><span class="pnum" id="pn-m"></span></div>
+        <div class="chips" id="chips-m"></div>
+        <div class="nomatch" id="nm-m">Ingen match</div>
+        <div class="write">
+          <button class="write-btn" id="wbtn-m" onclick="openWrite('m')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+            Skriv en kandidat uden for tinget
+          </button>
+          <div class="write-form" id="wform-m">
+            <input id="winput-m" type="text" placeholder="Navn" autocomplete="off" maxlength="40" onkeydown="writeKey(event,'m')">
+            <button onclick="addWrite('m')">Tilføj</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="prog">
+    <div class="prog-track"><div class="prog-fill" id="pfill"></div></div>
+    <span class="prog-lbl" id="plabel"><b>0</b> af 27 poster</span>
+  </div>
+  <div class="tallies">
+    <div class="tally"><span class="tldot" style="background:var(--a)"></span><span class="tn" id="cnt-a">0</span><span class="tp">A</span></div>
+    <div class="tally"><span class="tldot" style="background:var(--b)"></span><span class="tn" id="cnt-b">0</span><span class="tp">B</span></div>
+    <div class="tally"><span class="tldot" style="background:var(--f)"></span><span class="tn" id="cnt-f">0</span><span class="tp">F</span></div>
+    <div class="tally"><span class="tldot" style="background:var(--m)"></span><span class="tn" id="cnt-m">0</span><span class="tp">M</span></div>
+  </div>
+</footer>
+
+</div><!-- end page-quiz -->
+
+<div class="page" id="page-results">
+  <div class="res-scroll">
+    <div class="res-hero">
+      <div class="res-kicker">Minister-quiz · Regeringen 2026 · Endelig stilling</div>
+      <h1 class="res-title">Vilhelm vandt <span class="it">quizzen</span></h1>
+      <p class="res-sub">21 ministerposter, 9 deltagere og ét klart svar: Vilhelm gættede flest rigtigt og hjembragte 8 point – to foran nummer to. Her er den fulde oversigt over alle gæt.</p>
+    </div>
+
+    <div class="podium">
+      <div class="pod-card gold">
+        <div class="pod-rank gold">1. plads</div>
+        <div class="pod-name">Vilhelm</div>
+        <div class="pod-pts"><b>8</b> point</div>
+        <div class="pod-medal">🥇</div>
+        <div class="pod-xs">
+          <span class="pod-x x">Mette F.</span>
+          <span class="pod-x x">Lars Løkke</span>
+          <span class="pod-x x">Christian R.M.</span>
+          <span class="pod-x s">Pia O.D.</span>
+          <span class="pod-x s">Martin L.</span>
+          <span class="pod-x s">Christina E.</span>
+          <span class="pod-x s">Samira N.</span>
+          <span class="pod-x s">Ane H-J.</span>
+          <span class="pod-x s">Ida A.</span>
+          <span class="pod-x s">Lisbeth B-N.</span>
+        </div>
+      </div>
+      <div class="pod-card silver">
+        <div class="pod-rank silver">2. plads</div>
+        <div class="pod-name">Siw</div>
+        <div class="pod-pts"><b>6</b> point</div>
+        <div class="pod-medal">🥈</div>
+        <div class="pod-xs">
+          <span class="pod-x x">Mette F.</span>
+          <span class="pod-x x">Pia O.D.</span>
+          <span class="pod-x x">Lars Løkke</span>
+          <span class="pod-x x">Peter H.</span>
+          <span class="pod-x x">Zenia S.</span>
+          <span class="pod-x s">Lisbeth B-N.</span>
+        </div>
+      </div>
+      <div class="pod-card bronze">
+        <div class="pod-rank bronze">3. plads</div>
+        <div class="pod-name">Christian</div>
+        <div class="pod-pts"><b>5</b> point</div>
+        <div class="pod-medal">🥉</div>
+        <div class="pod-xs">
+          <span class="pod-x x">Mette F.</span>
+          <span class="pod-x x">Lars Løkke</span>
+          <span class="pod-x x">Samira N.</span>
+          <span class="pod-x s">Ida A.</span>
+          <span class="pod-x s">Zenia S.</span>
+          <span class="pod-x s">Lisbeth B-N.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="res-section">
+      <div class="res-section-head">Alle gæt</div>
+      <div class="score-wrap">
+        <table class="score-table">
+          <thead>
+            <tr class="sh-row">
+              <th class="sc-name-h">Deltager</th>
+              <th><div class="rw"><div class="ri"><span class="rn">Mette Frederiksen</span><span class="rt">Statsminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Pia Olsen Dyhr</span><span class="rt">Økonomi- og indenrigsminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Lars Løkke</span><span class="rt">Udenrigsminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Martin Lidegaard</span><span class="rt">Erhvervs- og konkurrencekraftsminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Peter Hummelgaard</span><span class="rt">Finansminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Nicolai Wammen</span><span class="rt">Justitsminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Christina Egelund</span><span class="rt">Forsknings-, uddannelses- og digitaliseringsminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Samira Nawa</span><span class="rt">Klima-, energi- og forsyningsminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Signe Munk</span><span class="rt">By-, land- og transportminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Morten Bødskov</span><span class="rt">Udlændinge- og integrationsminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Magnus Heunicke</span><span class="rt">Undervisningsminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Ane Halsboe-Jørgensen</span><span class="rt">Beskæftigelsesminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Jeppe Bruus</span><span class="rt">Forsvarsminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Jakob Engel Schmidt</span><span class="rt">Skatte- og vækstminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Ida Auken</span><span class="rt">Sundheds- og kirkeminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Christian Rabjerg Madsen</span><span class="rt">Minister for natur og dyrevelfærd</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Zenia Stampe</span><span class="rt">Kulturminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Lisbeth Bech-Nielsen</span><span class="rt">Minister for samfundssikkerhed og beredskab</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Jacob Mark</span><span class="rt">Børne-, ældre- og boligminister</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Monika Rubin</span><span class="rt">Socialminister og minister for nordisk samarbejde</span></div></div></th>
+              <th><div class="rw"><div class="ri"><span class="rn">Maria Reumert Gjerding</span><span class="rt">Miljøminister</span></div></div></th>
+              <th class="sc-pts-h">Point</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="sr-1">
+              <td class="sc-name"><span class="sc-rank gold">1</span>Vilhelm</td>
+              <td class="sc-g sc-x">X</td><td class="sc-g sc-s">S</td><td class="sc-g sc-x">X</td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td>
+              <td class="sc-pts">8</td>
+            </tr>
+            <tr class="sr-2">
+              <td class="sc-name"><span class="sc-rank silver">2</span>Siw</td>
+              <td class="sc-g sc-x">X</td><td class="sc-g sc-x">X</td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td>
+              <td class="sc-pts">6</td>
+            </tr>
+            <tr class="sr-3">
+              <td class="sc-name"><span class="sc-rank bronze">3</span>Christian</td>
+              <td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td>
+              <td class="sc-pts">5</td>
+            </tr>
+            <tr>
+              <td class="sc-name"><span class="sc-rank">4</span>Nina</td>
+              <td class="sc-g sc-x">X</td><td class="sc-g sc-s">S</td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td>
+              <td class="sc-pts">4</td>
+            </tr>
+            <tr>
+              <td class="sc-name"><span class="sc-rank">4</span>Naja</td>
+              <td class="sc-g sc-x">X</td><td class="sc-g sc-s">S</td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td>
+              <td class="sc-pts">4</td>
+            </tr>
+            <tr>
+              <td class="sc-name"><span class="sc-rank">4</span>Magnus</td>
+              <td class="sc-g sc-x">X</td><td class="sc-g sc-s">S</td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td>
+              <td class="sc-pts">4</td>
+            </tr>
+            <tr>
+              <td class="sc-name"><span class="sc-rank">4</span>Ida</td>
+              <td class="sc-g sc-x">X</td><td class="sc-g sc-x">X</td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td>
+              <td class="sc-pts">4</td>
+            </tr>
+            <tr>
+              <td class="sc-name"><span class="sc-rank">8</span>Mathias P</td>
+              <td class="sc-g sc-x">X</td><td class="sc-g sc-s">S</td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td>
+              <td class="sc-pts">3</td>
+            </tr>
+            <tr>
+              <td class="sc-name"><span class="sc-rank">8</span>Mathias B</td>
+              <td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g sc-x">X</td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g"></td><td class="sc-g sc-s">S</td><td class="sc-g"></td><td class="sc-g"></td>
+              <td class="sc-pts">3</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sc-legend">
+        <div class="sc-leg-item"><div class="sc-leg-b x">X</div> Korrekt minister gættet</div>
+        <div class="sc-leg-item"><div class="sc-leg-b s">S</div> Delvist korrekt</div>
+        <div class="sc-leg-item"><div class="sc-leg-b e"></div> Ikke gættet</div>
+        <div class="sc-rule">Point gives, hvis man <strong>som den eneste</strong> har gættet rigtigt (X).<br>Hvis ingen gættede rigtigt, gives point for delvist korrekt gæt (S).</div>
+      </div>
+    </div>
+  </div>
+</div><!-- end page-results -->
+
+<div class="page" id="page-bets">
+  <div class="bet-layout">
+    <div class="bet-feed">
+      <div class="feed-head">
+        <h2>DKPOL bets</h2>
+        <p>Slå et væddemål op – andre tager imod, jeg afgør</p>
+      </div>
+      <section class="bets-intro" id="bets-intro">
+        <div class="bets-intro-in">
+          <div class="bets-intro-txt">
+            <p>Her kan man slå politiske væddemål op og tage imod hinandens. Et væddemål er en påstand om dansk politik – fx <em>"Jeppe Bruus er den første minister, der ryger"</em> eller <em>"SF får mindst fire ministerposter"</em>. Du formulerer påstanden, sætter eventuelt en indsats og et loft over hvor mange der kan tage imod.</p>
+            <p>Andre kan så tage imod, hvis de tror det modsatte. Når virkeligheden har afgjort sagen, markerer jeg om påstanden holdt eller ej – og så fordeles point og eventuelle indsatser automatisk. Stillingen står opdateret i sidepanelet. Ingen penge går gennem siden; afregning sker mellem jer.</p>
+          </div>
+          <button class="bets-intro-x" onclick="toggleBetsIntro()">Skjul</button>
+        </div>
+      </section>
+      <button class="bets-show-intro" id="bets-show-intro" onclick="toggleBetsIntro()">Vis forklaring</button>
+      <div id="bet-list"></div>
+    </div>
+    <div class="bet-sidebar">
+      <div class="new-bet-section" id="bet-post-form">
+        <label>Hvad vædder vi om?</label>
+        <textarea id="bet-claim" placeholder='fx "Jeppe Bruus er den første, der ryger ud af regeringen"' maxlength="280"></textarea>
+        <label style="margin-top:6px">Indsats <span class="label-hint">– hvad er på spil?</span></label>
+        <input type="text" id="bet-stake" placeholder='fx "en øl" eller "25 kr."' maxlength="60">
+        <label style="margin-top:6px">Maks antal imod <span class="label-hint">– lad stå tomt for ubegrænset</span></label>
+        <input type="number" id="bet-max" placeholder="fx 3" min="1" max="99" style="width:100%">
+        <label style="margin-top:6px">Udfordr en bestemt <span class="label-hint">– valgfrit, låser bettet til én person</span></label>
+        <input type="email" id="bet-challenge" placeholder="kollega@email.dk" maxlength="100" autocomplete="off">
+        <button class="new-bet-post" id="bet-post-btn" onclick="postBet()">Slå op</button>
+      </div>
+      <div class="bet-login-prompt" id="bet-login-prompt" style="display:none">
+        <p>Log ind for at slå væddemål op og tage imod andre.</p>
+        <button class="new-bet-post" onclick="showAuthWall()">Log ind</button>
+      </div>
+      <div>
+        <div class="lb-head">Stilling</div>
+        <div id="leaderboard"></div>
+      </div>
+      <div class="stats-strip" id="bet-stats"></div>
+      <div class="admin-panel">
+        <button class="admin-toggle" id="admin-toggle" onclick="toggleAdmin()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          Admin
+        </button>
+        <div class="admin-inner" id="admin-inner">
+          <div id="admin-login-section">
+            <label>Adgangskode</label>
+            <input type="password" id="admin-pw" placeholder="••••••" onkeydown="if(event.key==='Enter')checkAdmin()">
+            <button class="admin-ok" onclick="checkAdmin()">Log ind</button>
+            <div class="admin-status" id="admin-status"></div>
+          </div>
+          <div id="admin-ban-section" style="display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
+            <label style="margin-bottom:8px;display:block">Bannede emails</label>
+            <div id="ban-list" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;"></div>
+            <div style="display:flex;gap:6px;">
+              <input type="email" id="ban-input" placeholder="email@eksempel.dk" style="flex:1;font-size:13px;padding:7px 9px;border:1px solid var(--line-2);border-radius:6px;background:var(--bg);outline:none;font-family:inherit;" onkeydown="if(event.key==='Enter')addBan()">
+              <button class="admin-ok" style="margin-top:0;width:auto;padding:7px 12px;" onclick="addBan()">Ban</button>
+            </div>
+            <div class="admin-status" id="ban-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- end page-bets -->
+
+<div class="picker" id="picker" aria-hidden="true">
+  <div class="picker-bd" onclick="closePicker()"></div>
+  <div class="picker-sheet" role="dialog" aria-modal="true" aria-labelledby="picker-title">
+    <div class="picker-head">
+      <div>
+        <div class="picker-eyebrow">Vælg minister til posten</div>
+        <div class="picker-title" id="picker-title">–</div>
+      </div>
+      <button class="picker-close" onclick="closePicker()" aria-label="Luk">×</button>
+    </div>
+    <div class="picker-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="pk-search" type="text" placeholder="Søg blandt alle fire partier" oninput="filterPicker()" autocomplete="off">
+    </div>
+    <div class="picker-body" id="pk-body"></div>
+  </div>
+</div>
+
+<div id="poster"></div>
+<div id="overlay"><div class="spinner"></div><span>Genererer dit bud…</span></div>
+
+<script>
+const PARTIES = {
+  a: { name:'Socialdemokratiet', color:'#BC1B2E' },
+  b: { name:'Radikale Venstre',  color:'#9B3C84' },
+  f: { name:'SF',                color:'#C6562A' },
+  m: { name:'Moderaterne',       color:'#5E4A97' }
+};
+
+const POLITICIANS = {
+  a: ['Mette Frederiksen','Nicolai Wammen','Peter Hummelgaard','Magnus Heunicke','Christian Rabjerg Madsen','Mattias Tesfaye','Ane Halsboe-Jørgensen','Morten Bødskov','Kaare Dybvad Bek','Trine Bramsen','Jeppe Bruus','Rasmus Stoklund','Ida Auken','Lea Wermelin','Benny Engelbrecht','Simon Kollerup','Jesper Petersen','Mogens Jensen','Flemming Møller Mortensen','Sophie Hæstorp Andersen','Anders Kühnau','Frederik Vad','Bjørn Brandenborg','Anne Paulin','Camilla Fabricius','Birgitte Vind','Leif Lahn Jensen','Anders Kronborg','Kasper Roug','Malte Larsen','Fie Hækkerup','Thomas Skriver Jensen','Thomas Monberg','Katrine Evelyn Jensen','Eva Borchorst Mejnertz','Matilde Powers','Thomas Klimek','Sofie de Bretteville','Trine Birk Andersen'],
+  b: ['Martin Lidegaard','Samira Nawa','Zenia Stampe','Stinus Lindgreen','Katrine Robsøe','Thomas Rohden','Magnus Georg Jensen','Steffen Holme Helledie','Anastasia Milthers','Philip Vivet'],
+  f: ['Pia Olsen Dyhr','Jacob Mark','Lisbeth Bech-Nielsen','Karsten Hønge','Signe Munk','Karina Lorentzen Dehnhardt','Kirsten Normann Andersen','Carl Valentin','Anne Valentina Berthelsen','Sigurd Agersnap','Astrid Carøe','Lise Müller','Theresa Berg Andersen','Marianne Bigum','Christina Lykke','Sofie Lippert','Charlotte Broman Mølbæk','Nanna Bonde','Jørgen Kvist','Sofie F. Villadsen'],
+  m: ['Lars Løkke Rasmussen','Jakob Engel-Schmidt','Christina Egelund','Lars Aagaard','Caroline Stage Olsen','Henrik Frandsen','Monika Rubin','Mohammad Rona','Charlotte Bagge Hansen','Morten E.G. Brautsch','Rasmus Lund-Nielsen','Pernille Christensen','Frida Bruun','Ellen Emilie']
+};
+
+// Personer med ministererfaring (nuværende eller tidligere) – markeres med stjerne
+const MINISTERS = new Set([
+  'a|Mette Frederiksen','a|Nicolai Wammen','a|Peter Hummelgaard','a|Magnus Heunicke','a|Christian Rabjerg Madsen','a|Mattias Tesfaye','a|Ane Halsboe-Jørgensen','a|Morten Bødskov','a|Kaare Dybvad Bek','a|Trine Bramsen','a|Jeppe Bruus','a|Rasmus Stoklund','a|Ida Auken','a|Lea Wermelin','a|Benny Engelbrecht','a|Simon Kollerup','a|Jesper Petersen','a|Mogens Jensen','a|Flemming Møller Mortensen',
+  'b|Martin Lidegaard',
+  'f|Pia Olsen Dyhr',
+  'm|Lars Løkke Rasmussen','m|Jakob Engel-Schmidt','m|Christina Egelund','m|Lars Aagaard','m|Caroline Stage Olsen','m|Henrik Frandsen'
+]);
+function isMinister(name, party){ return MINISTERS.has(party+'|'+name); }
+const STAR = '<span class="star" title="Har ministererfaring">★</span>';
+
+const MINISTRIES = [
+  { id:'pm',   name:'Statsminister', pm:true },
+  { id:'def',  name:'Forsvarsminister' },
+  { id:'um',   name:'Udenrigsminister' },
+  { id:'fm',   name:'Finansminister' },
+  { id:'inm',  name:'Indenrigs- og sundhedsminister' },
+  { id:'jm',   name:'Justitsminister' },
+  { id:'okm',  name:'Økonomiminister' },
+  { id:'em',   name:'Erhvervsminister' },
+  { id:'milm', name:'Miljøminister' },
+  { id:'ligm', name:'Minister for ligestilling' },
+  { id:'skm',  name:'Skatteminister' },
+  { id:'kum',  name:'Kulturminister' },
+  { id:'bum',  name:'Børne- og undervisningsminister' },
+  { id:'bem',  name:'Beskæftigelsesminister' },
+  { id:'trep', name:'Minister for Grøn Trepart' },
+  { id:'fvm',  name:'Minister for fødevarer, landbrug og fiskeri' },
+  { id:'trm',  name:'Transportminister' },
+  { id:'ufm',  name:'Uddannelses- og forskningsminister' },
+  { id:'aem',  name:'Ældreminister' },
+  { id:'klim', name:'Klima-, energi- og forsyningsminister' },
+  { id:'eum',  name:'Europaminister' },
+  { id:'byl',  name:'Minister for byer og landdistrikter' },
+  { id:'nord', name:'Minister for nordisk samarbejde' },
+  { id:'ber',  name:'Beredskabsminister' },
+  { id:'udlm', name:'Udlændinge- og integrationsminister' },
+  { id:'digm', name:'Minister for digitalisering' },
+  { id:'sbm',  name:'Social- og boligminister' }
+];
+
+const assignments = {};
+const WRITEINS = { a:[], b:[], f:[], m:[] };
+let drag = null;
+const filters = { L:'', R:'' };
+
+function isAssigned(name, party){ return Object.values(assignments).some(a => a.name===name && a.party===party); }
+
+function genitive(n){ n=(n||'').trim(); if(!n) n='Dit'; const l=n.slice(-1).toLowerCase(); return (['s','x','z'].includes(l)? n+"\u2019" : n+'s') + ' bud på'; }
+
+function updateTitle(){ /* header is now a fixed site brand; genitive() still used in quiz export */ }
+
+function makeChip(name, party, ext){
+  const assigned = isAssigned(name, party);
+  const d = document.createElement('div');
+  d.className = 'chip' + (ext ? ' ext' : '') + (assigned ? ' assigned' : '');
+  d.dataset.search = name.toLowerCase();
+  d.innerHTML = '<span class="cdot cdot-'+party+'"></span><span class="cname">'+name+'</span>' + (isMinister(name, party) ? STAR : '');
+  if(ext && !assigned){
+    const rm = document.createElement('button');
+    rm.className = 'rm'; rm.textContent = '×'; rm.title = 'Fjern kandidat';
+    rm.style.cssText = 'margin-left:auto;background:none;border:none;cursor:pointer;color:var(--faint);font-size:15px;line-height:1;padding:0 2px;';
+    rm.addEventListener('click', function(e){ e.stopPropagation(); WRITEINS[party] = WRITEINS[party].filter(function(x){ return x!==name; }); refresh(); });
+    rm.addEventListener('mousedown', function(e){ e.stopPropagation(); });
+    d.appendChild(rm);
+    d.draggable = true;
+  } else if(!assigned){
+    d.draggable = true;
+  }
+  if(!assigned){
+    d.addEventListener('dragstart', function(e){ drag = { name:name, party:party, srcId:null }; setTimeout(function(){ d.classList.add('dragging'); },0); e.dataTransfer.effectAllowed='move'; });
+    d.addEventListener('dragend', function(){ d.classList.remove('dragging'); });
+  }
+  return d;
+}
+
+function renderChips(){
+  Object.keys(POLITICIANS).forEach(function(party){
+    const el = document.getElementById('chips-'+party);
+    el.innerHTML = '';
+    const total = POLITICIANS[party].length + WRITEINS[party].length;
+    document.getElementById('pn-'+party).textContent = total;
+    WRITEINS[party].forEach(function(name){ el.appendChild(makeChip(name, party, true)); });
+    POLITICIANS[party].forEach(function(name){ el.appendChild(makeChip(name, party, false)); });
+  });
+  applyFilter('L'); applyFilter('R');
+}
+
+function openWrite(party){
+  const form = document.getElementById('wform-'+party);
+  const btn = document.getElementById('wbtn-'+party);
+  const open = form.classList.toggle('on');
+  btn.style.display = open ? 'none' : '';
+  if(open) document.getElementById('winput-'+party).focus();
+}
+
+function closeWrite(party){
+  document.getElementById('wform-'+party).classList.remove('on');
+  document.getElementById('wbtn-'+party).style.display = '';
+  document.getElementById('winput-'+party).value = '';
+}
+
+function addWrite(party){
+  const inp = document.getElementById('winput-'+party);
+  const name = inp.value.trim();
+  if(!name){ closeWrite(party); return; }
+  const exists = POLITICIANS[party].concat(WRITEINS[party]).some(function(x){ return x.toLowerCase()===name.toLowerCase(); });
+  if(!exists) WRITEINS[party].unshift(name);
+  inp.value = '';
+  closeWrite(party);
+  refresh();
+}
+
+function writeKey(e, party){
+  if(e.key==='Enter'){ e.preventDefault(); addWrite(party); }
+  if(e.key==='Escape'){ closeWrite(party); }
+}
+
+function applyFilter(side){
+  const q = document.getElementById(side==='L'?'searchL':'searchR').value.trim().toLowerCase();
+  filters[side] = q;
+  (side==='L'?['a','b']:['f','m']).forEach(function(p){
+    const chips = document.querySelectorAll('#chips-'+p+' .chip');
+    let vis = 0;
+    chips.forEach(function(c){ const ok = !q || c.dataset.search.indexOf(q)!==-1; c.classList.toggle('gone', !ok); if(ok) vis++; });
+    document.getElementById('nm-'+p).style.display = (vis===0 && q) ? 'block' : 'none';
+  });
+}
+
+function renderMinistries(){
+  const list = document.getElementById('mlist');
+  list.innerHTML = '';
+  MINISTRIES.forEach(function(m, i){
+    const asn = assignments[m.id];
+    const row = document.createElement('div');
+    row.className = 'mrow' + (m.pm ? ' pm' : '');
+    row.style.animationDelay = (0.12 + i*0.02) + 's';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'mname-wrap';
+    if(m.pm){ const eb = document.createElement('div'); eb.className='mname-eyebrow'; eb.textContent='Regeringschef'; wrap.appendChild(eb); }
+    const line = document.createElement('div'); line.className = 'mname-line';
+    const lbl = document.createElement('span'); lbl.className='mname'; lbl.textContent = m.name;
+    const editBtn = document.createElement('button'); editBtn.className='edit'; editBtn.title='Ret titel';
+    editBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+    editBtn.addEventListener('click', function(){ startEdit(m, lbl, editBtn); });
+    line.appendChild(lbl); line.appendChild(editBtn); wrap.appendChild(line);
+
+    const zone = document.createElement('div');
+    zone.className = 'zone' + (asn ? ' filled' : ' empty');
+
+    if(asn){
+      const tag = document.createElement('div'); tag.className='tag'; tag.draggable=true;
+      tag.innerHTML = '<span class="tdot tdot-'+asn.party+'"></span><span class="tname">'+asn.name+'</span>' + (isMinister(asn.name, asn.party) ? STAR : '');
+      const rm = document.createElement('button'); rm.className='rm'; rm.textContent='×'; rm.title='Fjern';
+      (function(mid){ rm.addEventListener('click', function(e){ e.stopPropagation(); delete assignments[mid]; refresh(); }); })(m.id);
+      tag.appendChild(rm);
+      tag.querySelector('.tname').title = asn.name;
+      zone.appendChild(tag);
+      (function(a, mid){
+        tag.addEventListener('dragstart', function(e){ drag={ name:a.name, party:a.party, srcId:mid }; setTimeout(function(){ tag.style.opacity='0.35'; },0); e.dataTransfer.effectAllowed='move'; });
+        tag.addEventListener('dragend', function(){ tag.style.opacity=''; });
+        tag.addEventListener('click', function(e){ if(e.target.closest('.rm')) return; openPicker(mid); });
+      })(asn, m.id);
+    } else {
+      const ph = document.createElement('span'); ph.className='ph'; ph.textContent='Træk navn hertil'; zone.appendChild(ph);
+      (function(mid){ zone.addEventListener('click', function(){ openPicker(mid); }); })(m.id);
+    }
+
+    (function(mid){
+      zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.classList.add('over'); });
+      zone.addEventListener('dragleave', function(){ zone.classList.remove('over'); });
+      zone.addEventListener('drop', function(e){ e.preventDefault(); zone.classList.remove('over'); if(!drag) return; if(drag.srcId) delete assignments[drag.srcId]; assignments[mid]={ name:drag.name, party:drag.party }; drag=null; refresh(); });
+    })(m.id);
+
+    row.appendChild(wrap); row.appendChild(zone);
+    list.appendChild(row);
+  });
+  updateFooter();
+}
+
+function startEdit(m, lbl, editBtn){
+  const orig = m.name;
+  const inp = document.createElement('input'); inp.className='medit'; inp.value=orig;
+  lbl.replaceWith(inp); editBtn.style.display='none'; inp.focus(); inp.select();
+  function done(){ const v=inp.value.trim()||orig; m.name=v; lbl.textContent=v; inp.replaceWith(lbl); editBtn.style.display=''; }
+  inp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); done(); } if(e.key==='Escape'){ inp.value=orig; done(); } });
+  inp.addEventListener('blur', done);
+}
+
+function updateFooter(){
+  const c={a:0,b:0,f:0,m:0}; let total=0;
+  Object.values(assignments).forEach(function(a){ if(c[a.party]!==undefined){ c[a.party]++; total++; } });
+  ['a','b','f','m'].forEach(function(p){ document.getElementById('cnt-'+p).textContent=c[p]; });
+  const n=MINISTRIES.length;
+  document.getElementById('pfill').style.width=(total/n*100)+'%';
+  const lab=document.getElementById('plabel');
+  lab.innerHTML = total===n ? 'Alle '+n+' poster besat' : '<b>'+total+'</b> af '+n+' poster';
+}
+
+let pickerTarget = null;
+
+function ministryName(id){ const m = MINISTRIES.find(function(x){ return x.id===id; }); return m ? m.name : ''; }
+
+function buildPicker(){
+  const body = document.getElementById('pk-body');
+  body.innerHTML = '';
+  const current = pickerTarget ? assignments[pickerTarget] : null;
+  ['a','b','f','m'].forEach(function(party){
+    const sec = document.createElement('div'); sec.className = 'psec'; sec.dataset.party = party;
+    const head = document.createElement('div'); head.className = 'psec-head';
+    head.innerHTML = '<span class="pd pdot-'+party+'"></span><span class="pl">'+PARTIES[party].name+'</span>';
+    sec.appendChild(head);
+
+    const names = WRITEINS[party].map(function(n){ return {n:n, ext:true}; })
+      .concat(POLITICIANS[party].map(function(n){ return {n:n, ext:false}; }));
+
+    names.forEach(function(item){
+      const assigned = isAssigned(item.n, party);
+      const isHere = current && current.name===item.n && current.party===party;
+      const row = document.createElement('div');
+      row.className = 'prow' + (item.ext?' ext':'') + (assigned && !isHere ? ' taken' : '');
+      row.dataset.search = item.n.toLowerCase();
+      row.innerHTML = '<span class="pdc cdot-'+party+'"></span><span class="pname">'+item.n+'</span>' + (isMinister(item.n, party) ? STAR : '') +
+        (isHere ? '<span class="taken-lbl">valgt her</span>' : (assigned ? '<span class="taken-lbl">optaget</span>' : ''));
+      if(!assigned || isHere){
+        (function(nm, pt){ row.addEventListener('click', function(){ pickCandidate(nm, pt); }); })(item.n, party);
+      }
+      sec.appendChild(row);
+    });
+
+    const w = document.createElement('div'); w.className = 'pwrite';
+    const inp = document.createElement('input'); inp.type='text'; inp.placeholder='Skriv egen '+party.toUpperCase()+'-kandidat'; inp.maxLength=40;
+    const btn = document.createElement('button'); btn.textContent='Vælg';
+    (function(pt, input){
+      function go(){ const v = input.value.trim(); if(!v) return; if(!POLITICIANS[pt].concat(WRITEINS[pt]).some(function(x){ return x.toLowerCase()===v.toLowerCase(); })) WRITEINS[pt].unshift(v); pickCandidate(v, pt); }
+      btn.addEventListener('click', go);
+      input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); go(); } });
+    })(party, inp);
+    w.appendChild(inp); w.appendChild(btn);
+    sec.appendChild(w);
+
+    body.appendChild(sec);
+  });
+  const empty = document.createElement('div'); empty.className='picker-empty'; empty.id='pk-empty'; empty.textContent='Ingen kandidater matcher søgningen';
+  body.appendChild(empty);
+}
+
+function openPicker(mid){
+  pickerTarget = mid;
+  document.getElementById('picker-title').textContent = ministryName(mid);
+  document.getElementById('pk-search').value = '';
+  buildPicker();
+  filterPicker();
+  document.getElementById('picker').classList.add('on');
+  document.getElementById('picker').setAttribute('aria-hidden','false');
+}
+
+function closePicker(){
+  document.getElementById('picker').classList.remove('on');
+  document.getElementById('picker').setAttribute('aria-hidden','true');
+  pickerTarget = null;
+}
+
+function pickCandidate(name, party){
+  if(pickerTarget){ assignments[pickerTarget] = { name:name, party:party }; }
+  closePicker();
+  refresh();
+}
+
+function filterPicker(){
+  const q = document.getElementById('pk-search').value.trim().toLowerCase();
+  let any = false;
+  document.querySelectorAll('#pk-body .psec').forEach(function(sec){
+    let vis = 0;
+    sec.querySelectorAll('.prow').forEach(function(r){ const ok = !q || r.dataset.search.indexOf(q)!==-1; r.classList.toggle('gone', !ok); if(ok) vis++; });
+    const pwrite = sec.querySelector('.pwrite');
+    if(pwrite) pwrite.style.display = q ? 'none' : 'flex';
+    sec.classList.toggle('hide', q && vis===0);
+    if(vis>0) any = true;
+  });
+  document.getElementById('pk-empty').style.display = (q && !any) ? 'block' : 'none';
+}
+
+function refresh(){ renderChips(); renderMinistries(); }
+function toggleIntro(){ document.getElementById('intro').classList.toggle('hide'); }
+function clearAll(){ if(!confirm('Ryd alle dine udnævnelser?')) return; Object.keys(assignments).forEach(function(k){ delete assignments[k]; }); refresh(); }
+
+function slug(s){ return s.toLowerCase().replace(/æ/g,'ae').replace(/ø/g,'oe').replace(/å/g,'aa').replace(/[\u2019''`]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+function titleText(){ return genitive(document.getElementById('nameInput').value) + ' regeringen 2026'; }
+
+function exportText(){
+  const lines=[titleText(), '─'.repeat(46), ''];
+  MINISTRIES.forEach(function(m){ const a=assignments[m.id]; lines.push(m.name); lines.push('   '+(a? a.name+'  ('+a.party.toUpperCase()+')' : '[ikke besat]')); lines.push(''); });
+  lines.push('─'.repeat(46)); lines.push('Debattens minister-quiz · send til vikj@dr.dk · 25 kr.');
+  const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob); const el=document.createElement('a'); el.href=url; el.download=(slug(titleText())||'mit-bud')+'.txt'; el.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); },2000);
+}
+
+function exportPhoto(){
+  const overlay=document.getElementById('overlay'); overlay.classList.add('on');
+  const pc={a:0,b:0,f:0,m:0}; Object.values(assignments).forEach(function(a){ if(pc[a.party]!==undefined) pc[a.party]++; });
+  const col={a:'#BC1B2E',b:'#9B3C84',f:'#C6562A',m:'#5E4A97'};
+  const pname={a:'Socialdemokratiet',b:'Radikale',f:'SF',m:'Moderaterne'};
+  const dateStr=new Date().toLocaleDateString('da-DK',{day:'numeric',month:'long',year:'numeric'});
+  const half=Math.ceil(MINISTRIES.length/2); const cols=[MINISTRIES.slice(0,half),MINISTRIES.slice(half)];
+  function colHtml(list){ return list.map(function(m){ const a=assignments[m.id]; return '<div class="po-row"><span class="po-mname">'+m.name+'</span>'+(a?'<div class="po-minister"><span class="po-md" style="background:'+col[a.party]+'"></span><span class="po-mn">'+a.name+(isMinister(a.name,a.party)?' <span class="po-star">★</span>':'')+'</span></div>':'<span class="po-empty">– ikke besat</span>')+'</div>'; }).join(''); }
+  const tt=titleText(); const idx=tt.lastIndexOf('regeringen 2026'); const head=tt.slice(0,idx);
+  document.getElementById('poster').innerHTML =
+    '<div class="po-pad">'+
+      '<div class="po-kicker">Debatten · DR1 – Minister-quiz</div>'+
+      '<div class="po-titlerow"><div class="po-title">'+head+'<span class="it">regeringen 2026</span></div><div class="po-date">'+dateStr+'</div></div>'+
+      '<div class="po-pills">'+Object.keys(pname).map(function(k){ return '<div class="po-pill"><span class="pd" style="background:'+col[k]+'"></span><span class="pnm">'+pname[k]+'</span><span class="pvl">'+pc[k]+'</span></div>'; }).join('')+'</div>'+
+      '<div class="po-body"><div>'+colHtml(cols[0])+'</div><div>'+colHtml(cols[1])+'</div></div>'+
+      '<div class="po-foot"><span class="po-fl">'+tt+'</span><span class="po-fr">Send til vikj@dr.dk · 25 kr.</span></div>'+
+    '</div>';
+  requestAnimationFrame(function(){ setTimeout(function(){
+    html2canvas(document.getElementById('poster'),{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#FCFBF8',logging:false,width:940,windowWidth:940})
+    .then(function(canvas){ overlay.classList.remove('on'); canvas.toBlob(function(blob){ const url=URL.createObjectURL(blob); const el=document.createElement('a'); el.href=url; el.download=(slug(tt)||'mit-bud')+'.png'; el.click(); setTimeout(function(){ URL.revokeObjectURL(url); },3000); },'image/png'); })
+    .catch(function(){ overlay.classList.remove('on'); alert('Kunne ikke generere billedet. Prøv igen.'); });
+  },180); });
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('on', t.dataset.page===id); });
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.toggle('on', p.id==='page-'+id); });
+  if(id==='bets') renderBets();
+}
+
+// ═══════════════════════════════════════════════════════
+// BETTING – SHARED PERSISTENT STORAGE
+// ═══════════════════════════════════════════════════════
+const BETS_KEY = 'debatten_bets_v2';
+
+// ── Supabase config ───────────────────────────────────────────────────────────
+const SB_URL = 'https://zxrsflektuxjeqypuogc.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4cnNmbGVrdHV4amVxeXB1b2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzODgwNDcsImV4cCI6MjA5NTk2NDA0N30.6n3sqKnrMYzg6_JglOmfPN8vvu1GCfu_15YrHldkyic';
+
+// GET headers – no Content-Type so browser skips preflight on simple requests
+const SB_GET = {
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY
+};
+
+// POST/PATCH headers
+const SB_POST = {
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'resolution=merge-duplicates,return=minimal'
+};
+
+async function saveBets(bets) {
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/bets', {
+      method: 'POST',
+      headers: SB_POST,
+      body: JSON.stringify({ id: BETS_KEY, data: bets, updated_at: new Date().toISOString() })
+    });
+    if(!r.ok) throw new Error(await r.text());
+  } catch(e) {
+    console.error('saveBets error', e);
+  }
+}
+
+async function loadBets() {
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/bets?id=eq.' + BETS_KEY + '&select=data', {
+      headers: SB_GET
+    });
+    if(!r.ok) throw new Error(await r.text());
+    const rows = await r.json();
+    if(rows.length === 0) return [];
+    return rows[0].data || [];
+  } catch(e) {
+    console.error('loadBets error', e);
+    return [];
+  }
+}
+
+const ADMIN_HASH = 'vikj2026';
+const BANS_KEY   = 'dkpol_banned_emails_v1';
+let isAdmin = false;
+
+function toggleAdmin() {
+  const toggle = document.getElementById('admin-toggle');
+  const inner  = document.getElementById('admin-inner');
+  const open = !inner.classList.contains('on');
+  inner.classList.toggle('on', open);
+  toggle.classList.toggle('open', open);
+}
+
+function checkAdmin() {
+  const pw = document.getElementById('admin-pw').value;
+  const st = document.getElementById('admin-status');
+  if(pw === ADMIN_HASH) {
+    isAdmin = true;
+    st.textContent = '✓ Logget ind som admin';
+    st.style.color = 'var(--win-ink)';
+    document.getElementById('admin-ban-section').style.display = '';
+    renderBets();
+    renderBanList();
+  } else {
+    st.textContent = 'Forkert kode';
+    st.style.color = 'var(--loss-ink)';
+  }
+}
+
+async function loadBans() {
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/bets?id=eq.' + BANS_KEY + '&select=data', { headers: SB_GET });
+    if(!r.ok) return [];
+    const rows = await r.json();
+    return rows.length ? (rows[0].data || []) : [];
+  } catch(e) { return []; }
+}
+
+async function saveBans(list) {
+  try {
+    await fetch(SB_URL + '/rest/v1/bets', {
+      method: 'POST', headers: SB_POST,
+      body: JSON.stringify({ id: BANS_KEY, data: list, updated_at: new Date().toISOString() })
+    });
+  } catch(e) {}
+}
+
+async function renderBanList() {
+  const bans = await loadBans();
+  const el = document.getElementById('ban-list');
+  if(!el) return;
+  if(!bans.length) { el.innerHTML = '<span style="font-size:12px;color:var(--faint);font-style:italic;">Ingen bannede endnu</span>'; return; }
+  el.innerHTML = bans.map(function(email) {
+    return '<div style="display:flex;align-items:center;gap:7px;font-size:12.5px;">' +
+      '<span style="flex:1;color:var(--ink-2);">'+email+'</span>' +
+      '<button onclick="removeBan(\''+email+'\')" style="background:none;border:none;cursor:pointer;color:var(--faint);font-size:14px;padding:0 2px;" title="Fjern ban">×</button>' +
+      '</div>';
+  }).join('');
+}
+
+async function addBan() {
+  const input = document.getElementById('ban-input');
+  const email = input.value.trim().toLowerCase();
+  const st = document.getElementById('ban-status');
+  if(!email || !email.includes('@')) { st.textContent = 'Ugyldig email'; st.style.color = 'var(--loss-ink)'; return; }
+  const bans = await loadBans();
+  if(bans.includes(email)) { st.textContent = 'Allerede bannet'; st.style.color = 'var(--loss-ink)'; return; }
+  bans.push(email);
+  await saveBans(bans);
+  input.value = '';
+  st.textContent = email + ' er nu bannet';
+  st.style.color = 'var(--win-ink)';
+  setTimeout(function(){ st.textContent = ''; }, 3000);
+  renderBanList();
+  // If this person is currently logged in via Supabase, sign them out server-side
+  // (best-effort — they'll be blocked on next login attempt)
+}
+
+async function removeBan(email) {
+  const bans = await loadBans();
+  const updated = bans.filter(function(e){ return e !== email; });
+  await saveBans(updated);
+  renderBanList();
+}
+
+// ── Storage with in-memory fallback ──────────────────────────────────────────
+
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('da-DK', { day:'numeric', month:'short' }) + ' · ' +
+         d.toLocaleTimeString('da-DK', { hour:'2-digit', minute:'2-digit' });
+}
+
+async function postBet() {
+  if(!currentUser) { showAuthWall(); return; }
+  const claim     = document.getElementById('bet-claim').value.trim();
+  const stake     = document.getElementById('bet-stake').value.trim();
+  const maxRaw    = document.getElementById('bet-max').value.trim();
+  const challenge = document.getElementById('bet-challenge').value.trim().toLowerCase();
+  // If challenge set and no explicit max, default to 1
+  const maxTakers = maxRaw ? Math.max(1, parseInt(maxRaw, 10)) : (challenge ? 1 : null);
+  if(!claim) return;
+  const btn = document.getElementById('bet-post-btn');
+  btn.disabled = true;
+  const bets = await loadBets();
+  bets.unshift({
+    id: Date.now() + Math.random().toString(36).slice(2,6),
+    claim,
+    author: currentUser.displayName,
+    authorEmail: currentUser.email,
+    stake, maxTakers,
+    challengeEmail: challenge || null,
+    ts: Date.now(),
+    takers: [],
+    settled: null
+  });
+  await saveBets(bets);
+  document.getElementById('bet-claim').value = '';
+  document.getElementById('bet-stake').value = '';
+  document.getElementById('bet-max').value = '';
+  document.getElementById('bet-challenge').value = '';
+  btn.disabled = false;
+
+  // If challenge email set, open prefilled mailto so the invite lands in their inbox
+  if(challenge) {
+    const subject = encodeURIComponent(currentUser.displayName + ' udfordrer dig på DKPOL bets');
+    const body = encodeURIComponent(
+      currentUser.displayName + ' har udfordret dig:\n\n"' + claim + '"\n' +
+      (stake ? 'Indsats: ' + stake + '\n' : '') +
+      '\nLog ind og tag imod på:\n' + window.location.href
+    );
+    window.open('mailto:' + challenge + '?subject=' + subject + '&body=' + body);
+  }
+
+  renderBets();
+}
+
+async function takeBet(betId) {
+  if(!currentUser) return;
+  const bets = await loadBets();
+  const bet = bets.find(function(b){ return b.id===betId; });
+  if(!bet || bet.settled) return;
+  // If challenge set, only that email can take
+  if(bet.challengeEmail && bet.challengeEmail !== currentUser.email) return;
+  const takersNorm = (bet.takers||[]).map(function(t){ return typeof t==='object' ? t : {name:t, email:''}; });
+  const takerEmails = takersNorm.map(function(t){ return t.email; });
+  if(takerEmails.includes(currentUser.email)) return;
+  if(bet.authorEmail === currentUser.email) return;
+  if(bet.maxTakers && takersNorm.length >= bet.maxTakers) return;
+  bet.takers.push({ name: currentUser.displayName, email: currentUser.email });
+  await saveBets(bets);
+  renderBets();
+}
+
+async function settleBet(betId, outcome) {
+  if(!isAdmin) return;
+  const bets = await loadBets();
+  const bet = bets.find(function(b){ return b.id===betId; });
+  if(!bet) return;
+  bet.settled = outcome;
+  await saveBets(bets);
+  renderBets();
+}
+
+async function unsettleBet(betId) {
+  if(!isAdmin) return;
+  const bets = await loadBets();
+  const bet = bets.find(function(b){ return b.id===betId; });
+  if(!bet) return;
+  bet.settled = null;
+  await saveBets(bets);
+  renderBets();
+}
+
+async function deleteBet(betId) {
+  if(!isAdmin) return;
+  const bets = await loadBets();
+  const idx = bets.findIndex(function(b){ return b.id===betId; });
+  if(idx===-1) return;
+  bets.splice(idx,1);
+  await saveBets(bets);
+  renderBets();
+}
+
+function buildLeaderboard(bets) {
+  const scores = {};  // email -> {name, score}
+  bets.forEach(function(bet) {
+    if(!bet.settled || bet.settled==='void') return;
+    const pScore = bet.settled==='win' ? 1 : -1;
+    const authorKey = bet.authorEmail || bet.author;
+    if(!scores[authorKey]) scores[authorKey] = { name: bet.author, score: 0 };
+    scores[authorKey].score += pScore;
+
+    const takersNorm = (bet.takers||[]).map(function(t){ return typeof t==='object' ? t : {name:t, email:t}; });
+    takersNorm.forEach(function(t){
+      const key = t.email || t.name;
+      if(!scores[key]) scores[key] = { name: t.name, score: 0 };
+      scores[key].score += -pScore;
+    });
+  });
+  return Object.values(scores).sort(function(a,b){ return b.score - a.score; });
+}
+
+async function renderBets() {
+  const list = document.getElementById('bet-list');
+  const lb   = document.getElementById('leaderboard');
+  const stats = document.getElementById('bet-stats');
+  // Show/hide post form based on auth state
+  const postForm = document.getElementById('bet-post-form');
+  const loginPrompt = document.getElementById('bet-login-prompt');
+  if(postForm && loginPrompt) {
+    postForm.style.display = currentUser ? '' : 'none';
+    loginPrompt.style.display = currentUser ? 'none' : '';
+  }
+
+  if(!list) return;
+
+  list.innerHTML = '<div style="color:var(--faint);font-size:13px;padding:20px 0">Henter væddemål…</div>';
+
+  const bets = await loadBets();
+
+  // Stats
+  const total    = bets.length;
+  const settled  = bets.filter(function(b){ return b.settled&&b.settled!=='void'; }).length;
+  const open_c   = bets.filter(function(b){ return !b.settled; }).length;
+  stats.innerHTML =
+    '<div class="stat-box"><div class="stat-n">'+total+'</div><div class="stat-l">Væddemål</div></div>' +
+    '<div class="stat-box"><div class="stat-n">'+open_c+'</div><div class="stat-l">Åbne</div></div>' +
+    '<div class="stat-box"><div class="stat-n">'+settled+'</div><div class="stat-l">Afgjorte</div></div>';
+
+  // Leaderboard
+  const lbData = buildLeaderboard(bets);
+  if(lbData.length === 0) {
+    lb.innerHTML = '<div class="lb-empty">Ingen afgjorte endnu</div>';
+  } else {
+    lb.innerHTML = lbData.map(function(row, i) {
+      const sc = row.score;
+      const cls = sc>0?'pos':sc<0?'neg':'zero';
+      return '<div class="lb-row">' +
+        '<span class="lb-rank">'+(i+1)+'</span>' +
+        '<span class="lb-name">'+row.name+'</span>' +
+        '<span class="lb-score '+cls+'">'+(sc>0?'+':'')+sc+'</span>' +
+        '</div>';
+    }).join('');
+  }
+
+  // Bet cards
+  if(bets.length === 0) {
+    list.innerHTML = '<div class="bet-empty">Ingen væddemål endnu – vær den første til at slå et op</div>';
+    return;
+  }
+
+  const myEmail = currentUser ? currentUser.email : '';
+  const myName  = currentUser ? currentUser.displayName : '';
+
+  list.innerHTML = '';
+  bets.forEach(function(bet) {
+    const card = document.createElement('div');
+    const s = bet.settled;
+    card.className = 'bet-card' + (s==='win'?' settled-win':s==='loss'?' settled-loss':s==='void'?' settled-void':'');
+
+    const claimCls = s==='win'?' settled-win-txt':s==='loss'?' settled-loss-txt':s==='void'?' settled-void-txt':'';
+
+    // Normalise takers to objects
+    const takersNorm = (bet.takers||[]).map(function(t){ return typeof t==='object' ? t : {name:t, email:''}; });
+    const takerEmails = takersNorm.map(function(t){ return t.email; });
+    const isTaker      = myEmail && takerEmails.includes(myEmail);
+    const isAuthor     = myEmail && bet.authorEmail === myEmail;
+    const isFull       = bet.maxTakers && takersNorm.length >= bet.maxTakers;
+    const isChallenged = bet.challengeEmail && myEmail && bet.challengeEmail === myEmail;
+    const isLockedOut  = bet.challengeEmail && myEmail && bet.challengeEmail !== myEmail && !isAuthor;
+    const canTake      = currentUser && !s && !isTaker && !isAuthor && !isFull && !isLockedOut;
+
+    const takersHtml = takersNorm.length
+      ? takersNorm.map(function(t){
+          return '<span class="taker-chip">'+t.name+' imod'+(t.email?'<span class="bet-author-email">'+t.email+'</span>':'')+'</span>';
+        }).join('')
+      : '<span class="no-takers">Ingen har taget imod endnu</span>';
+
+    // Challenge badge — only shown while no one has taken yet
+    const challengeHtml = (bet.challengeEmail && !takersNorm.length)
+      ? '<div class="challenge-badge">⚔ Udfordrer <span class="challenge-email">'+bet.challengeEmail+'</span></div>'
+      : '';
+
+    const stakeHtml = bet.stake
+      ? '<div class="bet-stake-row"><span class="bet-stake-chip">🤝 '+bet.stake+'</span>'+(bet.maxTakers && !bet.challengeEmail?'<span class="bet-max-chip">Maks '+bet.maxTakers+' imod</span>':'')+'</div>'
+      : (bet.maxTakers && !bet.challengeEmail ? '<div class="bet-stake-row"><span class="bet-max-chip">Maks '+bet.maxTakers+' imod</span></div>' : '');
+
+    // Verdict story helpers – taker names
+    const takerNames = takersNorm.map(function(t){ return t.name; });
+
+    let footHtml = '';
+    if(s) {
+      if(s === 'void') {
+        footHtml =
+          '<div class="verdict void">' +
+            '<span class="verdict-stamp void">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>' +
+              'Annulleret' +
+            '</span>' +
+            '<div class="verdict-admin">';
+      } else {
+        const winners = s==='win' ? [bet.author]  : takerNames;
+        const losers  = s==='win' ? takerNames     : [bet.author];
+        const winnersStr = winners.length ? winners.join(', ') : '–';
+        const losersStr  = losers.length  ? losers.join(' og ') : '–';
+        const stakeStr   = bet.stake || null;
+
+        let story = '';
+        if(winners.length && losers.length) {
+          story = '<span class="winner">'+winnersStr+'</span> vandt';
+          if(stakeStr) story += ' – <span class="stake-owed'+(s==='loss'?' loss':'')+'">'+losersStr+' skylder '+winnersStr+': '+stakeStr+'</span>';
+          else story += ' over <span class="loser">'+losersStr+'</span>';
+        } else if(winners.length) {
+          story = '<span class="winner">'+winnersStr+'</span> vandt – ingen havde taget imod';
+        } else {
+          story = 'Afgjort';
+        }
+
+        const icon = s==='win'
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>';
+        const stampTxt = s==='win' ? 'Holdt ✓' : 'Holdt ikke ✗';
+
+        footHtml =
+          '<div class="verdict '+s+'">' +
+            '<span class="verdict-stamp '+s+'">'+icon+stampTxt+'</span>' +
+            '<div class="verdict-story">'+story+'</div>' +
+            '<div class="verdict-admin">';
+      }
+
+      if(isAdmin) {
+        footHtml += '<button class="unsettle-btn" onclick="unsettleBet(\''+bet.id+'\')">Fortryd</button>' +
+                    '<button class="settle-btn void" onclick="deleteBet(\''+bet.id+'\')" style="font-size:11px">Slet</button>';
+      }
+      footHtml += '</div></div>';
+
+    } else {
+      const btnLabel = !currentUser ? 'Log ind for at deltage'
+        : isTaker     ? 'Du er imod'
+        : isAuthor    ? 'Dit væddemål'
+        : isFull      ? 'Fuldt'
+        : isLockedOut ? 'Kun for udfordret'
+        : isChallenged? 'Acceptér udfordring'
+        : 'Tag imod';
+      const btnDisabled = (isTaker || isAuthor || isFull || isLockedOut) ? ' taken' : '';
+      const btnOnclick = !currentUser ? 'showAuthWall()' : canTake ? 'takeBet(\''+bet.id+'\')' : '';
+      footHtml = '<div class="bet-foot"><button class="take-btn'+btnDisabled+'" '+(btnOnclick?'onclick="'+btnOnclick+'"':'')+'>'+btnLabel+'</button><span class="take-count">'+takersNorm.length+(bet.maxTakers?' / '+bet.maxTakers:'')+'  imod</span>';
+      if(isAdmin) {
+        footHtml += '<div class="admin-btns"><button class="settle-btn win" onclick="settleBet(\''+bet.id+'\',\'win\')">Holdt</button><button class="settle-btn loss" onclick="settleBet(\''+bet.id+'\',\'loss\')">Holdt ikke</button><button class="settle-btn void" onclick="settleBet(\''+bet.id+'\',\'void\')">Annuller</button></div>';
+      }
+      footHtml += '</div>';
+    }
+
+    card.innerHTML =
+      '<div class="bet-body">' +
+        '<div class="bet-meta">' +
+          '<span class="bet-author">'+bet.author+'</span>' +
+          (bet.authorEmail ? '<span class="bet-author-email">'+bet.authorEmail+'</span>' : '') +
+          '<span class="bet-ts">'+fmtTime(bet.ts)+'</span>' +
+        '</div>' +
+        '<div class="bet-claim'+claimCls+'">'+bet.claim+'</div>' +
+        challengeHtml +
+        stakeHtml +
+        '<div class="bet-takers">'+takersHtml+'</div>' +
+      '</div>' +
+      footHtml;
+
+    list.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// AUTH – Supabase Magic Link
+// ═══════════════════════════════════════════════════════
+const sbClient = supabase.createClient(SB_URL, SB_KEY);
+let currentUser = null; // { email, displayName, id }
+
+function showStep(step) {
+  document.querySelectorAll('.auth-step').forEach(function(el){ el.classList.remove('on'); });
+  document.getElementById('auth-step-'+step).classList.add('on');
+}
+
+function setAuthMsg(id, txt, type) {
+  const el = document.getElementById(id);
+  el.textContent = txt;
+  el.className = 'auth-msg ' + (type||'');
+}
+
+async function sendMagicLink() {
+  const email = document.getElementById('auth-email-input').value.trim().toLowerCase();
+  if(!email || !email.includes('@')) { setAuthMsg('auth-msg','Skriv en gyldig email','err'); return; }
+  const btn = document.getElementById('auth-send-btn');
+  btn.disabled = true;
+  setAuthMsg('auth-msg','Tjekker…','');
+
+  // Check ban list
+  const bans = await loadBans();
+  if(bans.includes(email)) {
+    setAuthMsg('auth-msg', 'Denne email har ikke adgang til siden.', 'err');
+    btn.disabled = false;
+    return;
+  }
+
+  setAuthMsg('auth-msg','Sender…','');
+  const { error } = await sbClient.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: true }
+  });
+  if(error) {
+    setAuthMsg('auth-msg', error.message, 'err');
+    btn.disabled = false;
+  } else {
+    document.getElementById('auth-sent-email').textContent = email;
+    showStep('sent');
+    setTimeout(function(){ document.getElementById('auth-otp-input').focus(); }, 100);
+  }
+}
+
+document.getElementById('auth-email-input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') sendMagicLink();
+});
+
+async function verifyOtp() {
+  const email = document.getElementById('auth-email-input').value.trim().toLowerCase();
+  const token = document.getElementById('auth-otp-input').value.trim();
+  if(!token || token.length < 6) { setAuthMsg('auth-otp-msg','Skriv den 6-cifrede kode','err'); return; }
+  const btn = document.getElementById('auth-otp-btn');
+  btn.disabled = true;
+  setAuthMsg('auth-otp-msg','Tjekker…','');
+  const { data, error } = await sbClient.auth.verifyOtp({ email, token, type: 'email' });
+  if(error) {
+    setAuthMsg('auth-otp-msg', 'Forkert eller udløbet kode. Prøv igen.', 'err');
+    btn.disabled = false;
+  } else {
+    // onAuthStateChange will handle the rest
+  }
+}
+document.getElementById('auth-name-input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') saveDisplayName();
+});
+document.getElementById('auth-otp-input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') verifyOtp();
+});
+
+async function saveDisplayName() {
+  const name = document.getElementById('auth-name-input').value.trim();
+  if(!name) { setAuthMsg('auth-name-msg','Skriv et navn','err'); return; }
+  const btn = document.getElementById('auth-name-btn'); btn.disabled = true;
+  const { error } = await sbClient.auth.updateUser({ data: { display_name: name } });
+  if(error) { setAuthMsg('auth-name-msg', error.message, 'err'); btn.disabled = false; return; }
+  currentUser.displayName = name;
+  onLoggedIn();
+}
+
+function onLoggedIn() {
+  document.getElementById('auth-wall').classList.add('gone');
+  document.getElementById('user-bar-loggedin').style.display = '';
+  document.getElementById('user-bar-loggedout').style.display = 'none';
+  document.getElementById('user-displayname').textContent = currentUser.displayName;
+  document.getElementById('user-email-display').textContent = currentUser.email;
+  document.getElementById('user-avatar').textContent = currentUser.displayName.charAt(0).toUpperCase();
+  document.getElementById('nameInput').value = currentUser.displayName;
+  renderBets();
+}
+
+function showAuthWall() {
+  document.getElementById('auth-wall').classList.remove('gone');
+  showStep('email');
+}
+
+async function signOut() {
+  await sbClient.auth.signOut();
+  currentUser = null;
+  document.getElementById('user-bar-loggedin').style.display = 'none';
+  document.getElementById('user-bar-loggedout').style.display = '';
+  document.getElementById('nameInput').value = '';
+  renderBets();
+}
+
+async function initAuth() {
+  // Handle magic link token in URL hash (when user clicks link in email)
+  const { data: { session }, error } = await sbClient.auth.getSession();
+
+  if(session && session.user) {
+    const bans = await loadBans();
+    if(bans.includes(session.user.email)) {
+      await sbClient.auth.signOut();
+      document.getElementById('auth-wall').classList.remove('gone');
+      showStep('email');
+      setAuthMsg('auth-msg', 'Denne email har ikke adgang til siden.', 'err');
+      return;
+    }
+    const meta = session.user.user_metadata || {};
+    const displayName = meta.display_name || '';
+    currentUser = { email: session.user.email, displayName, id: session.user.id };
+    if(!displayName) {
+      // First login – need to pick a display name
+      document.getElementById('auth-wall').classList.remove('gone');
+      showStep('name');
+    } else {
+      onLoggedIn();
+    }
+  } else {
+    // No session – user can browse but not participate
+    // Auth wall stays hidden; login button in bets sidebar will trigger it
+  }
+
+  // Listen for auth changes (handles magic link redirect)
+  sbClient.auth.onAuthStateChange(async function(event, session) {
+    if((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+      const meta = session.user.user_metadata || {};
+      const displayName = meta.display_name || '';
+      currentUser = { email: session.user.email, displayName, id: session.user.id };
+      if(!displayName) {
+        document.getElementById('auth-wall').classList.remove('gone');
+        showStep('name');
+      } else {
+        onLoggedIn();
+      }
+    } else if(event === 'SIGNED_OUT') {
+      currentUser = null;
+    }
+  });
+}
+
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closePicker(); });
+
+// ── Theme toggle ──────────────────────────────────────────────────────────────
+function applyTheme(theme) {
+  if(theme === 'dark') document.documentElement.setAttribute('data-theme','dark');
+  else document.documentElement.removeAttribute('data-theme');
+}
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  applyTheme(next);
+  try { localStorage.setItem('dkpol-theme', next); } catch(e){}
+}
+(function initTheme(){
+  let saved = null;
+  try { saved = localStorage.getItem('dkpol-theme'); } catch(e){}
+  if(saved) applyTheme(saved);
+  else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme('dark');
+})();
+
+// ── Bets intro toggle ─────────────────────────────────────────────────────────
+function toggleBetsIntro() {
+  const intro = document.getElementById('bets-intro');
+  const showBtn = document.getElementById('bets-show-intro');
+  const hidden = intro.classList.toggle('hide');
+  showBtn.classList.toggle('show', hidden);
+  try { localStorage.setItem('dkpol-bets-intro', hidden ? 'hidden' : 'shown'); } catch(e){}
+}
+(function initBetsIntro(){
+  let saved = null;
+  try { saved = localStorage.getItem('dkpol-bets-intro'); } catch(e){}
+  if(saved === 'hidden') {
+    document.getElementById('bets-intro').classList.add('hide');
+    document.getElementById('bets-show-intro').classList.add('show');
+  }
+})();
+
+updateTitle();
+refresh();
+initAuth();
+</script>
+</body>
+</html>

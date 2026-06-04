@@ -1314,7 +1314,7 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
       <!-- Search -->
       <div class="ga-search-bar">
         <input class="ga-search-input" id="ga-search-q" type="text" placeholder='fx "kvindelige klimaeksperter" eller "Jakob Ellemann"' onkeydown="if(event.key==='Enter') gaSearch()">
-        <button class="ga-search-btn" id="ga-search-btn" onclick="gaSearch()">Søg med Claude</button>
+        <button class="ga-search-btn" id="ga-search-btn" onclick="gaSearch()">Søg</button>
       </div>
       <div id="ga-results"></div>
 
@@ -2771,49 +2771,135 @@ function gaSaveProfile() {
   setTimeout(function(){ btn.textContent = 'Gem'; }, 1500);
 }
 
-// ── Claude search ─────────────────────────────────────
-async function gaSearch() {
-  var q = document.getElementById('ga-search-q').value.trim();
-  var apiKey = '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';
-  if (!q) return;
-  var btn = document.getElementById('ga-search-btn');
-  btn.disabled = true; btn.textContent = 'Søger…';
+// ── Local search ──────────────────────────────────────
+function gaSearch() {
+  var rawQ = document.getElementById('ga-search-q').value.trim();
+  var el = document.getElementById('ga-results');
+  if (!rawQ) { el.innerHTML = ''; return; }
+
   var eps = gaLoadEpisodes();
   var guests = gaLoadGuests();
-  var dataset = eps.map(function(ep) {
-    return { date: ep.date, title: ep.title, keywords: ep.keywords, description: ep.desc||'',
-      guests: (ep.guests||[]).map(function(ge) {
-        var g = guests.find(function(x){ return x.id===ge.guestId; })||{};
-        return { name: g.name, title: ge.role||g.defaultTitle, gender: g.gender, category: ge.category, party: ge.party||'', havkatsfaktor: ge.havkat!=null?ge.havkat:null };
-      })
-    };
+
+  // ── Query parsing ──────────────────────────────────
+  var q = rawQ.toLowerCase();
+
+  // Havkatsfaktor threshold detection
+  var hkMin = null;
+  if (/h[øo]j\s+havkat/.test(q) || /havkat[^\d]*h[øo]j/.test(q)) hkMin = 7;
+  var hkExact = q.match(/havkat(?:sfaktor)?\s*[:\-≥>=]\s*(\d+)/);
+  if (hkExact) hkMin = parseInt(hkExact[1], 10);
+  var hkNum = q.match(/\bhavkat(?:sfaktor)?\s+(\d+)/);
+  if (hkNum) hkMin = parseInt(hkNum[1], 10);
+
+  // Gender normalisation: "kvinder/kvindelig" → match gender "kvinde"
+  var genderFilter = null;
+  if (/\bkvind/.test(q)) genderFilter = 'kvinde';
+  else if (/\bmænd|\bmand\b/.test(q)) genderFilter = 'mand';
+
+  // Strip special-cased tokens so they don't muddy text matching
+  var textQ = q
+    .replace(/h[øo]j\s+havkat\w*/g, '')
+    .replace(/havkat\w*\s*[:\-≥>=]\s*\d+/g, '')
+    .replace(/havkat\w*\s+\d+/g, '')
+    .replace(/\bkvinder\b|\bkvindelig\b|\bkvinde\b/g, '')
+    .replace(/\bmænd\b|\bmand\b/g, '')
+    .trim();
+
+  // Tokenise remaining query (skip short stop-words)
+  var STOP = new Set(['og','i','på','med','af','en','et','er','som','til','fra','de','den','det','at','for','om','men','har','var','ikke']);
+  var tokens = textQ.split(/\s+/).map(function(t){ return t.replace(/[^a-zæøå0-9]/g,''); }).filter(function(t){ return t.length > 1 && !STOP.has(t); });
+
+  // ── Scoring per guest ──────────────────────────────
+  // Build a map: guestId → { guest, score, matchedFields[], matchedEps[] }
+  var guestScores = {};
+
+  guests.forEach(function(g) {
+    guestScores[g.id] = { guest: g, score: 0, fields: [], eps: [] };
   });
-  var systemPrompt = 'Du er et søgesystem for et gæstarkiv til TV-programmet "Debatten" på DR2. Du modtager et JSON-datasæt med udsendelser og gæster. Returner et JSON-array med de bedste matches. Hvert match har: "type" ("episode" eller "guest"), "label" (navn eller titel), "date" (dato, kun for episoder), "why" (kort dansk forklaring). Returner KUN valid JSON-array, intet andet.';
-  try {
-    var res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1024, system: systemPrompt,
-        messages: [{ role: 'user', content: 'Dataset:\n'+JSON.stringify(dataset)+'\n\nSøg: '+q }] })
+
+  eps.forEach(function(ep) {
+    var epFields = [
+      ep.title || '',
+      ep.desc  || '',
+      (ep.keywords||[]).join(' ')
+    ].join(' ').toLowerCase();
+
+    (ep.guests||[]).forEach(function(ge) {
+      var g = guests.find(function(x){ return x.id === ge.guestId; });
+      if (!g) return;
+      var entry = guestScores[g.id];
+
+      // Havkatsfaktor filter — skip if below threshold
+      var hk = ge.havkat != null ? ge.havkat : 5;
+      if (hkMin !== null && hk < hkMin) return;
+
+      // Gender filter
+      if (genderFilter && g.gender !== genderFilter) return;
+
+      // Build a combined text blob for this guest×episode pairing
+      var blob = [
+        g.name, g.defaultTitle||'', g.gender||'',
+        ge.role||'', ge.category||'', ge.party||'',
+        String(hk),
+        ep.title||'', ep.desc||'', (ep.keywords||[]).join(' ')
+      ].join(' ').toLowerCase();
+
+      var hitFields = [];
+      var score = 0;
+
+      // Hard filters already passed — credit them
+      if (hkMin !== null) { hitFields.push('havkatsfaktor '+hk); score += 2; }
+      if (genderFilter)   { hitFields.push(g.gender); score += 1; }
+
+      // Token matching
+      tokens.forEach(function(tok) {
+        if (blob.includes(tok)) {
+          score += 1;
+          // Label which field matched
+          if (g.name.toLowerCase().includes(tok))              hitFields.push('navn');
+          if ((g.defaultTitle||'').toLowerCase().includes(tok)||
+              (ge.role||'').toLowerCase().includes(tok))       hitFields.push('titel');
+          if ((ge.party||'').toLowerCase().includes(tok))      hitFields.push('parti');
+          if ((ge.category||'').toLowerCase().includes(tok))   hitFields.push('kategori');
+          if ((ep.title||'').toLowerCase().includes(tok))      hitFields.push('udsendelse');
+          if ((ep.desc||'').toLowerCase().includes(tok))       hitFields.push('beskrivelse');
+          if ((ep.keywords||[]).join(' ').toLowerCase().includes(tok)) hitFields.push('emner');
+        }
+      });
+
+      // If no tokens but filters matched, still count as a hit
+      if (score > 0 || (tokens.length === 0 && (hkMin !== null || genderFilter))) {
+        if (tokens.length === 0) score = Math.max(score, 1);
+        entry.score += score;
+        entry.fields = entry.fields.concat(hitFields);
+        entry.eps.push(ep);
+      }
     });
-    if (!res.ok) throw new Error('API-fejl: ' + res.status);
-    var data = await res.json();
-    var text = data.content[0].text.trim();
-    // Strip markdown code fences if present
-    text = text.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '');
-    var results;
-    try { results = JSON.parse(text); } catch(e) { throw new Error('Ugyldigt svar fra Claude'); }
-    var el = document.getElementById('ga-results');
-    if (!results||results.length===0) {
-      el.innerHTML = '<div class="ga-results-head">Ingen resultater for "'+gaEscHtml(q)+'"</div>';
-    } else {
-      el.innerHTML = '<div class="ga-results-head">'+results.length+' resultat'+(results.length===1?'':'er')+' for "'+gaEscHtml(q)+'"</div>'+
-        results.map(function(r){ return '<div class="ga-result-card"><h4>'+gaEscHtml(r.label||'')+'</h4>'+(r.date?'<div class="ga-result-meta">'+gaFmtDate(r.date)+'</div>':'')+'<div class="ga-result-why">'+gaEscHtml(r.why||'')+'</div></div>'; }).join('');
-    }
-  } catch(e) {
-    document.getElementById('ga-results').innerHTML = '<div style="color:var(--loss-ink);font-size:13px;padding:8px 0;">'+gaEscHtml(e.message)+'</div>';
+  });
+
+  // ── Collect and rank results ───────────────────────
+  var results = Object.values(guestScores)
+    .filter(function(e){ return e.score > 0; })
+    .sort(function(a, b){ return b.score - a.score; });
+
+  // ── Render ─────────────────────────────────────────
+  if (results.length === 0) {
+    el.innerHTML = '<div class="ga-results-head">Ingen resultater for “'+gaEscHtml(rawQ)+'”</div>';
+    return;
   }
-  btn.disabled = false; btn.textContent = 'Søg med Claude';
+
+  el.innerHTML = '<div class="ga-results-head">'+results.length+' resultat'+(results.length===1?'':'er')+' for “'+gaEscHtml(rawQ)+'”</div>'+
+    results.map(function(r) {
+      var uniqueFields = r.fields.filter(function(v,i,a){ return a.indexOf(v)===i; });
+      var why = uniqueFields.length ? 'Match på: ' + uniqueFields.join(', ') : 'Opfylder søgekriterier';
+      var epList = r.eps.slice(0,3).map(function(ep){ return gaFmtDate(ep.date)+(ep.title?' — '+ep.title:''); }).join('; ');
+      return '<div class="ga-result-card">'+
+        '<h4>'+gaEscHtml(r.guest.name)+'</h4>'+
+        (r.guest.defaultTitle?'<div class="ga-result-meta">'+gaEscHtml(r.guest.defaultTitle)+'</div>':'')+
+        (epList?'<div class="ga-result-meta">'+gaEscHtml(epList)+(r.eps.length>3?' …':'')+'</div>':'')+
+        '<div class="ga-result-why">'+gaEscHtml(why)+'</div>'+
+        '</div>';
+    }).join('');
 }
 </script>
 </body>

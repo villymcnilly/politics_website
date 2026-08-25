@@ -762,7 +762,8 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-search-btn:disabled { opacity: 0.4; cursor: default; }
 .ga-results { margin-bottom: 24px; }
 .ga-results-head { font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
-.ga-result-card { background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; margin-bottom: 8px; }
+.ga-result-card { background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.14s, box-shadow 0.14s; }
+.ga-result-card:hover { border-color: var(--line-2); box-shadow: var(--shadow-sm); }
 .ga-result-card h4 { font-family: 'Newsreader', serif; font-size: 16px; font-weight: 400; color: var(--ink); }
 .ga-result-meta { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
 .ga-result-why { font-size: 13px; color: var(--ink-2); line-height: 1.55; margin-top: 6px; }
@@ -885,9 +886,13 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-pc-field > span { font-size: 11.5px; color: var(--muted); font-weight: 500; }
 .ga-pcontact-input { font-family: inherit; font-size: 13px; color: var(--ink); padding: 7px 9px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--bg); outline: none; width: 100%; transition: border-color 0.15s; }
 .ga-pcontact-input:focus { border-color: var(--ink-2); }
-.ga-psource { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.ga-psource { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.ga-psource-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ga-psource-host { font-size: 10.5px; color: var(--faint); }
+.ga-result-badge { font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--muted); background: var(--hover); border: 1px solid var(--line-2); border-radius: 999px; padding: 2px 7px; margin-left: 8px; vertical-align: middle; }
+.ga-result-hk { font-size: 10.5px; font-weight: 600; color: var(--muted); margin-left: 8px; vertical-align: middle; }
 .ga-psource:last-child { border-bottom: none; }
-.ga-psource a { font-size: 12.5px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line-2); word-break: break-all; flex: 1; line-height: 1.45; }
+.ga-psource a { font-size: 13px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line-2); overflow-wrap: anywhere; line-height: 1.4; }
 .ga-psource a:hover { border-bottom-color: var(--ink); }
 .ga-psource-rm { background: none; border: none; color: var(--faint); font-size: 15px; line-height: 1; cursor: pointer; padding: 0 2px; flex-shrink: 0; }
 .ga-psource-rm:hover { color: var(--loss-ink); }
@@ -2751,6 +2756,19 @@ function gaToggleInArray(arr, value) {
   return arr;
 }
 
+// Sources were originally plain URL strings; they are now {url, title} so the
+// link can show the article's headline. Reading goes through this, so old and
+// new shapes both work without a destructive rewrite.
+function gaSource(entry) {
+  if (typeof entry === 'string') return { url: entry, title: '' };
+  return { url: (entry && entry.url) || '', title: (entry && entry.title) || '' };
+}
+
+function gaSourceLabel(entry) {
+  var src = gaSource(entry);
+  return src.title || src.url.replace(/^https?:\/\/(www\.)?/, '');
+}
+
 // Moves the old per-appearance 1–10 ratings onto the guest as a single 1–5
 // score (averaged across their appearances). Runs on load; idempotent, because
 // every guest ends up with an explicit havkat — a number or null — and only
@@ -2870,7 +2888,7 @@ async function gaExtractFromArticle() {
         gender: p.gender_guess === 'ukendt' ? 'andet' : p.gender_guess,
         category: p.category_guess === 'ukendt' ? 'ekspert' : p.category_guess,
         topics: p.topics || [], havkat: null, added: false,
-        sourceUrl: url,
+        sourceUrl: url, sourceTitle: data.articleTitle || '',
       };
     });
     if (gaExtractCandidates.length === 0) {
@@ -2967,8 +2985,11 @@ function gaAddExtractedGuest(i) {
   });
   if (!g.defaultTitle) g.defaultTitle = c.descriptor;
   if (g.havkat == null) g.havkat = c.havkat;
+  if (!g.category) g.category = c.category;
   g.sources = g.sources || [];
-  if (c.sourceUrl && g.sources.indexOf(c.sourceUrl) === -1) g.sources.push(c.sourceUrl);
+  if (c.sourceUrl && !g.sources.some(function(x){ return gaSource(x).url === c.sourceUrl; })) {
+    g.sources.push({ url: c.sourceUrl, title: c.sourceTitle || '' });
+  }
   gaSaveGuests(gaLoadGuests());
 
   c.added = true;
@@ -3486,29 +3507,71 @@ function gaRenderProfileSources(g) {
     el.innerHTML = '<div class="ga-pempty">Ingen artikellinks endnu</div>';
     return;
   }
-  el.innerHTML = sources.map(function(url, i) {
-    var label = url.replace(/^https?:\/\/(www\.)?/, '');
+  el.innerHTML = sources.map(function(entry, i) {
+    var src = gaSource(entry);
+    var host = src.url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
     return '<div class="ga-psource">' +
-      '<a href="' + gaEscHtml(url) + '" target="_blank" rel="noopener noreferrer">' + gaEscHtml(label) + '</a>' +
+      '<div class="ga-psource-main">' +
+        '<a href="' + gaEscHtml(src.url) + '" target="_blank" rel="noopener noreferrer">' +
+          gaEscHtml(gaSourceLabel(entry)) + '</a>' +
+        (src.title ? '<span class="ga-psource-host">' + gaEscHtml(host) + '</span>' : '') +
+      '</div>' +
       '<button class="ga-psource-rm" onclick="gaRemoveProfileSource(' + i + ')" title="Fjern link">×</button>' +
     '</div>';
   }).join('');
 }
 
-function gaAddProfileSource() {
+async function gaAddProfileSource() {
   if (!gaCurrentProfile) return;
   var input = document.getElementById('ga-psource-url');
   var url = input.value.trim();
   if (!url) return;
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
   var guests = gaLoadGuests();
   var g = guests.find(function(x){ return x.id===gaCurrentProfile; });
   if (!g) return;
   g.sources = g.sources || [];
-  if (g.sources.indexOf(url) === -1) g.sources.push(url);
+  if (g.sources.some(function(x){ return gaSource(x).url === url; })) { input.value = ''; return; }
+
+  // Save immediately with the URL as the label, then swap in the headline once
+  // it arrives — a slow or unreachable site must not lose the link.
+  var entry = { url: url, title: '' };
+  g.sources.push(entry);
   gaSaveGuests(guests);
   input.value = '';
+  var forId = gaCurrentProfile;
   gaRenderProfileSources(g);
+
+  var title = await gaFetchArticleTitle(url);
+  if (!title) return;
+  var fresh = gaLoadGuests().find(function(x){ return x.id === forId; });
+  if (!fresh) return;
+  var target = (fresh.sources || []).find(function(x){ return gaSource(x).url === url; });
+  if (!target || typeof target === 'string') {
+    fresh.sources = (fresh.sources || []).map(function(x){
+      return gaSource(x).url === url ? { url: url, title: title } : x;
+    });
+  } else {
+    target.title = title;
+  }
+  gaSaveGuests(gaLoadGuests());
+  if (gaCurrentProfile === forId) gaRenderProfileSources(fresh);
+}
+
+async function gaFetchArticleTitle(url) {
+  try {
+    var res = await fetch('/.netlify/functions/extract-guests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url, titleOnly: true }),
+    });
+    if (!res.ok) return '';
+    var data = await res.json();
+    return data.articleTitle || '';
+  } catch (e) {
+    return '';
+  }
 }
 
 function gaRemoveProfileSource(i) {
@@ -3625,76 +3688,72 @@ function gaSearch() {
   var tokens = textQ.split(/\s+/).map(function(t){ return t.replace(/[^a-zæøå0-9]/g,''); }).filter(function(t){ return t.length > 1 && !STOP.has(t); });
 
   // ── Scoring per guest ──────────────────────────────
-  // Build a map: guestId → { guest, score, matchedFields[], matchedEps[] }
+  // Guest-centric on purpose: iterating episodes would make anyone who has
+  // never been on the show unreachable, which is most of the archive now that
+  // candidates are pulled from articles. Episodes only add to a guest's score.
   var guestScores = {};
 
   guests.forEach(function(g) {
-    guestScores[g.id] = { guest: g, score: 0, fields: [], eps: [] };
-  });
+    // Hard filters, all read from the guest so prospects are included.
+    if (genderFilter && g.gender !== genderFilter) return;
+    if (hkMin !== null && (g.havkat == null || g.havkat < hkMin)) return;
 
-  eps.forEach(function(ep) {
-    var epFields = [
-      ep.title || '',
-      ep.desc  || '',
-      (ep.keywords||[]).join(' ')
-    ].join(' ').toLowerCase();
-
-    (ep.guests||[]).forEach(function(ge) {
-      var g = guests.find(function(x){ return x.id === ge.guestId; });
-      if (!g) return;
-      var entry = guestScores[g.id];
-
-      // Havkatsfaktor filter — rated on the guest, so unrated guests are
-      // excluded whenever a threshold is set rather than assumed mid-scale.
-      var hk = g.havkat;
-      if (hkMin !== null && (hk == null || hk < hkMin)) return;
-
-      // Gender filter
-      if (genderFilter && g.gender !== genderFilter) return;
-
-      // Category filter
-      if (catFilter && ge.category !== catFilter) return;
-
-      // Build a combined text blob for this guest×episode pairing
-      var blob = [
-        g.name, g.defaultTitle||'', g.gender||'',
-        ge.role||'', ge.category||'', ge.party||'',
-        hk != null ? String(hk) : '',
-        ep.title||'', ep.desc||'', (ep.keywords||[]).join(' ')
-      ].join(' ').toLowerCase();
-
-      var hitFields = [];
-      var score = 0;
-
-      // Hard filters already passed — credit them
-      if (hkMin !== null) { hitFields.push('havkatsfaktor '+hk); score += 2; }
-      if (genderFilter)   { hitFields.push(g.gender); score += 1; }
-      if (catFilter)      { hitFields.push(ge.category); score += 1; }
-
-      // Token matching
-      tokens.forEach(function(tok) {
-        if (blob.includes(tok)) {
-          score += 1;
-          // Label which field matched
-          if (g.name.toLowerCase().includes(tok))              hitFields.push('navn');
-          if ((g.defaultTitle||'').toLowerCase().includes(tok)||
-              (ge.role||'').toLowerCase().includes(tok))       hitFields.push('titel');
-          if ((ge.party||'').toLowerCase().includes(tok))      hitFields.push('parti');
-          if ((ge.category||'').toLowerCase().includes(tok))   hitFields.push('kategori');
-          if ((ep.title||'').toLowerCase().includes(tok))      hitFields.push('udsendelse');
-          if ((ep.desc||'').toLowerCase().includes(tok))       hitFields.push('beskrivelse');
-          if ((ep.keywords||[]).join(' ').toLowerCase().includes(tok)) hitFields.push('emner');
-        }
+    // Every appearance this guest has, paired with its episode.
+    var appearances = [];
+    eps.forEach(function(ep) {
+      (ep.guests||[]).forEach(function(ge) {
+        if (ge.guestId === g.id) appearances.push({ ep: ep, ge: ge });
       });
-
-      // If no tokens but filters matched, still count as a hit
-      if (score > 0 || (tokens.length === 0 && (hkMin !== null || genderFilter))) {
-        if (tokens.length === 0) score = Math.max(score, 1);
-        entry.score += score;
-        entry.fields = entry.fields.concat(hitFields);
-        entry.eps.push(ep);
-      }
     });
+
+    // Category lives on the guest, and historically on each appearance.
+    var cats = [g.category || ''].concat(appearances.map(function(a){ return a.ge.category || ''; }))
+      .filter(Boolean);
+    if (catFilter && cats.indexOf(catFilter) === -1) return;
+
+    var topicText = (g.topics||[]).join(' ');
+    var parts = [
+      g.name, g.defaultTitle||'', g.gender||'', g.notes||'', topicText, g.category||'',
+      g.havkat != null ? String(g.havkat) : ''
+    ];
+    (g.sources||[]).forEach(function(x){ parts.push(gaSource(x).title); });
+    appearances.forEach(function(a) {
+      parts.push(a.ge.role||'', a.ge.category||'', a.ge.party||'',
+                 a.ep.title||'', a.ep.desc||'', (a.ep.keywords||[]).join(' '));
+    });
+    var blob = parts.join(' ').toLowerCase();
+
+    var hitFields = [];
+    var score = 0;
+
+    if (hkMin !== null)  { hitFields.push('havkatsfaktor '+g.havkat); score += 2; }
+    if (genderFilter)    { hitFields.push(g.gender); score += 1; }
+    if (catFilter)       { hitFields.push(catFilter); score += 1; }
+
+    tokens.forEach(function(tok) {
+      if (!blob.includes(tok)) return;
+      score += 1;
+      if (g.name.toLowerCase().includes(tok))                hitFields.push('navn');
+      if ((g.defaultTitle||'').toLowerCase().includes(tok))  hitFields.push('titel');
+      if (topicText.toLowerCase().includes(tok))             hitFields.push('emner');
+      if ((g.notes||'').toLowerCase().includes(tok))         hitFields.push('noter');
+      appearances.forEach(function(a) {
+        if ((a.ge.role||'').toLowerCase().includes(tok))     hitFields.push('rolle');
+        if ((a.ge.party||'').toLowerCase().includes(tok))    hitFields.push('parti');
+        if ((a.ep.title||'').toLowerCase().includes(tok))    hitFields.push('udsendelse');
+        if ((a.ep.desc||'').toLowerCase().includes(tok))     hitFields.push('beskrivelse');
+        if ((a.ep.keywords||[]).join(' ').toLowerCase().includes(tok)) hitFields.push('emneord');
+      });
+    });
+
+    // A filter with no text query is still a hit.
+    if (score > 0 || (tokens.length === 0 && (hkMin !== null || genderFilter || catFilter))) {
+      if (tokens.length === 0) score = Math.max(score, 1);
+      guestScores[g.id] = {
+        guest: g, score: score, fields: hitFields,
+        eps: appearances.map(function(a){ return a.ep; })
+      };
+    }
   });
 
   // ── Collect and rank results ───────────────────────
@@ -3703,18 +3762,21 @@ function gaSearch() {
     .sort(function(a, b){ return b.score - a.score; });
 
   // ── Render ─────────────────────────────────────────
+  var forQ = rawQ ? ' for \u201C'+gaEscHtml(rawQ)+'\u201D' : '';
   if (results.length === 0) {
-    el.innerHTML = '<div class="ga-results-head">Ingen resultater for “'+gaEscHtml(rawQ)+'”</div>';
+    el.innerHTML = '<div class="ga-results-head">Ingen resultater'+forQ+'</div>';
     return;
   }
 
-  el.innerHTML = '<div class="ga-results-head">'+results.length+' resultat'+(results.length===1?'':'er')+' for “'+gaEscHtml(rawQ)+'”</div>'+
+  el.innerHTML = '<div class="ga-results-head">'+results.length+' resultat'+(results.length===1?'':'er')+forQ+'</div>'+
     results.map(function(r) {
       var uniqueFields = r.fields.filter(function(v,i,a){ return a.indexOf(v)===i; });
       var why = uniqueFields.length ? 'Match på: ' + uniqueFields.join(', ') : 'Opfylder søgekriterier';
       var epList = r.eps.slice(0,3).map(function(ep){ return gaFmtDate(ep.date)+(ep.title?' — '+ep.title:''); }).join('; ');
-      return '<div class="ga-result-card">'+
-        '<h4>'+gaEscHtml(r.guest.name)+'</h4>'+
+      var hk = r.guest.havkat != null ? '<span class="ga-result-hk">HK '+r.guest.havkat+'</span>' : '';
+      var badge = r.eps.length ? '' : '<span class="ga-result-badge">kandidat</span>';
+      return '<div class="ga-result-card" onclick="gaOpenProfile(\''+r.guest.id+'\')">'+
+        '<h4>'+gaEscHtml(r.guest.name)+badge+hk+'</h4>'+
         (r.guest.defaultTitle?'<div class="ga-result-meta">'+gaEscHtml(r.guest.defaultTitle)+'</div>':'')+
         (epList?'<div class="ga-result-meta">'+gaEscHtml(epList)+(r.eps.length>3?' …':'')+'</div>':'')+
         '<div class="ga-result-why">'+gaEscHtml(why)+'</div>'+

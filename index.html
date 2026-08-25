@@ -1572,6 +1572,11 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
           <option value="">Alle emner</option>
         </select>
         <input class="ga-ep-f-theme" id="ga-ep-f-theme" type="text" placeholder="Søg i temaer/nøgleord…" oninput="gaRenderEpisodes()">
+        <select class="ga-filter-select" id="ga-ep-sort" onchange="gaRenderEpisodes()">
+          <option value="date-desc">Nyeste først</option>
+          <option value="date-asc">Ældste først</option>
+          <option value="topic">Emne (A-Å)</option>
+        </select>
       </div>
       <div id="ga-ep-list"></div>
     </div>
@@ -3933,6 +3938,20 @@ function gaRenderEpisodes() {
     if (topicFilter && (ep.topics||[]).indexOf(topicFilter) === -1) return false;
     if (themeQ && !(ep.keywords||[]).some(function(k){ return gaNormText(k).includes(themeQ); })) return false;
     return true;
+  });
+
+  var sortMode = (document.getElementById('ga-ep-sort')||{}).value || 'date-desc';
+  eps = eps.slice().sort(function(a, b) {
+    if (sortMode === 'topic') {
+      var ta = (a.topics && a.topics[0]) || '';
+      var tb = (b.topics && b.topics[0]) || '';
+      // Untopiced episodes sort to the end rather than clumping at "" first.
+      if (!ta && tb) return 1;
+      if (ta && !tb) return -1;
+      if (ta !== tb) return ta.localeCompare(tb, 'da');
+      return b.date.localeCompare(a.date); // newest first within the same topic
+    }
+    return sortMode === 'date-asc' ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
   });
 
   var cnt = document.getElementById('ga-ep-count');

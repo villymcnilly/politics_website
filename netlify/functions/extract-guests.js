@@ -60,6 +60,40 @@ function sanitizePerson(p) {
   };
 }
 
+function decodeEntities(s) {
+  return String(s)
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&#(\d+);/g, function (_, n) { return String.fromCharCode(parseInt(n, 10)); })
+    .replace(/&#x([0-9a-f]+);/gi, function (_, n) { return String.fromCharCode(parseInt(n, 16)); })
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;|&#39;/gi, "'")
+    .replace(/&lsquo;|&rsquo;/gi, "'")
+    .replace(/&ldquo;|&rdquo;/gi, '"')
+    .replace(/&ndash;/gi, '–')
+    .replace(/&mdash;/gi, '—')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&');
+}
+
+// The article's headline, preferring og:title (usually the clean headline)
+// over <title> (often carries a " | Site name" suffix).
+function extractTitle(html) {
+  var og =
+    html.match(/<meta[^>]+property=["']og:title["'][^>]*content=["']([^"']*)["']/i) ||
+    html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:title["']/i);
+  if (og && og[1].trim()) return decodeEntities(og[1]).replace(/\s+/g, ' ').trim().slice(0, 300);
+
+  var t = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (t && t[1].trim()) {
+    var title = decodeEntities(t[1]).replace(/\s+/g, ' ').trim();
+    // Drop a trailing " | Site" / " – Site" suffix when there's a real headline left.
+    var trimmed = title.replace(/\s*[|–—]\s*[^|–—]{2,40}$/, '').trim();
+    return (trimmed.length >= 15 ? trimmed : title).slice(0, 300);
+  }
+  return '';
+}
+
 function stripHtml(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
@@ -78,9 +112,11 @@ exports.handler = async function (event) {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
-  let url;
+  let url, titleOnly;
   try {
-    url = JSON.parse(event.body || '{}').url;
+    const body = JSON.parse(event.body || '{}');
+    url = body.url;
+    titleOnly = body.titleOnly === true;
   } catch (e) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Ugyldig request' }) };
   }
@@ -88,7 +124,7 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Mangler en gyldig artikel-URL' }) };
   }
 
-  let articleText;
+  let articleText, articleTitle;
   try {
     const res = await fetch(url, {
       headers: {
@@ -104,6 +140,17 @@ exports.handler = async function (event) {
       };
     }
     const html = await res.text();
+    articleTitle = extractTitle(html);
+
+    // A manual link only needs the headline — skip the model call entirely.
+    if (titleOnly) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ articleTitle: articleTitle }),
+      };
+    }
+
     articleText = stripHtml(html).slice(0, 20000);
     if (articleText.length < 200) {
       return {
@@ -156,7 +203,7 @@ exports.handler = async function (event) {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ people }),
+      body: JSON.stringify({ people, articleTitle: articleTitle }),
     };
   } catch (e) {
     return {

@@ -766,9 +766,11 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-result-card h4 { font-family: 'Newsreader', serif; font-size: 16px; font-weight: 400; color: var(--ink); }
 .ga-result-meta { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
 .ga-result-why { font-size: 13px; color: var(--ink-2); line-height: 1.55; margin-top: 6px; }
+.ga-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.ga-extract-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ga-add-toggle { display: inline-flex; align-items: center; gap: 7px; background: none; border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 14px; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.14s; }
 .ga-add-toggle:hover { color: var(--ink); border-color: var(--ink-2); background: var(--hover); }
-.ga-add-toggle.open { color: var(--ink); border-color: var(--ink); margin-bottom: 12px; }
+.ga-add-toggle.open { color: var(--ink); border-color: var(--ink); background: var(--hover); }
 .ga-form { display: none; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px 18px; margin-bottom: 24px; }
 .ga-form.on { display: block; }
 .ga-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
@@ -795,11 +797,18 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-save-btn:disabled { opacity: 0.4; cursor: default; }
 .ga-extract-status { font-size: 13px; color: var(--ink-2); margin-top: 10px; min-height: 18px; }
 .ga-extract-status.err { color: var(--loss-ink); }
-.ga-candidate { background: var(--bg); border: 1px solid var(--line-2); border-radius: 10px; padding: 14px 16px; margin-top: 12px; }
+.ga-candidate { background: var(--bg); border: 1px solid var(--line-2); border-radius: 10px; padding: 16px 18px; margin-top: 12px; }
 .ga-candidate.added { opacity: 0.55; }
-.ga-candidate-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
-.ga-candidate-row.full { grid-template-columns: 1fr; }
-.ga-topic-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.ga-candidate-grid { display: grid; grid-template-columns: 2fr 1fr 1.2fr; gap: 10px; margin-bottom: 10px; }
+.ga-candidate-meta { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; margin-top: 12px; }
+.ga-candidate-actions { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+@media (max-width: 720px) { .ga-candidate-grid { grid-template-columns: 1fr; } .ga-candidate-meta { grid-template-columns: 1fr; gap: 12px; } }
+.ga-topic-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; padding: 10px; background: var(--hover); border: 1px solid var(--line); border-radius: 8px; }
+.ga-topic-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ga-topic-chip { font-size: 12px; font-weight: 500; color: var(--ink-2); background: var(--hover); border: 1px solid var(--line-2); border-radius: 999px; padding: 3px 10px; }
+.ga-topic-none { font-size: 12px; color: var(--faint); font-style: italic; }
+.ga-topic-edit { font-family: inherit; font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em; color: var(--muted); background: none; border: none; padding: 3px 4px; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.ga-topic-edit:hover { color: var(--ink); }
 .ga-topic-pill { display: inline-flex; align-items: center; font-family: inherit; font-size: 12px; color: var(--ink-2); background: var(--panel); border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 10px; cursor: pointer; user-select: none; transition: all 0.13s; }
 .ga-topic-pill:hover { border-color: var(--ink-2); color: var(--ink); }
 .ga-topic-pill.on { border-color: var(--ink); color: var(--ink); font-weight: 600; background: var(--hover); }
@@ -841,7 +850,7 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-hk-clear { font-family: inherit; font-size: 15px; line-height: 1; width: 24px; height: 28px; padding: 0; border: none; background: none; color: var(--faint); cursor: pointer; margin-left: 2px; transition: color 0.13s; }
 .ga-hk-clear:hover { color: var(--loss-ink); }
 .ga-hk-unrated { font-size: 12px; color: var(--faint); font-style: italic; margin-left: 6px; }
-.ga-profile { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; max-width: 90%; background: var(--panel); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg); transform: translateX(105%); transition: transform 0.25s cubic-bezier(.4,0,.2,1); z-index: 300; display: flex; flex-direction: column; overflow: hidden; }
+.ga-profile { position: absolute; top: 0; right: 0; bottom: 0; width: 420px; max-width: 92%; background: var(--panel); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg); transform: translateX(105%); transition: transform 0.25s cubic-bezier(.4,0,.2,1); z-index: 300; display: flex; flex-direction: column; overflow: hidden; }
 .ga-profile.open { transform: translateX(0); }
 .ga-profile-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); flex-shrink: 0; display: flex; align-items: flex-start; gap: 10px; }
 .ga-profile-info { flex: 1; min-width: 0; }
@@ -856,7 +865,12 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-pfield-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 6px; margin-top: 16px; }
 .ga-pnotes { width: 100%; min-height: 80px; resize: vertical; font-family: inherit; font-size: 13.5px; color: var(--ink); line-height: 1.55; padding: 9px 10px; border: 1px solid var(--line-2); border-radius: 7px; background: var(--bg); outline: none; transition: border-color 0.15s; }
 .ga-pnotes:focus { border-color: var(--ink-2); }
-.ga-psave { font-family: inherit; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; border: none; background: var(--ink); color: var(--bg); cursor: pointer; margin-top: 8px; transition: opacity 0.14s; }
+.ga-psection { padding: 16px 0; border-top: 1px solid var(--line); }
+.ga-psection:first-of-type { border-top: none; }
+.ga-psection .ga-pfield-label { margin-top: 0; }
+.ga-profile-foot { flex-shrink: 0; border-top: 1px solid var(--line); background: var(--panel); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ga-psave-hint { font-size: 11px; color: var(--faint); line-height: 1.35; }
+.ga-psave { font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 8px 18px; border-radius: 6px; border: none; background: var(--ink); color: var(--bg); cursor: pointer; flex-shrink: 0; transition: opacity 0.14s; }
 .ga-psave:hover { opacity: 0.85; }
 .ga-pep-head { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 20px 0 10px; }
 .ga-pep { padding: 9px 0; border-bottom: 1px solid var(--line); }
@@ -866,7 +880,9 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-pep-title a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line-2); }
 .ga-pep-title a:hover { border-bottom-color: var(--ink); }
 .ga-pep-role { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-.ga-pcontact { display: flex; flex-direction: column; gap: 6px; }
+.ga-pcontact { display: flex; flex-direction: column; gap: 8px; }
+.ga-pc-field { display: grid; grid-template-columns: 62px 1fr; align-items: center; gap: 10px; }
+.ga-pc-field > span { font-size: 11.5px; color: var(--muted); font-weight: 500; }
 .ga-pcontact-input { font-family: inherit; font-size: 13px; color: var(--ink); padding: 7px 9px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--bg); outline: none; width: 100%; transition: border-color 0.15s; }
 .ga-pcontact-input:focus { border-color: var(--ink-2); }
 .ga-psource { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); }
@@ -878,7 +894,7 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-plink-add { display: flex; gap: 6px; margin-top: 8px; }
 .ga-plink-btn { font-family: inherit; font-size: 12px; font-weight: 600; padding: 0 12px; border-radius: 6px; border: 1px solid var(--line-2); background: none; color: var(--ink-2); cursor: pointer; white-space: nowrap; transition: all 0.13s; }
 .ga-plink-btn:hover { border-color: var(--ink); color: var(--ink); }
-.ga-extract-clear-btn { font-family: inherit; font-size: 13px; font-weight: 500; padding: 10px 16px; margin-left: 8px; border-radius: 8px; border: 1px solid var(--line-2); background: none; color: var(--muted); cursor: pointer; transition: all 0.14s; }
+.ga-extract-clear-btn { font-family: inherit; font-size: 13px; font-weight: 500; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line-2); background: none; color: var(--muted); cursor: pointer; transition: all 0.14s; }
 .ga-extract-clear-btn:hover { border-color: var(--ink-2); color: var(--ink); }
 .ga-pdanger { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); }
 .ga-pdelete { font-family: inherit; font-size: 12.5px; font-weight: 500; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--loss-line); background: none; color: var(--loss-ink); cursor: pointer; transition: all 0.14s; }
@@ -1409,11 +1425,17 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
       <div id="ga-results"></div>
 
       <!-- Add guests from article (automated extraction) -->
-      <div style="margin-bottom:24px">
+      <div class="ga-toolbar">
         <button class="ga-add-toggle" id="ga-extract-toggle" onclick="gaToggleExtractForm()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
           Tilføj fra artikel
         </button>
+        <button class="ga-add-toggle" id="ga-add-toggle" onclick="gaToggleForm()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+          Tilføj udsendelse
+        </button>
+      </div>
+      <div style="margin-bottom:24px">
         <div class="ga-form" id="ga-extract-form">
           <div class="ga-form-row">
             <div class="ga-form-field full">
@@ -1421,8 +1443,10 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
               <input class="ga-form-input" id="ga-extract-url" type="url" placeholder="https://…" onkeydown="if(event.key==='Enter') gaExtractFromArticle()">
             </div>
           </div>
-          <button class="ga-save-btn" id="ga-extract-btn" onclick="gaExtractFromArticle()">Hent kilder</button>
-          <button class="ga-extract-clear-btn" id="ga-extract-clear" style="display:none;" onclick="gaClearCandidates()">Ryd listen</button>
+          <div class="ga-extract-actions">
+            <button class="ga-save-btn" id="ga-extract-btn" onclick="gaExtractFromArticle()">Hent kilder</button>
+            <button class="ga-extract-clear-btn" id="ga-extract-clear" style="display:none;" onclick="gaClearCandidates()">Ryd listen</button>
+          </div>
           <div class="ga-extract-status" id="ga-extract-status"></div>
           <div id="ga-extract-results"></div>
         </div>
@@ -1430,10 +1454,6 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 
       <!-- Add episode form -->
       <div style="margin-bottom:24px">
-        <button class="ga-add-toggle" id="ga-add-toggle" onclick="gaToggleForm()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-          Tilføj udsendelse
-        </button>
         <div class="ga-form" id="ga-add-form">
           <div class="ga-form-row">
             <div class="ga-form-field">
@@ -1530,29 +1550,44 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
       <div class="ga-hk-rating" id="ga-profile-havkat"></div>
       <div class="ga-pfield-label">Emner</div>
       <div class="ga-topic-pills" id="ga-profile-topics"></div>
-      <div class="ga-pfield-label">Kontakt</div>
-      <div class="ga-pcontact">
-        <input class="ga-pcontact-input" id="ga-pc-email" type="email" placeholder="Email">
-        <input class="ga-pcontact-input" id="ga-pc-phone" type="tel" placeholder="Telefon">
-        <input class="ga-pcontact-input" id="ga-pc-other" type="text" placeholder="Andet — fx presseansvarlig, bureau">
-      </div>
-      <div class="ga-pfield-label">Noter</div>
-      <textarea class="ga-pnotes" id="ga-pnotes" placeholder="Notater om gæsten…"></textarea>
-      <button class="ga-psave" id="ga-psave" onclick="gaSaveProfile()">Gem</button>
-
-      <div class="ga-pep-head">Fundet i artikler</div>
-      <div id="ga-profile-sources"></div>
-      <div class="ga-plink-add">
-        <input class="ga-pcontact-input" id="ga-psource-url" type="url" placeholder="https://… tilføj artikellink" onkeydown="if(event.key==='Enter') gaAddProfileSource()">
-        <button class="ga-plink-btn" onclick="gaAddProfileSource()">Tilføj</button>
+      <div class="ga-psection">
+        <div class="ga-pfield-label">Kontakt</div>
+        <div class="ga-pcontact">
+          <label class="ga-pc-field"><span>Email</span>
+            <input class="ga-pcontact-input" id="ga-pc-email" type="email" placeholder="navn@eksempel.dk"></label>
+          <label class="ga-pc-field"><span>Telefon</span>
+            <input class="ga-pcontact-input" id="ga-pc-phone" type="tel" placeholder="12 34 56 78"></label>
+          <label class="ga-pc-field"><span>Andet</span>
+            <input class="ga-pcontact-input" id="ga-pc-other" type="text" placeholder="fx presseansvarlig, bureau"></label>
+        </div>
       </div>
 
-      <div class="ga-pep-head" id="ga-pep-head"></div>
-      <div id="ga-profile-eps"></div>
+      <div class="ga-psection">
+        <div class="ga-pfield-label">Noter</div>
+        <textarea class="ga-pnotes" id="ga-pnotes" placeholder="Notater om gæsten…"></textarea>
+      </div>
+
+      <div class="ga-psection">
+        <div class="ga-pfield-label">Fundet i artikler</div>
+        <div id="ga-profile-sources"></div>
+        <div class="ga-plink-add">
+          <input class="ga-pcontact-input" id="ga-psource-url" type="url" placeholder="https://… tilføj artikellink" onkeydown="if(event.key==='Enter') gaAddProfileSource()">
+          <button class="ga-plink-btn" onclick="gaAddProfileSource()">Tilføj</button>
+        </div>
+      </div>
+
+      <div class="ga-psection">
+        <div class="ga-pfield-label" id="ga-pep-head"></div>
+        <div id="ga-profile-eps"></div>
+      </div>
 
       <div class="ga-pdanger">
         <button class="ga-pdelete" id="ga-pdelete" onclick="gaDeleteProfileGuest()">Slet gæst</button>
       </div>
+    </div>
+    <div class="ga-profile-foot">
+      <span class="ga-psave-hint" id="ga-psave-hint">Kontakt og noter gemmes med knappen</span>
+      <button class="ga-psave" id="ga-psave" onclick="gaSaveProfile()">Gem</button>
     </div>
   </div>
 </div><!-- end page-gaestearkiv -->
@@ -2619,9 +2654,11 @@ async function gaFetchAll() {
 
 function gaEscHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-// Topic pills, shared by the candidate cards and the guest profile panel.
-// The topic travels in a data-topic attribute rather than being interpolated
-// into an inline handler, so names containing quotes or & can't break out.
+// Topic editor, shared by the candidate cards and the guest profile panel.
+// Collapsed it shows only what's chosen; the full ten-topic picker appears on
+// demand, so a card with two topics doesn't render eight irrelevant options.
+// Topics travel in a data-topic attribute rather than being interpolated into
+// an inline handler, so names containing quotes or & can't break out.
 function gaTopicPillsHtml(selected) {
   var chosen = selected || [];
   return GA_TOPICS.map(function(t) {
@@ -2629,6 +2666,18 @@ function gaTopicPillsHtml(selected) {
     return '<button type="button" class="ga-topic-pill' + (on ? ' on' : '') +
       '" data-topic="' + gaEscHtml(t) + '">' + gaEscHtml(t) + '</button>';
   }).join('');
+}
+
+function gaTopicEditorHtml(selected, open) {
+  var chosen = selected || [];
+  var summary = chosen.length
+    ? chosen.map(function(t){ return '<span class="ga-topic-chip">' + gaEscHtml(t) + '</span>'; }).join('')
+    : '<span class="ga-topic-none">Ingen emner valgt</span>';
+  return '<div class="ga-topic-summary">' + summary +
+      '<button type="button" class="ga-topic-edit" data-topic-toggle="1">' +
+      (open ? 'Færdig' : (chosen.length ? 'Rediger' : 'Vælg')) + '</button>' +
+    '</div>' +
+    (open ? '<div class="ga-topic-pills">' + gaTopicPillsHtml(chosen) + '</div>' : '');
 }
 
 // Havkatsfaktor — how fun a guest is, rated 1–5. Stored on the guest, not on
@@ -2656,14 +2705,28 @@ function gaHavkatFrom10(v) {
 document.addEventListener('click', function(e) {
   if (!e.target.closest) return;
 
+  var toggle = e.target.closest('[data-topic-toggle]');
+  if (toggle) {
+    var host = toggle.closest('[data-candidate-index]');
+    if (host) {
+      var ci = parseInt(host.getAttribute('data-candidate-index'), 10);
+      gaExtractCandidates[ci].topicsOpen = !gaExtractCandidates[ci].topicsOpen;
+      gaRenderExtractResults();
+    } else if (toggle.closest('#ga-profile-topics')) {
+      gaProfileTopicsOpen = !gaProfileTopicsOpen;
+      gaRenderProfileTopics();
+    }
+    return;
+  }
+
   var pill = e.target.closest('.ga-topic-pill');
   if (pill) {
     var topic = pill.getAttribute('data-topic');
-    var pillBox = pill.parentNode;
-    if (pillBox.id === 'ga-profile-topics') {
+    var pillHost = pill.closest('[data-candidate-index]');
+    if (pillHost) {
+      gaToggleCandidateTopic(parseInt(pillHost.getAttribute('data-candidate-index'), 10), topic);
+    } else if (pill.closest('#ga-profile-topics')) {
       gaToggleProfileTopic(topic);
-    } else if (pillBox.hasAttribute('data-candidate-index')) {
-      gaToggleCandidateTopic(parseInt(pillBox.getAttribute('data-candidate-index'), 10), topic);
     }
     return;
   }
@@ -2672,11 +2735,11 @@ document.addEventListener('click', function(e) {
   if (dot) {
     var raw = parseInt(dot.getAttribute('data-havkat'), 10);
     var rating = raw === 0 ? null : raw;
-    var hkBox = dot.parentNode;
-    if (hkBox.id === 'ga-profile-havkat') {
+    var hkHost = dot.closest('[data-candidate-index]');
+    if (hkHost) {
+      gaSetCandidateHavkat(parseInt(hkHost.getAttribute('data-candidate-index'), 10), rating);
+    } else if (dot.closest('#ga-profile-havkat')) {
       gaSetProfileHavkat(rating);
-    } else if (hkBox.hasAttribute('data-candidate-index')) {
-      gaSetCandidateHavkat(parseInt(hkBox.getAttribute('data-candidate-index'), 10), rating);
     }
   }
 });
@@ -2851,17 +2914,21 @@ function gaRenderExtractResults() {
       '" oninput="gaExtractCandidates[' + i + '].descriptor=this.value">';
 
     return '<div class="ga-candidate' + (c.added ? ' added' : '') + '">' +
-      '<div class="ga-candidate-row">' +
+      '<div class="ga-candidate-grid">' +
         gaField('Navn', nameInput) +
         gaField('Køn', gaSelectHtml('gender', i, ['mand','kvinde','andet'], c.gender)) +
+        gaField('Kategori', gaSelectHtml('category', i, ['politiker','ekspert','case','pro-deb'], c.category)) +
       '</div>' +
-      '<div class="ga-candidate-row full">' + gaField('Beskrivelse', descInput) + '</div>' +
-      gaField('Kategori', gaSelectHtml('category', i, ['politiker','ekspert','case','pro-deb'], c.category)) +
-      gaField('Havkatsfaktor', '<div class="ga-hk-rating" data-candidate-index="' + i + '">' + gaHavkatHtml(c.havkat) + '</div>') +
-      '<div class="ga-topic-pills" data-candidate-index="' + i + '">' + gaTopicPillsHtml(c.topics) + '</div>' +
-      '<button class="ga-candidate-add"' + (c.added ? ' disabled' : '') + ' onclick="gaAddExtractedGuest(' + i + ')">' +
-        (c.added ? 'Tilføjet ✓' : 'Tilføj til gæstearkiv') + '</button>' +
-      '<button class="ga-candidate-dismiss" onclick="gaDismissCandidate(' + i + ')">Afvis</button>' +
+      gaField('Beskrivelse', descInput) +
+      '<div class="ga-candidate-meta">' +
+        gaField('Havkatsfaktor', '<div class="ga-hk-rating" data-candidate-index="' + i + '">' + gaHavkatHtml(c.havkat) + '</div>') +
+        gaField('Emner', '<div data-candidate-index="' + i + '">' + gaTopicEditorHtml(c.topics, c.topicsOpen) + '</div>') +
+      '</div>' +
+      '<div class="ga-candidate-actions">' +
+        '<button class="ga-candidate-add"' + (c.added ? ' disabled' : '') + ' onclick="gaAddExtractedGuest(' + i + ')">' +
+          (c.added ? 'Tilføjet ✓' : 'Tilføj til gæstearkiv') + '</button>' +
+        '<button class="ga-candidate-dismiss" onclick="gaDismissCandidate(' + i + ')">Afvis</button>' +
+      '</div>' +
     '</div>';
   }).join('');
 }
@@ -3330,6 +3397,7 @@ function gaRenderSidebar() {
 
 // ── Guest profile panel ───────────────────────────────
 var gaCurrentProfile = null;
+var gaProfileTopicsOpen = false;
 
 function gaOpenProfile(guestId) {
   var g = gaGetGuest(guestId);
@@ -3341,7 +3409,8 @@ function gaOpenProfile(guestId) {
   document.getElementById('ga-profile-gender').textContent = g.gender;
   document.getElementById('ga-profile-status').textContent = eps.length === 0 ? 'Kandidat — ikke optrådt endnu' : eps.length + ' optræden' + (eps.length===1?'':'er');
   document.getElementById('ga-profile-havkat').innerHTML = gaHavkatHtml(g.havkat);
-  document.getElementById('ga-profile-topics').innerHTML = gaTopicPillsHtml(g.topics);
+  gaProfileTopicsOpen = false;
+  gaRenderProfileTopics();
   var contact = g.contact || {};
   document.getElementById('ga-pc-email').value = contact.email || '';
   document.getElementById('ga-pc-phone').value = contact.phone || '';
@@ -3385,7 +3454,15 @@ function gaToggleProfileTopic(topic) {
   if (!g) return;
   g.topics = gaToggleInArray(g.topics || [], topic);
   gaSaveGuests(guests);
-  document.getElementById('ga-profile-topics').innerHTML = gaTopicPillsHtml(g.topics);
+  gaRenderProfileTopics();
+  gaRenderSidebar();
+}
+
+function gaRenderProfileTopics() {
+  var g = gaGetGuest(gaCurrentProfile);
+  if (!g) return;
+  document.getElementById('ga-profile-topics').innerHTML =
+    gaTopicEditorHtml(g.topics, gaProfileTopicsOpen);
 }
 
 // Like the topic toggle, repaints only its own widget so unsaved notes survive.

@@ -792,6 +792,20 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-add-guest:hover { color: var(--ink); border-color: var(--ink-2); }
 .ga-save-btn { font-family: inherit; font-size: 14px; font-weight: 600; padding: 10px 22px; border-radius: 8px; border: none; background: var(--ink); color: var(--bg); cursor: pointer; transition: opacity 0.15s; }
 .ga-save-btn:hover { opacity: 0.85; }
+.ga-save-btn:disabled { opacity: 0.4; cursor: default; }
+.ga-extract-status { font-size: 13px; color: var(--ink-2); margin-top: 10px; min-height: 18px; }
+.ga-extract-status.err { color: var(--loss-ink); }
+.ga-candidate { background: var(--bg); border: 1px solid var(--line-2); border-radius: 10px; padding: 14px 16px; margin-top: 12px; }
+.ga-candidate.added { opacity: 0.55; }
+.ga-candidate-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+.ga-candidate-row.full { grid-template-columns: 1fr; }
+.ga-topic-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.ga-topic-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink-2); background: var(--panel); border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 10px; cursor: pointer; user-select: none; }
+.ga-topic-pill input { margin: 0; }
+.ga-topic-pill.on { border-color: var(--ink); color: var(--ink); font-weight: 600; background: var(--hover); }
+.ga-candidate-add { font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 14px; border-radius: 7px; border: none; background: var(--ink); color: var(--bg); cursor: pointer; }
+.ga-candidate-add:disabled { opacity: 0.4; cursor: default; }
+.ga-candidate-dismiss { font-family: inherit; font-size: 12.5px; font-weight: 500; padding: 7px 12px; border-radius: 7px; border: 1px solid var(--line-2); background: none; color: var(--muted); cursor: pointer; margin-left: 6px; }
 .ga-ep-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
 .ga-ep-header h2 { font-family: 'Newsreader', serif; font-weight: 400; font-size: 22px; letter-spacing: -0.01em; }
 .ga-ep-count { font-size: 11px; color: var(--muted); font-weight: 500; }
@@ -1369,6 +1383,25 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
       </div>
       <div id="ga-results"></div>
 
+      <!-- Add guests from article (automated extraction) -->
+      <div style="margin-bottom:24px">
+        <button class="ga-add-toggle" id="ga-extract-toggle" onclick="gaToggleExtractForm()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+          Tilføj fra artikel
+        </button>
+        <div class="ga-form" id="ga-extract-form">
+          <div class="ga-form-row">
+            <div class="ga-form-field full">
+              <label class="ga-form-label">Artikel-URL</label>
+              <input class="ga-form-input" id="ga-extract-url" type="url" placeholder="https://…" onkeydown="if(event.key==='Enter') gaExtractFromArticle()">
+            </div>
+          </div>
+          <button class="ga-save-btn" id="ga-extract-btn" onclick="gaExtractFromArticle()">Hent kilder</button>
+          <div class="ga-extract-status" id="ga-extract-status"></div>
+          <div id="ga-extract-results"></div>
+        </div>
+      </div>
+
       <!-- Add episode form -->
       <div style="margin-bottom:24px">
         <button class="ga-add-toggle" id="ga-add-toggle" onclick="gaToggleForm()">
@@ -1426,7 +1459,11 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
       </div>
       <div id="ga-sidebar-guests-panel" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
         <div class="ga-sidebar-search">
-          <input type="text" placeholder="Søg i gæster…" oninput="gaRenderSidebar(this.value)">
+          <input type="text" id="ga-sidebar-q" placeholder="Søg i gæster…" oninput="gaRenderSidebar()">
+          <select id="ga-sidebar-topic" style="width:100%;margin-top:6px;font-family:inherit;font-size:12.5px;color:var(--ink);padding:6px 8px;border:1px solid var(--line-2);border-radius:6px;background:var(--bg);outline:none;" onchange="gaRenderSidebar()">
+            <option value="">Alle emner</option>
+            <option value="__prospect__">Kun kandidater (ikke optrådt)</option>
+          </select>
         </div>
         <div class="ga-sidebar-list" id="ga-sidebar-list"></div>
       </div>
@@ -1458,6 +1495,9 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
         <span id="ga-profile-title"></span>
         <span id="ga-profile-gender"></span>
       </div>
+      <div class="ga-pfield-label" id="ga-profile-status"></div>
+      <div class="ga-pfield-label">Emner</div>
+      <div class="ga-topic-pills" id="ga-profile-topics"></div>
       <div class="ga-pfield-label">Noter</div>
       <textarea class="ga-pnotes" id="ga-pnotes" placeholder="Notater om gæsten…"></textarea>
       <button class="ga-psave" id="ga-psave" onclick="gaSaveProfile()">Gem</button>
@@ -2477,12 +2517,18 @@ function toggleBetsIntro() {
 updateTitle();
 refresh();
 initAuth();
+gaInitTopicFilter();
 
 // ═══════════════════════════════════════════════════════
 // GÆSTEARKIV
 // ═══════════════════════════════════════════════════════
 const GA_PASSWORD  = 'REDACTED';
 const GA_SB_TABLE  = 'gaestearkiv';
+const GA_TOPICS = [
+  'Klima & energi', 'Udlændinge & integration', 'Sundhed & ældrepleje', 'Uddannelse',
+  'Ligestilling & køn', 'Digitalisering & tech/AI', 'Geopolitik', 'Forsvarspolitik',
+  'Business og nationaløkonomi', 'Dannelse og trivsel',
+];
 
 // In-memory cache — all sync reads hit this; writes update it then push to Supabase
 var gaEpsCache    = null;
@@ -2578,6 +2624,118 @@ async function gaOnSwitch() {
 var gaFormOpen = false;
 var gaGuestRows = [];
 var gaEditingId = null;
+
+// ── Extract guests from an article (draft → review → add) ─────────────
+var gaExtractOpen = false;
+var gaExtractCandidates = [];
+
+function gaToggleExtractForm() {
+  gaExtractOpen = !gaExtractOpen;
+  document.getElementById('ga-extract-toggle').classList.toggle('open', gaExtractOpen);
+  document.getElementById('ga-extract-form').classList.toggle('on', gaExtractOpen);
+}
+
+async function gaExtractFromArticle() {
+  var url = document.getElementById('ga-extract-url').value.trim();
+  var statusEl = document.getElementById('ga-extract-status');
+  var btn = document.getElementById('ga-extract-btn');
+  if (!url) { statusEl.textContent = 'Indsæt et link til artiklen først'; statusEl.className = 'ga-extract-status err'; return; }
+
+  btn.disabled = true;
+  statusEl.className = 'ga-extract-status';
+  statusEl.textContent = 'Henter og analyserer artikel…';
+  document.getElementById('ga-extract-results').innerHTML = '';
+
+  try {
+    var res = await fetch('/.netlify/functions/extract-guests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Ukendt fejl');
+
+    gaExtractCandidates = (data.people || []).map(function(p) {
+      return {
+        name: p.name, descriptor: p.descriptor,
+        gender: p.gender_guess === 'ukendt' ? 'andet' : p.gender_guess,
+        category: p.category_guess === 'ukendt' ? 'ekspert' : p.category_guess,
+        topics: p.topics || [], added: false,
+      };
+    });
+    if (gaExtractCandidates.length === 0) {
+      statusEl.textContent = 'Ingen personer fundet i artiklen';
+    } else {
+      statusEl.textContent = gaExtractCandidates.length + ' fundet — gennemgå og tilføj';
+    }
+    gaRenderExtractResults();
+  } catch (e) {
+    statusEl.textContent = 'Fejl: ' + e.message;
+    statusEl.className = 'ga-extract-status err';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function gaRenderExtractResults() {
+  var el = document.getElementById('ga-extract-results');
+  el.innerHTML = gaExtractCandidates.map(function(c, i) {
+    var topicPills = GA_TOPICS.map(function(t) {
+      var on = c.topics.indexOf(t) !== -1;
+      return '<label class="ga-topic-pill' + (on ? ' on' : '') + '">' +
+        '<input type="checkbox" style="display:none" ' + (on ? 'checked' : '') + ' onchange="gaToggleCandidateTopic(' + i + ',\'' + gaEscHtml(t).replace(/'/g,"\\'") + '\')">' +
+        gaEscHtml(t) + '</label>';
+    }).join('');
+    return '<div class="ga-candidate' + (c.added ? ' added' : '') + '" id="ga-cand-' + i + '">' +
+      '<div class="ga-candidate-row">' +
+        '<div class="ga-form-field"><label class="ga-form-label">Navn</label>' +
+        '<input class="ga-form-input" value="' + gaEscHtml(c.name) + '" oninput="gaExtractCandidates[' + i + '].name=this.value"></div>' +
+        '<div class="ga-form-field"><label class="ga-form-label">Køn</label>' +
+        '<select class="ga-form-input" onchange="gaExtractCandidates[' + i + '].gender=this.value">' +
+          ['mand','kvinde','andet'].map(function(g){ return '<option value="'+g+'"'+(c.gender===g?' selected':'')+'>'+g+'</option>'; }).join('') +
+        '</select></div>' +
+      '</div>' +
+      '<div class="ga-candidate-row full">' +
+        '<div class="ga-form-field"><label class="ga-form-label">Beskrivelse</label>' +
+        '<input class="ga-form-input" value="' + gaEscHtml(c.descriptor) + '" oninput="gaExtractCandidates[' + i + '].descriptor=this.value"></div>' +
+      '</div>' +
+      '<div class="ga-form-field"><label class="ga-form-label">Kategori</label>' +
+      '<select class="ga-form-input" style="max-width:160px" onchange="gaExtractCandidates[' + i + '].category=this.value">' +
+        ['politiker','ekspert','case','pro-deb'].map(function(cat){ return '<option value="'+cat+'"'+(c.category===cat?' selected':'')+'>'+cat+'</option>'; }).join('') +
+      '</select></div>' +
+      '<div class="ga-topic-pills">' + topicPills + '</div>' +
+      '<button class="ga-candidate-add" ' + (c.added ? 'disabled' : '') + ' onclick="gaAddExtractedGuest(' + i + ')">' + (c.added ? 'Tilføjet ✓' : 'Tilføj til gæstearkiv') + '</button>' +
+      '<button class="ga-candidate-dismiss" onclick="gaDismissCandidate(' + i + ')">Afvis</button>' +
+    '</div>';
+  }).join('');
+}
+
+function gaToggleCandidateTopic(i, topic) {
+  var c = gaExtractCandidates[i];
+  var idx = c.topics.indexOf(topic);
+  if (idx === -1) c.topics.push(topic); else c.topics.splice(idx, 1);
+  gaRenderExtractResults();
+}
+
+function gaDismissCandidate(i) {
+  gaExtractCandidates.splice(i, 1);
+  gaRenderExtractResults();
+}
+
+function gaAddExtractedGuest(i) {
+  var c = gaExtractCandidates[i];
+  if (!c || c.added) return;
+  var guests = gaLoadGuests();
+  guests.push({
+    id: Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    name: c.name, defaultTitle: c.descriptor, gender: c.gender,
+    notes: '', topics: c.topics.slice(),
+  });
+  gaSaveGuests(guests);
+  c.added = true;
+  gaRenderExtractResults();
+  gaRenderSidebar();
+}
 
 function gaToggleForm() {
   if (gaFormOpen && gaEditingId) { gaCloseForm(); return; }
@@ -2952,16 +3110,33 @@ function gaRenderEpisodes() {
   });
 }
 
-function gaRenderSidebar(filter) {
+function gaInitTopicFilter() {
+  var sel = document.getElementById('ga-sidebar-topic');
+  if (!sel) return;
+  GA_TOPICS.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
+  });
+}
+
+function gaRenderSidebar() {
   var list = document.getElementById('ga-sidebar-list');
   if (!list) return;
   var guests = gaLoadGuests();
   var eps    = gaLoadEpisodes();
-  var q = (filter||'').toLowerCase();
+  var qEl = document.getElementById('ga-sidebar-q');
+  var q = qEl ? qEl.value.toLowerCase() : '';
+  var topicFilter = (document.getElementById('ga-sidebar-topic')||{}).value || '';
   var counts = {};
   eps.forEach(function(ep){ (ep.guests||[]).forEach(function(ge){ counts[ge.guestId]=(counts[ge.guestId]||0)+1; }); });
   var sorted = guests
     .filter(function(g){ return !q || g.name.toLowerCase().includes(q); })
+    .filter(function(g){
+      if (!topicFilter) return true;
+      if (topicFilter === '__prospect__') return !counts[g.id];
+      return (g.topics||[]).indexOf(topicFilter) !== -1;
+    })
     .sort(function(a,b){ return (counts[b.id]||0)-(counts[a.id]||0) || a.name.localeCompare(b.name,'da'); });
   if (sorted.length === 0) {
     list.innerHTML = '<div style="padding:16px;font-size:13px;color:var(--faint);font-style:italic;">Ingen gæster endnu</div>';
@@ -2971,9 +3146,10 @@ function gaRenderSidebar(filter) {
   sorted.forEach(function(g) {
     var row = document.createElement('div');
     row.className = 'ga-sg';
+    var countLabel = counts[g.id] ? (counts[g.id]+'×') : 'kandidat';
     row.innerHTML = '<span class="ga-sg-name">'+gaEscHtml(g.name)+'</span>'+
       '<span class="ga-sg-gender">'+gaEscHtml(g.gender)+'</span>'+
-      '<span class="ga-sg-count">'+((counts[g.id]||0))+'×</span>';
+      '<span class="ga-sg-count">'+countLabel+'</span>';
     row.addEventListener('click', function(){ gaOpenProfile(g.id); });
     list.appendChild(row);
   });
@@ -2990,6 +3166,13 @@ function gaOpenProfile(guestId) {
   document.getElementById('ga-profile-name').textContent = g.name;
   document.getElementById('ga-profile-title').textContent = g.defaultTitle || '';
   document.getElementById('ga-profile-gender').textContent = g.gender;
+  document.getElementById('ga-profile-status').textContent = eps.length === 0 ? 'Kandidat — ikke optrådt endnu' : eps.length + ' optræden' + (eps.length===1?'':'er');
+  document.getElementById('ga-profile-topics').innerHTML = GA_TOPICS.map(function(t) {
+    var on = (g.topics||[]).indexOf(t) !== -1;
+    return '<label class="ga-topic-pill' + (on?' on':'') + '">' +
+      '<input type="checkbox" style="display:none" ' + (on?'checked':'') + ' onchange="gaToggleProfileTopic(\'' + gaEscHtml(t).replace(/'/g,"\\'") + '\')">' +
+      gaEscHtml(t) + '</label>';
+  }).join('');
   document.getElementById('ga-pnotes').value = g.notes || '';
   document.getElementById('ga-pep-head').textContent = eps.length + ' udsendelse' + (eps.length===1?'':'r');
   var epsEl = document.getElementById('ga-profile-eps');
@@ -3011,6 +3194,18 @@ function gaOpenProfile(guestId) {
 function gaCloseProfile() {
   document.getElementById('ga-profile').classList.remove('open');
   gaCurrentProfile = null;
+}
+
+function gaToggleProfileTopic(topic) {
+  if (!gaCurrentProfile) return;
+  var guests = gaLoadGuests();
+  var g = guests.find(function(x){ return x.id===gaCurrentProfile; });
+  if (!g) return;
+  g.topics = g.topics || [];
+  var idx = g.topics.indexOf(topic);
+  if (idx === -1) g.topics.push(topic); else g.topics.splice(idx, 1);
+  gaSaveGuests(guests);
+  gaOpenProfile(gaCurrentProfile);
 }
 
 function gaSaveProfile() {

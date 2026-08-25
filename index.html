@@ -912,6 +912,7 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-ms-guest-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 .ga-ms-include { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--ink); cursor: pointer; }
 .ga-ms-badge { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; color: var(--muted); background: var(--hover); border: 1px solid var(--line-2); border-radius: 999px; padding: 2px 8px; }
+.ga-ms-badge.known { color: #2b6cb0; background: rgba(43,108,176,0.1); border-color: rgba(43,108,176,0.3); text-transform: none; letter-spacing: 0.02em; }
 .ga-ms-reason { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 10px; }
 .ga-ms-warn { background: var(--stake-bg); border: 1px solid var(--stake-line); border-radius: 9px; padding: 12px 14px; margin-top: 12px; font-size: 12.5px; color: var(--stake-ink); }
 .ga-ms-warn ul { margin: 6px 0 0; padding-left: 18px; }
@@ -3074,11 +3075,26 @@ async function gaRenderProfilePre(guestId) {
 }
 
 // ── Guest registry ────────────────────────────────────
+// The episode (and that episode's guest entry) representing a guest's most
+// recent appearance, by broadcast date — not by array/insertion order.
+function gaLatestAppearance(guestId) {
+  var best = null, bestGe = null;
+  gaLoadEpisodes().forEach(function(ep) {
+    var ge = (ep.guests||[]).find(function(x){ return x.guestId === guestId; });
+    if (ge && (!best || ep.date > best.date)) { best = ep; bestGe = ge; }
+  });
+  return best ? { ep: best, ge: bestGe } : null;
+}
+
 // Matches on the same normalised form as search and as the import warning, so
 // "Uffe Elbaek" resolves to an existing "Uffe Elbæk" instead of becoming a
 // second card. Folding is exact-after-normalisation, not fuzzy, so distinct
 // people ("Anders Fogh" vs "Anders Fogh-Rasmussen") stay separate.
-function gaFindOrCreateGuest(name, defaultTitle, gender) {
+// episodeDate (optional, ISO) is the broadcast date this name/title come from —
+// when it's at least as recent as the guest's latest known appearance, their
+// name and job title are refreshed so a person's card doesn't go stale after
+// their first import while an older re-import can't clobber newer info.
+function gaFindOrCreateGuest(name, defaultTitle, gender, episodeDate) {
   var guests = gaLoadGuests();
   var norm = gaNormText(name);
   var g = guests.find(function(x){ return gaNormText(x.name) === norm; });
@@ -3086,6 +3102,12 @@ function gaFindOrCreateGuest(name, defaultTitle, gender) {
     g = { id: Date.now()+'_'+Math.random().toString(36).slice(2,6), name: name.trim(), defaultTitle: defaultTitle||'', gender: gender||'andet', notes: '', topics: [], havkat: null, sources: [], contact: { email:'', phone:'', other:'' } };
     guests.push(g);
     gaSaveGuests(guests);
+  } else if (episodeDate) {
+    var latest = gaLatestAppearance(g.id);
+    if (!latest || episodeDate >= latest.ep.date) {
+      if (name && name.trim()) g.name = name.trim();
+      if (defaultTitle) g.defaultTitle = defaultTitle;
+    }
   }
   return g;
 }
@@ -3203,12 +3225,34 @@ async function gaParseManuscript() {
     gaMsDraft = {
       episode: Object.assign({ topicsOpen: false }, data.episode || {}),
       guests: (data.guests || []).map(function(g) {
-        return {
-          name: g.name, role: g.role, gender: g.gender,
+        var draft = {
+          name: g.name, role: g.role, gender: g.gender, category: '',
           topics: g.topics || [], havkat: g.havkat, havkatReason: g.havkatReason || '',
           preinterview: g.preinterview || '', phone: g.phone || '',
           include: true, topicsOpen: false,
+          existingGuestId: null, existingLatestDate: null,
         };
+        // Known guest, seen before under a different broadcast: use the
+        // archive's canonical name/rating rather than re-guessing them, and
+        // only borrow the archive's title/category when they're not stale
+        // (i.e. this import isn't itself the guest's newest appearance).
+        var existing = gaLoadGuests().find(function(x){ return gaNormText(x.name) === gaNormText(g.name); });
+        if (existing) {
+          var latest = gaLatestAppearance(existing.id);
+          draft.existingGuestId = existing.id;
+          draft.existingLatestDate = latest ? latest.ep.date : null;
+          draft.name = existing.name;
+          var epDate = (data.episode && data.episode.date) || '';
+          if (latest && epDate && latest.ep.date > epDate) {
+            if (existing.defaultTitle) draft.role = existing.defaultTitle;
+            if (latest.ge.category) draft.category = latest.ge.category;
+          }
+          if (existing.havkat != null) {
+            draft.havkat = existing.havkat;
+            draft.havkatReason = 'Hentet fra det eksisterende gæstekort';
+          }
+        }
+        return draft;
       }),
       warnings: data.warnings || {},
     };
@@ -3240,12 +3284,8 @@ function gaMsWarningsHtml() {
     if (dupEp) out.push('Udsendelsen “' + gaEscHtml(gaEpName(dupEp)) + '” findes allerede — den bliver opdateret, ikke oprettet på ny.');
   }
 
-  // Names already in the archive, so a re-import updates rather than duplicates.
-  var existing = gaLoadGuests();
-  (gaMsDraft.guests || []).forEach(function(g) {
-    var hit = existing.find(function(x){ return gaNormText(x.name) === gaNormText(g.name); });
-    if (hit) out.push('“' + gaEscHtml(g.name) + '” findes allerede — bliver opdateret, ikke oprettet på ny.');
-  });
+  // Names already in the archive get a "kendt gæst" badge on their own card
+  // instead of a line here — easier to spot at a glance than a buried list.
   if (!out.length) return '';
   return '<div class="ga-ms-warn"><strong>Tjek lige:</strong><ul>' +
     out.map(function(x){ return '<li>' + x + '</li>'; }).join('') + '</ul></div>';
@@ -3273,6 +3313,7 @@ function gaRenderMsReview() {
       '<div class="ga-ms-guest-head">' +
         '<label class="ga-ms-include"><input type="checkbox"' + (g.include ? ' checked' : '') +
           ' onchange="gaMsDraft.guests[' + i + '].include=this.checked;gaRenderMsReview()"> Medtag</label>' +
+        (g.existingGuestId ? '<span class="ga-ms-badge known">kendt gæst' + (g.existingLatestDate ? ' · sidst set ' + gaFmtDate(g.existingLatestDate) : '') + '</span>' : '') +
         (g.preinterview ? '<span class="ga-ms-badge">præinterview ' + Math.round(g.preinterview.length/1000) + ' KB</span>' : '') +
         (g.phone ? '<span class="ga-ms-badge">tlf.</span>' : '') +
       '</div>' +
@@ -3283,8 +3324,10 @@ function gaRenderMsReview() {
         gaField('Havkat', '<div class="ga-hk-rating" data-ms-index="' + i + '">' + gaHavkatHtml(g.havkat) + '</div>') +
       '</div>' +
       gaField('Rolle i udsendelsen', '<input class="ga-form-input" value="' + gaEscHtml(g.role) + '" oninput="gaMsDraft.guests[' + i + '].role=this.value">') +
+      gaField('Kategori', '<select class="ga-form-input" onchange="gaMsDraft.guests[' + i + '].category=this.value">' +
+        ['','politiker','ekspert','case','pro-deb'].map(function(v){ return '<option value="'+v+'"'+((g.category||'')===v?' selected':'')+'>'+(v||'— ingen —')+'</option>'; }).join('') + '</select>') +
       gaField('Emner', '<div data-ms-index="' + i + '">' + gaTopicEditorHtml(g.topics, g.topicsOpen) + '</div>') +
-      (g.havkatReason ? '<div class="ga-ms-reason">Vurdering i manuskriptet: “' + gaEscHtml(g.havkatReason) + '”</div>' : '') +
+      (g.havkatReason ? '<div class="ga-ms-reason">' + (g.existingGuestId ? '' : 'Vurdering i manuskriptet: ') + '“' + gaEscHtml(g.havkatReason) + '”</div>' : '') +
     '</div>';
   }).join('');
 
@@ -3332,7 +3375,7 @@ async function gaSaveManuscript() {
 
   for (var i = 0; i < chosen.length; i++) {
     var c = chosen[i];
-    var g = gaFindOrCreateGuest(c.name.trim(), c.role.trim(), c.gender);
+    var g = gaFindOrCreateGuest(c.name.trim(), c.role.trim(), c.gender, ep.date);
     g.topics = g.topics || [];
     c.topics.forEach(function(t){ if (g.topics.indexOf(t) === -1) g.topics.push(t); });
     if (g.havkat == null) g.havkat = c.havkat;
@@ -3340,8 +3383,7 @@ async function gaSaveManuscript() {
       g.contact = g.contact || { email:'', phone:'', other:'' };
       if (!g.contact.phone) g.contact.phone = c.phone;
     }
-    // Category deliberately left blank on import — set per guest later.
-    entries.push({ guestId: g.id, role: c.role.trim(), category: '', party: '' });
+    entries.push({ guestId: g.id, role: c.role.trim(), category: c.category || '', party: '' });
 
     if (c.preinterview) {
       await gaAddPreinterview(g.id, {
@@ -3666,12 +3708,8 @@ function gaBindAutocomplete(i) {
 }
 
 function gaApplyAutocomplete(i, guest) {
-  var eps = gaLoadEpisodes();
-  var lastAppearance = null;
-  for (var e = 0; e < eps.length; e++) {
-    var ge = (eps[e].guests||[]).find(function(x){ return x.guestId === guest.id; });
-    if (ge) { lastAppearance = ge; break; }
-  }
+  var latest = gaLatestAppearance(guest.id);
+  var lastAppearance = latest ? latest.ge : null;
   document.getElementById('ga-gr-name-'+i).value = guest.name;
   document.getElementById('ga-gr-title-'+i).value = guest.defaultTitle || '';
   var genderSel = document.getElementById('ga-gr-gender-'+i);
@@ -3706,7 +3744,7 @@ function gaSaveEpisode() {
   var guestEntries = [];
   gaGuestRows.forEach(function(row) {
     if (!row.name.trim()) return;
-    var g = gaFindOrCreateGuest(row.name.trim(), row.role.trim(), row.gender);
+    var g = gaFindOrCreateGuest(row.name.trim(), row.role.trim(), row.gender, date);
     guestEntries.push({ guestId: g.id, role: row.role.trim(), category: row.category, party: row.party||'' });
   });
   var eps = gaLoadEpisodes();

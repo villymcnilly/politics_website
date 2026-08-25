@@ -84,8 +84,8 @@ const SYSTEM = [
   '- role: titlen som den står i manuskriptet, fx "fhv. formand, Transparency International".',
   '- gender: gæt ud fra navn og kontekst; brug "andet" hvis det er usikkert.',
   '- topics: 0-3 fra listen, ud fra personens fagområde.',
-  '- havkat: hvor god en gæst personen er, 1-5. Manuskriptet har ofte en "Vurdering"-linje i præinterview-afsnittet ("Hun er rigtig god!" → 5, "God energi!" → 4, "havde ikke tid til at snakke" → 2). Findes der intet grundlag, så svar 0.',
-  '- havkat_reason: den korte sætning fra manuskriptet du baserer vurderingen på. Tom streng hvis havkat er 0.',
+  '- havkat: hvor god en gæst personen er, 1-5 — angiv ALTID et tal, aldrig 0 eller blankt. Manuskriptet har ofte en "Vurdering"-linje i præinterview-afsnittet ("Hun er rigtig god!" → 5, "God energi!" → 4, "havde ikke tid til at snakke" → 2) — brug den, hvis den findes. Findes der ingen eksplicit vurdering, så gæt ud fra alt tilgængeligt (rolle, hvor rutineret personen virker, tonen i et evt. præinterview) og angiv den bedste vurdering du kan. Er der virkelig intet at gå ud fra, så sæt 3.',
+  '- havkat_reason: den korte sætning fra manuskriptet du baserer vurderingen på. Er vurderingen et gæt uden eksplicit grundlag i manuskriptet, så skriv det (fx "intet eksplicit grundlag, sat til standardvurdering").',
   '',
   'Gæt aldrig oplysninger der ikke står i manuskriptet.',
 ].join('\n');
@@ -214,7 +214,7 @@ function sanitizeGuest(g) {
     role: String((g && g.role) || '').trim().slice(0, 300),
     gender: GENDERS.includes(g && g.gender) ? g.gender : 'andet',
     topics: Array.isArray(g && g.topics) ? g.topics.filter((t) => TOPICS.includes(t)).slice(0, 3) : [],
-    havkat: Number.isFinite(hk) && hk >= 1 && hk <= 5 ? Math.round(hk) : null,
+    havkat: Number.isFinite(hk) && hk >= 1 && hk <= 5 ? Math.round(hk) : 3,
     havkatReason: String((g && g.havkat_reason) || '').trim().slice(0, 300),
   };
 }

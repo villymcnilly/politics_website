@@ -2756,6 +2756,21 @@ function gaToggleInArray(arr, value) {
   return arr;
 }
 
+// Folds case, diacritics and punctuation so a query and the text being searched
+// are compared on equal terms. Previously the query had punctuation stripped
+// while the text kept it, so "Fogh-Rasmussen" could never match a guest called
+// Fogh-Rasmussen. Also makes å/aa and é/e interchangeable when searching.
+function gaNormText(s) {
+  return String(s == null ? '' : s)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')   // é→e, ü→u, ç→c, and å→a
+    .replace(/æ/g, 'ae')
+    .replace(/ø/g, 'o')                 // æ and ø have no decomposition, so map
+    .replace(/[^a-z0-9]+/g, ' ')        // them by hand — "Søren" is found as "Soren"
+    .trim();
+}
+
 // Sources were originally plain URL strings; they are now {url, title} so the
 // link can show the article's headline. Reading goes through this, so old and
 // new shapes both work without a destructive rewrite.
@@ -3386,12 +3401,12 @@ function gaRenderSidebar() {
   var guests = gaLoadGuests();
   var eps    = gaLoadEpisodes();
   var qEl = document.getElementById('ga-sidebar-q');
-  var q = qEl ? qEl.value.toLowerCase() : '';
+  var q = qEl ? gaNormText(qEl.value) : '';
   var topicFilter = (document.getElementById('ga-sidebar-topic')||{}).value || '';
   var counts = {};
   eps.forEach(function(ep){ (ep.guests||[]).forEach(function(ge){ counts[ge.guestId]=(counts[ge.guestId]||0)+1; }); });
   var sorted = guests
-    .filter(function(g){ return !q || g.name.toLowerCase().includes(q); })
+    .filter(function(g){ return !q || gaNormText(g.name).includes(q); })
     .filter(function(g){
       if (!topicFilter) return true;
       if (topicFilter === '__prospect__') return !counts[g.id];
@@ -3684,8 +3699,8 @@ function gaSearch() {
     .trim();
 
   // Tokenise remaining query (skip short stop-words)
-  var STOP = new Set(['og','i','på','med','af','en','et','er','som','til','fra','de','den','det','at','for','om','men','har','var','ikke']);
-  var tokens = textQ.split(/\s+/).map(function(t){ return t.replace(/[^a-zæøå0-9]/g,''); }).filter(function(t){ return t.length > 1 && !STOP.has(t); });
+  var STOP = new Set(['og','i','pa','med','af','en','et','er','som','til','fra','de','den','det','at','for','om','men','har','var','ikke']);
+  var tokens = gaNormText(textQ).split(' ').filter(function(t){ return t.length > 1 && !STOP.has(t); });
 
   // ── Scoring per guest ──────────────────────────────
   // Guest-centric on purpose: iterating episodes would make anyone who has
@@ -3721,7 +3736,7 @@ function gaSearch() {
       parts.push(a.ge.role||'', a.ge.category||'', a.ge.party||'',
                  a.ep.title||'', a.ep.desc||'', (a.ep.keywords||[]).join(' '));
     });
-    var blob = parts.join(' ').toLowerCase();
+    var blob = gaNormText(parts.join(' '));
 
     var hitFields = [];
     var score = 0;
@@ -3733,16 +3748,16 @@ function gaSearch() {
     tokens.forEach(function(tok) {
       if (!blob.includes(tok)) return;
       score += 1;
-      if (g.name.toLowerCase().includes(tok))                hitFields.push('navn');
-      if ((g.defaultTitle||'').toLowerCase().includes(tok))  hitFields.push('titel');
-      if (topicText.toLowerCase().includes(tok))             hitFields.push('emner');
-      if ((g.notes||'').toLowerCase().includes(tok))         hitFields.push('noter');
+      if (gaNormText(g.name).includes(tok))               hitFields.push('navn');
+      if (gaNormText(g.defaultTitle).includes(tok))        hitFields.push('titel');
+      if (gaNormText(topicText).includes(tok))             hitFields.push('emner');
+      if (gaNormText(g.notes).includes(tok))               hitFields.push('noter');
       appearances.forEach(function(a) {
-        if ((a.ge.role||'').toLowerCase().includes(tok))     hitFields.push('rolle');
-        if ((a.ge.party||'').toLowerCase().includes(tok))    hitFields.push('parti');
-        if ((a.ep.title||'').toLowerCase().includes(tok))    hitFields.push('udsendelse');
-        if ((a.ep.desc||'').toLowerCase().includes(tok))     hitFields.push('beskrivelse');
-        if ((a.ep.keywords||[]).join(' ').toLowerCase().includes(tok)) hitFields.push('emneord');
+        if (gaNormText(a.ge.role).includes(tok))           hitFields.push('rolle');
+        if (gaNormText(a.ge.party).includes(tok))          hitFields.push('parti');
+        if (gaNormText(a.ep.title).includes(tok))          hitFields.push('udsendelse');
+        if (gaNormText(a.ep.desc).includes(tok))           hitFields.push('beskrivelse');
+        if (gaNormText((a.ep.keywords||[]).join(' ')).includes(tok)) hitFields.push('emneord');
       });
     });
 

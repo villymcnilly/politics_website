@@ -800,8 +800,8 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-candidate-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
 .ga-candidate-row.full { grid-template-columns: 1fr; }
 .ga-topic-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
-.ga-topic-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink-2); background: var(--panel); border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 10px; cursor: pointer; user-select: none; }
-.ga-topic-pill input { margin: 0; }
+.ga-topic-pill { display: inline-flex; align-items: center; font-family: inherit; font-size: 12px; color: var(--ink-2); background: var(--panel); border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 10px; cursor: pointer; user-select: none; transition: all 0.13s; }
+.ga-topic-pill:hover { border-color: var(--ink-2); color: var(--ink); }
 .ga-topic-pill.on { border-color: var(--ink); color: var(--ink); font-weight: 600; background: var(--hover); }
 .ga-candidate-add { font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 14px; border-radius: 7px; border: none; background: var(--ink); color: var(--bg); cursor: pointer; }
 .ga-candidate-add:disabled { opacity: 0.4; cursor: default; }
@@ -2569,6 +2569,38 @@ async function gaFetchAll() {
 
 function gaEscHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
+// Topic pills, shared by the candidate cards and the guest profile panel.
+// The topic travels in a data-topic attribute rather than being interpolated
+// into an inline handler, so names containing quotes or & can't break out.
+function gaTopicPillsHtml(selected) {
+  var chosen = selected || [];
+  return GA_TOPICS.map(function(t) {
+    var on = chosen.indexOf(t) !== -1;
+    return '<button type="button" class="ga-topic-pill' + (on ? ' on' : '') +
+      '" data-topic="' + gaEscHtml(t) + '">' + gaEscHtml(t) + '</button>';
+  }).join('');
+}
+
+// One delegated listener handles every topic pill on the page.
+document.addEventListener('click', function(e) {
+  var pill = e.target.closest ? e.target.closest('.ga-topic-pill') : null;
+  if (!pill) return;
+  var topic = pill.getAttribute('data-topic');
+  var container = pill.parentNode;
+  if (container.id === 'ga-profile-topics') {
+    gaToggleProfileTopic(topic);
+  } else if (container.hasAttribute('data-candidate-index')) {
+    gaToggleCandidateTopic(parseInt(container.getAttribute('data-candidate-index'), 10), topic);
+  }
+});
+
+// Add/remove a value in an array, in place. Returns the array.
+function gaToggleInArray(arr, value) {
+  var i = arr.indexOf(value);
+  if (i === -1) arr.push(value); else arr.splice(i, 1);
+  return arr;
+}
+
 // ── Guest registry ────────────────────────────────────
 function gaFindOrCreateGuest(name, defaultTitle, gender) {
   var guests = gaLoadGuests();
@@ -2676,34 +2708,34 @@ async function gaExtractFromArticle() {
   }
 }
 
+function gaSelectHtml(field, index, options, current) {
+  return '<select class="ga-form-input" onchange="gaExtractCandidates[' + index + '].' + field + '=this.value">' +
+    options.map(function(o) {
+      return '<option value="' + o + '"' + (current === o ? ' selected' : '') + '>' + o + '</option>';
+    }).join('') + '</select>';
+}
+
+function gaField(label, inner) {
+  return '<div class="ga-form-field"><label class="ga-form-label">' + label + '</label>' + inner + '</div>';
+}
+
 function gaRenderExtractResults() {
-  var el = document.getElementById('ga-extract-results');
-  el.innerHTML = gaExtractCandidates.map(function(c, i) {
-    var topicPills = GA_TOPICS.map(function(t) {
-      var on = c.topics.indexOf(t) !== -1;
-      return '<label class="ga-topic-pill' + (on ? ' on' : '') + '">' +
-        '<input type="checkbox" style="display:none" ' + (on ? 'checked' : '') + ' onchange="gaToggleCandidateTopic(' + i + ',\'' + gaEscHtml(t).replace(/'/g,"\\'") + '\')">' +
-        gaEscHtml(t) + '</label>';
-    }).join('');
-    return '<div class="ga-candidate' + (c.added ? ' added' : '') + '" id="ga-cand-' + i + '">' +
+  document.getElementById('ga-extract-results').innerHTML = gaExtractCandidates.map(function(c, i) {
+    var nameInput = '<input class="ga-form-input" value="' + gaEscHtml(c.name) +
+      '" oninput="gaExtractCandidates[' + i + '].name=this.value">';
+    var descInput = '<input class="ga-form-input" value="' + gaEscHtml(c.descriptor) +
+      '" oninput="gaExtractCandidates[' + i + '].descriptor=this.value">';
+
+    return '<div class="ga-candidate' + (c.added ? ' added' : '') + '">' +
       '<div class="ga-candidate-row">' +
-        '<div class="ga-form-field"><label class="ga-form-label">Navn</label>' +
-        '<input class="ga-form-input" value="' + gaEscHtml(c.name) + '" oninput="gaExtractCandidates[' + i + '].name=this.value"></div>' +
-        '<div class="ga-form-field"><label class="ga-form-label">Køn</label>' +
-        '<select class="ga-form-input" onchange="gaExtractCandidates[' + i + '].gender=this.value">' +
-          ['mand','kvinde','andet'].map(function(g){ return '<option value="'+g+'"'+(c.gender===g?' selected':'')+'>'+g+'</option>'; }).join('') +
-        '</select></div>' +
+        gaField('Navn', nameInput) +
+        gaField('Køn', gaSelectHtml('gender', i, ['mand','kvinde','andet'], c.gender)) +
       '</div>' +
-      '<div class="ga-candidate-row full">' +
-        '<div class="ga-form-field"><label class="ga-form-label">Beskrivelse</label>' +
-        '<input class="ga-form-input" value="' + gaEscHtml(c.descriptor) + '" oninput="gaExtractCandidates[' + i + '].descriptor=this.value"></div>' +
-      '</div>' +
-      '<div class="ga-form-field"><label class="ga-form-label">Kategori</label>' +
-      '<select class="ga-form-input" style="max-width:160px" onchange="gaExtractCandidates[' + i + '].category=this.value">' +
-        ['politiker','ekspert','case','pro-deb'].map(function(cat){ return '<option value="'+cat+'"'+(c.category===cat?' selected':'')+'>'+cat+'</option>'; }).join('') +
-      '</select></div>' +
-      '<div class="ga-topic-pills">' + topicPills + '</div>' +
-      '<button class="ga-candidate-add" ' + (c.added ? 'disabled' : '') + ' onclick="gaAddExtractedGuest(' + i + ')">' + (c.added ? 'Tilføjet ✓' : 'Tilføj til gæstearkiv') + '</button>' +
+      '<div class="ga-candidate-row full">' + gaField('Beskrivelse', descInput) + '</div>' +
+      gaField('Kategori', gaSelectHtml('category', i, ['politiker','ekspert','case','pro-deb'], c.category)) +
+      '<div class="ga-topic-pills" data-candidate-index="' + i + '">' + gaTopicPillsHtml(c.topics) + '</div>' +
+      '<button class="ga-candidate-add"' + (c.added ? ' disabled' : '') + ' onclick="gaAddExtractedGuest(' + i + ')">' +
+        (c.added ? 'Tilføjet ✓' : 'Tilføj til gæstearkiv') + '</button>' +
       '<button class="ga-candidate-dismiss" onclick="gaDismissCandidate(' + i + ')">Afvis</button>' +
     '</div>';
   }).join('');
@@ -2711,8 +2743,8 @@ function gaRenderExtractResults() {
 
 function gaToggleCandidateTopic(i, topic) {
   var c = gaExtractCandidates[i];
-  var idx = c.topics.indexOf(topic);
-  if (idx === -1) c.topics.push(topic); else c.topics.splice(idx, 1);
+  if (!c) return;
+  gaToggleInArray(c.topics, topic);
   gaRenderExtractResults();
 }
 
@@ -2721,16 +2753,22 @@ function gaDismissCandidate(i) {
   gaRenderExtractResults();
 }
 
+// Routes through gaFindOrCreateGuest so a person already in the registry
+// (from an earlier article or a past episode) is updated rather than duplicated.
 function gaAddExtractedGuest(i) {
   var c = gaExtractCandidates[i];
-  if (!c || c.added) return;
-  var guests = gaLoadGuests();
-  guests.push({
-    id: Date.now() + '_' + Math.random().toString(36).slice(2,6),
-    name: c.name, defaultTitle: c.descriptor, gender: c.gender,
-    notes: '', topics: c.topics.slice(),
+  if (!c || c.added || !c.name.trim()) return;
+
+  // gaFindOrCreateGuest returns a live reference into the cached guest list,
+  // so mutating it here and saving is enough — no second lookup needed.
+  var g = gaFindOrCreateGuest(c.name, c.descriptor, c.gender);
+  g.topics = g.topics || [];
+  c.topics.forEach(function(t) {
+    if (g.topics.indexOf(t) === -1) g.topics.push(t);
   });
-  gaSaveGuests(guests);
+  if (!g.defaultTitle) g.defaultTitle = c.descriptor;
+  gaSaveGuests(gaLoadGuests());
+
   c.added = true;
   gaRenderExtractResults();
   gaRenderSidebar();
@@ -3166,12 +3204,7 @@ function gaOpenProfile(guestId) {
   document.getElementById('ga-profile-title').textContent = g.defaultTitle || '';
   document.getElementById('ga-profile-gender').textContent = g.gender;
   document.getElementById('ga-profile-status').textContent = eps.length === 0 ? 'Kandidat — ikke optrådt endnu' : eps.length + ' optræden' + (eps.length===1?'':'er');
-  document.getElementById('ga-profile-topics').innerHTML = GA_TOPICS.map(function(t) {
-    var on = (g.topics||[]).indexOf(t) !== -1;
-    return '<label class="ga-topic-pill' + (on?' on':'') + '">' +
-      '<input type="checkbox" style="display:none" ' + (on?'checked':'') + ' onchange="gaToggleProfileTopic(\'' + gaEscHtml(t).replace(/'/g,"\\'") + '\')">' +
-      gaEscHtml(t) + '</label>';
-  }).join('');
+  document.getElementById('ga-profile-topics').innerHTML = gaTopicPillsHtml(g.topics);
   document.getElementById('ga-pnotes').value = g.notes || '';
   document.getElementById('ga-pep-head').textContent = eps.length + ' udsendelse' + (eps.length===1?'':'r');
   var epsEl = document.getElementById('ga-profile-eps');
@@ -3195,16 +3228,16 @@ function gaCloseProfile() {
   gaCurrentProfile = null;
 }
 
+// Repaints only the pills — re-opening the whole profile here would reset the
+// notes textarea and discard whatever the user had typed but not yet saved.
 function gaToggleProfileTopic(topic) {
   if (!gaCurrentProfile) return;
   var guests = gaLoadGuests();
   var g = guests.find(function(x){ return x.id===gaCurrentProfile; });
   if (!g) return;
-  g.topics = g.topics || [];
-  var idx = g.topics.indexOf(topic);
-  if (idx === -1) g.topics.push(topic); else g.topics.splice(idx, 1);
+  g.topics = gaToggleInArray(g.topics || [], topic);
   gaSaveGuests(guests);
-  gaOpenProfile(gaCurrentProfile);
+  document.getElementById('ga-profile-topics').innerHTML = gaTopicPillsHtml(g.topics);
 }
 
 function gaSaveProfile() {

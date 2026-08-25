@@ -2945,10 +2945,14 @@ async function gaRenderProfilePre(guestId) {
 }
 
 // ── Guest registry ────────────────────────────────────
+// Matches on the same normalised form as search and as the import warning, so
+// "Uffe Elbaek" resolves to an existing "Uffe Elbæk" instead of becoming a
+// second card. Folding is exact-after-normalisation, not fuzzy, so distinct
+// people ("Anders Fogh" vs "Anders Fogh-Rasmussen") stay separate.
 function gaFindOrCreateGuest(name, defaultTitle, gender) {
   var guests = gaLoadGuests();
-  var norm = name.trim().toLowerCase();
-  var g = guests.find(function(x){ return x.name.toLowerCase() === norm; });
+  var norm = gaNormText(name);
+  var g = guests.find(function(x){ return gaNormText(x.name) === norm; });
   if (!g) {
     g = { id: Date.now()+'_'+Math.random().toString(36).slice(2,6), name: name.trim(), defaultTitle: defaultTitle||'', gender: gender||'andet', notes: '', topics: [], havkat: null, sources: [], contact: { email:'', phone:'', other:'' } };
     guests.push(g);
@@ -3092,6 +3096,14 @@ function gaMsWarningsHtml() {
   (w.unmatchedHeadings || []).forEach(function(h) {
     out.push('“' + gaEscHtml(h) + '” har et præinterview, men blev ikke fundet som gæst.');
   });
+  var epDraft = gaMsDraft.episode || {};
+  if (epDraft.date && epDraft.title) {
+    var dupEp = gaLoadEpisodes().find(function(e) {
+      return e.date === epDraft.date && gaNormText(e.title) === gaNormText(epDraft.title);
+    });
+    if (dupEp) out.push('Udsendelsen “' + gaEscHtml(gaEpName(dupEp)) + '” findes allerede — den bliver opdateret, ikke oprettet på ny.');
+  }
+
   // Names already in the archive, so a re-import updates rather than duplicates.
   var existing = gaLoadGuests();
   (gaMsDraft.guests || []).forEach(function(g) {
@@ -3173,7 +3185,12 @@ async function gaSaveManuscript() {
   status.className = 'ga-extract-status';
   status.textContent = 'Gemmer…';
 
-  var episodeId = Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  // Re-importing a manuscript should correct the episode already there, not add
+  // a second copy of it. Same date + title is treated as the same broadcast.
+  var existingEp = gaLoadEpisodes().find(function(e) {
+    return e.date === ep.date && gaNormText(e.title) === gaNormText(ep.title);
+  });
+  var episodeId = existingEp ? existingEp.id : Date.now() + '_' + Math.random().toString(36).slice(2,6);
   var entries = [];
 
   for (var i = 0; i < chosen.length; i++) {
@@ -3198,14 +3215,17 @@ async function gaSaveManuscript() {
   gaSaveGuests(gaLoadGuests());
 
   var eps = gaLoadEpisodes();
-  eps.unshift({
+  var record = {
     id: episodeId, date: ep.date, title: ep.title,
     keywords: ep.keywords || [], link: ep.link || '', desc: ep.desc || '',
     guests: entries,
-  });
+  };
+  var atIdx = eps.findIndex(function(e){ return e.id === episodeId; });
+  if (atIdx === -1) eps.unshift(record); else eps[atIdx] = record;
   gaSaveEpisodes(eps);
 
-  status.textContent = 'Gemt: ' + gaEpName(ep) + ' med ' + chosen.length + ' gæst' + (chosen.length===1?'':'er');
+  status.textContent = (existingEp ? 'Opdateret: ' : 'Gemt: ') + gaEpName(ep) +
+    ' med ' + chosen.length + ' gæst' + (chosen.length===1?'':'er');
   gaMsDraft = null;
   document.getElementById('ga-ms-review').innerHTML = '';
   gaRender();

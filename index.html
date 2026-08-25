@@ -922,7 +922,24 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-pre-toggle.open::before { transform: rotate(90deg); }
 .ga-pre-toggle:hover { color: var(--a); }
 .ga-pre-body { display: none; font-size: 12.5px; line-height: 1.6; color: var(--ink-2); white-space: pre-wrap; padding: 4px 0 14px 16px; max-height: 340px; overflow-y: auto; }
-.ga-pre-body.open { display: block; }
+.ga-pre-open { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.ga-modal { position: fixed; inset: 0; z-index: 900; display: none; }
+.ga-modal.on { display: block; }
+.ga-modal-bd { position: absolute; inset: 0; background: rgba(26,25,22,0.42); }
+.ga-modal-sheet { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: 780px; max-width: calc(100vw - 40px); height: 82vh; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 60px rgba(26,25,22,0.28);
+  display: flex; flex-direction: column; overflow: hidden; }
+.ga-modal-head { flex-shrink: 0; display: flex; align-items: flex-start; gap: 16px; padding: 20px 24px 16px; border-bottom: 1px solid var(--line); }
+.ga-modal-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+.ga-modal-title { font-family: 'Newsreader', serif; font-size: 21px; line-height: 1.2; letter-spacing: -0.01em; color: var(--ink); }
+.ga-modal-close { margin-left: auto; flex-shrink: 0; background: none; border: none; font-size: 24px; line-height: 1; color: var(--muted); cursor: pointer; padding: 0 2px; transition: color 0.15s; }
+.ga-modal-close:hover { color: var(--ink); }
+.ga-modal-body { flex: 1; overflow-y: auto; padding: 22px 24px 26px; font-size: 14px; line-height: 1.72;
+  color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.ga-modal-foot { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px; border-top: 1px solid var(--line); }
+.ga-modal-hint { font-size: 11.5px; color: var(--faint); }
+@media (max-width: 640px) { .ga-modal-sheet { height: 90vh; border-radius: 10px; } .ga-modal-body { padding: 16px 18px 20px; font-size: 13.5px; } }
 @media (max-width: 820px) {
   .ga-layout { grid-template-columns: 1fr; }
   .ga-sidebar { display: none; }
@@ -1637,6 +1654,24 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
     </div>
   </div>
 </div><!-- end page-gaestearkiv -->
+
+<div class="ga-modal" id="ga-pre-modal" aria-hidden="true">
+  <div class="ga-modal-bd" onclick="gaClosePre()"></div>
+  <div class="ga-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="ga-pre-modal-title">
+    <div class="ga-modal-head">
+      <div>
+        <div class="ga-modal-eyebrow" id="ga-pre-modal-who">–</div>
+        <div class="ga-modal-title" id="ga-pre-modal-title">–</div>
+      </div>
+      <button class="ga-modal-close" onclick="gaClosePre()" title="Luk">&times;</button>
+    </div>
+    <div class="ga-modal-body" id="ga-pre-modal-body"></div>
+    <div class="ga-modal-foot">
+      <span class="ga-modal-hint" id="ga-pre-modal-meta"></span>
+      <button class="ga-plink-btn" onclick="gaDownloadPre()">Hent som .txt</button>
+    </div>
+  </div>
+</div>
 
 <div class="picker" id="picker" aria-hidden="true">
   <div class="picker-bd" onclick="closePicker()"></div>
@@ -2608,7 +2643,12 @@ async function initAuth() {
   });
 }
 
-document.addEventListener('keydown', function(e){ if(e.key==='Escape') closePicker(); });
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Escape') return;
+  var pre = document.getElementById('ga-pre-modal');
+  if (pre && pre.classList.contains('on')) { gaClosePre(); return; }
+  closePicker();
+});
 
 // ── Theme toggle ──────────────────────────────────────────────────────────────
 function applyTheme(theme) {
@@ -2784,11 +2824,7 @@ document.addEventListener('click', function(e) {
 
   var preBtn = e.target.closest('[data-pre-index]');
   if (preBtn) {
-    var body = document.getElementById('ga-pre-body-' + preBtn.getAttribute('data-pre-index'));
-    if (body) {
-      var open = body.classList.toggle('open');
-      preBtn.classList.toggle('open', open);
-    }
+    gaOpenPre(parseInt(preBtn.getAttribute('data-pre-index'), 10));
     return;
   }
 
@@ -2921,6 +2957,67 @@ async function gaAddPreinterview(guestId, entry) {
   gaSavePreinterviews(guestId, next);
 }
 
+// A pre-interview runs to several thousand words; the 420px sidebar is the
+// wrong place to read one. Opening it in a wide sheet gives it a readable
+// measure, and the same text can be pulled out as a .txt for Notepad.
+var gaPreShown = [];
+var gaPreCurrent = null;
+
+function gaOpenPre(i) {
+  var entry = gaPreShown[i];
+  if (!entry) return;
+  var g = gaGetGuest(gaCurrentProfile);
+  gaPreCurrent = { entry: entry, guestName: g ? g.name : '' };
+
+  document.getElementById('ga-pre-modal-who').textContent = 'Præinterview · ' + (g ? g.name : '');
+  document.getElementById('ga-pre-modal-title').textContent =
+    gaEpName({ date: entry.date, title: entry.title }) || 'Præinterview';
+  document.getElementById('ga-pre-modal-body').textContent = entry.text || '';
+  var words = (entry.text || '').trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('ga-pre-modal-meta').textContent = words + ' ord';
+
+  var m = document.getElementById('ga-pre-modal');
+  m.classList.add('on');
+  m.setAttribute('aria-hidden', 'false');
+  document.getElementById('ga-pre-modal-body').scrollTop = 0;
+}
+
+function gaClosePre() {
+  var m = document.getElementById('ga-pre-modal');
+  m.classList.remove('on');
+  m.setAttribute('aria-hidden', 'true');
+  gaPreCurrent = null;
+}
+
+// Filename-safe: fold the accents, drop anything else, keep it recognisable
+// in a downloads folder.
+function gaSlug(s) {
+  return gaNormText(s).replace(/\s+/g, '-').slice(0, 60) || 'praeinterview';
+}
+
+function gaDownloadPre() {
+  if (!gaPreCurrent) return;
+  var e = gaPreCurrent.entry;
+  var label = gaEpName({ date: e.date, title: e.title });
+  var header = [
+    'Præinterview',
+    gaPreCurrent.guestName,
+    label,
+    '',
+    '',
+  ].join('\n');
+  var blob = new Blob([header + (e.text || '')], { type: 'text/plain;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'praeinterview_' + gaSlug(gaPreCurrent.guestName) + '_' +
+    (String(e.date || '').replace(/-/g, '') || 'udateret') + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+
 async function gaRenderProfilePre(guestId) {
   var el = document.getElementById('ga-profile-pre');
   if (!el) return;
@@ -2931,15 +3028,16 @@ async function gaRenderProfilePre(guestId) {
     el.innerHTML = '<div class="ga-pempty">Ingen præinterviews</div>';
     return;
   }
-  el.innerHTML = list
+  gaPreShown = list
     .slice()
-    .sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); })
-    .map(function(x, i) {
+    .sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); });
+  el.innerHTML = gaPreShown.map(function(x, i) {
       var label = gaEpName({ date: x.date, title: x.title }) || 'Præinterview';
+      var kb = Math.max(1, Math.round((x.text || '').length / 1000));
       return '<div class="ga-pre">' +
         '<button type="button" class="ga-pre-toggle" data-pre-index="' + i + '">' +
-          gaEscHtml(label) + '</button>' +
-        '<div class="ga-pre-body" id="ga-pre-body-' + i + '">' + gaEscHtml(x.text || '') + '</div>' +
+          gaEscHtml(label) + '<span class="ga-pre-open">' + kb + ' KB · åbn</span>' +
+        '</button>' +
       '</div>';
     }).join('');
 }

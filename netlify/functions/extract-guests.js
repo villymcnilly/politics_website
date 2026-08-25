@@ -4,8 +4,6 @@
 // and edits each candidate in the UI before anything is written to Supabase.
 
 const Anthropic = require('@anthropic-ai/sdk');
-const { z } = require('zod');
-const { zodOutputFormat } = require('@anthropic-ai/sdk/helpers/zod');
 
 const TOPICS = [
   'Klima & energi',
@@ -19,18 +17,48 @@ const TOPICS = [
   'Business og nationaløkonomi',
   'Dannelse og trivsel',
 ];
+const GENDERS = ['mand', 'kvinde', 'ukendt'];
+const CATEGORIES = ['politiker', 'ekspert', 'case', 'pro-deb', 'ukendt'];
 
-const ExtractionSchema = z.object({
-  people: z.array(
-    z.object({
-      name: z.string(),
-      descriptor: z.string(),
-      gender_guess: z.enum(['mand', 'kvinde', 'ukendt']),
-      category_guess: z.enum(['politiker', 'ekspert', 'case', 'pro-deb', 'ukendt']),
-      topics: z.array(z.enum(TOPICS)),
-    }),
-  ),
-});
+// Hand-written JSON Schema rather than the SDK's zodOutputFormat() helper —
+// that helper currently mis-serializes z.enum() (dumps the enum into a
+// stringified `description` instead of a real `enum` array) with the
+// installed Zod version, so enum constraints silently didn't apply.
+const OUTPUT_SCHEMA = {
+  type: 'json_schema',
+  schema: {
+    type: 'object',
+    properties: {
+      people: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            descriptor: { type: 'string' },
+            gender_guess: { type: 'string', enum: GENDERS },
+            category_guess: { type: 'string', enum: CATEGORIES },
+            topics: { type: 'array', items: { type: 'string', enum: TOPICS } },
+          },
+          required: ['name', 'descriptor', 'gender_guess', 'category_guess', 'topics'],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ['people'],
+    additionalProperties: false,
+  },
+};
+
+function sanitizePerson(p) {
+  return {
+    name: String((p && p.name) || '').slice(0, 200),
+    descriptor: String((p && p.descriptor) || '').slice(0, 300),
+    gender_guess: GENDERS.includes(p && p.gender_guess) ? p.gender_guess : 'ukendt',
+    category_guess: CATEGORIES.includes(p && p.category_guess) ? p.category_guess : 'ukendt',
+    topics: Array.isArray(p && p.topics) ? p.topics.filter((t) => TOPICS.includes(t)).slice(0, 3) : [],
+  };
+}
 
 function stripHtml(html) {
   return html
@@ -92,10 +120,10 @@ exports.handler = async function (event) {
 
   try {
     const client = new Anthropic();
-    const response = await client.messages.parse({
+    const response = await client.messages.create({
       model: 'claude-opus-5',
       max_tokens: 4096,
-      output_config: { effort: 'medium', format: zodOutputFormat(ExtractionSchema) },
+      output_config: { effort: 'medium', format: OUTPUT_SCHEMA },
       system:
         'Du analyserer danske nyhedsartikler for at finde potentielle gæster til en politisk debat-podcast. ' +
         'Find hver navngivet person i artiklen der er en kilde, citeret, interviewet, eller som artiklen handler om — ikke journalisten/bylinen. ' +
@@ -111,14 +139,24 @@ exports.handler = async function (event) {
       ],
     });
 
-    if (!response.parsed_output) {
+    const textBlock = response.content.find((b) => b.type === 'text');
+    if (!textBlock) {
+      return { statusCode: 502, body: JSON.stringify({ error: 'Intet svar fra Claude' }) };
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(textBlock.text);
+    } catch (e) {
       return { statusCode: 502, body: JSON.stringify({ error: 'Kunne ikke tolke svaret fra Claude' }) };
     }
+
+    const people = Array.isArray(parsed.people) ? parsed.people.map(sanitizePerson) : [];
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(response.parsed_output),
+      body: JSON.stringify({ people }),
     };
   } catch (e) {
     return {

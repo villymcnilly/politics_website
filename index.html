@@ -2280,6 +2280,9 @@ async function renderBets() {
 const sbClient = supabase.createClient(SB_URL, SB_KEY);
 let currentUser = null; // { email, displayName, id }
 
+// TEMP: both login gates disabled while testing. Set to false to re-enable.
+const LOGIN_DISABLED = true;
+
 function showStep(step) {
   document.querySelectorAll('.auth-step').forEach(function(el){ el.classList.remove('on'); });
   document.getElementById('auth-step-'+step).classList.add('on');
@@ -2383,6 +2386,12 @@ async function signOut() {
 }
 
 async function initAuth() {
+  if(LOGIN_DISABLED) {
+    currentUser = { email: 'tester@lokal.dk', displayName: 'Tester', id: 'local-test' };
+    onLoggedIn();
+    return;
+  }
+
   // Handle magic link token in URL hash (when user clicks link in email)
   const { data: { session }, error } = await sbClient.auth.getSession();
 
@@ -2530,7 +2539,7 @@ function gaFindOrCreateGuest(name, defaultTitle, gender) {
 function gaGetGuest(id) { return gaLoadGuests().find(function(g){ return g.id===id; }); }
 
 // ── Password gate ─────────────────────────────────────
-function gaCheckAuth() { return sessionStorage.getItem('gaestearkiv_auth')==='1'; }
+function gaCheckAuth() { return LOGIN_DISABLED || sessionStorage.getItem('gaestearkiv_auth')==='1'; }
 
 function gaUnlock() {
   var pw = document.getElementById('ga-pw-input').value;

@@ -783,7 +783,7 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-ep-desc { font-size: 12.5px; color: var(--ink-2); line-height: 1.55; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
 .ga-ep-desc.expanded { -webkit-line-clamp: unset; overflow: visible; }
 .ga-guest-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
-.ga-guest-row { display: grid; grid-template-columns: 1fr 1fr 90px 110px 120px 100px 28px; gap: 7px; align-items: center; }
+.ga-guest-row { display: grid; grid-template-columns: 1fr 1fr 90px 110px 120px 28px; gap: 7px; align-items: center; }
 .ga-guest-row input, .ga-guest-row select { font-family: inherit; font-size: 13px; color: var(--ink); padding: 7px 8px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--bg); outline: none; width: 100%; }
 .ga-guest-row input:focus, .ga-guest-row select:focus { border-color: var(--ink-2); }
 .ga-rm-btn { background: none; border: none; cursor: pointer; color: var(--faint); font-size: 18px; line-height: 1; padding: 2px 4px; transition: color 0.12s; width: 100%; text-align: center; }
@@ -834,9 +834,13 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-cat-ekspert   { background: var(--f); }
 .ga-cat-case      { background: var(--m); }
 .ga-cat-pro-deb   { background: var(--b); }
-.ga-hk-row { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
-.ga-hk-slider { flex: 1; accent-color: var(--ink); cursor: pointer; }
-.ga-hk-val { font-size: 12px; font-weight: 600; color: var(--ink); min-width: 18px; text-align: center; }
+.ga-hk-rating { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.ga-hk-dot { font-family: inherit; font-size: 12.5px; font-weight: 600; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 1px solid var(--line-2); background: var(--panel); color: var(--faint); cursor: pointer; transition: all 0.13s; }
+.ga-hk-dot:hover { border-color: var(--ink-2); color: var(--ink); }
+.ga-hk-dot.on { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+.ga-hk-clear { font-family: inherit; font-size: 15px; line-height: 1; width: 24px; height: 28px; padding: 0; border: none; background: none; color: var(--faint); cursor: pointer; margin-left: 2px; transition: color 0.13s; }
+.ga-hk-clear:hover { color: var(--loss-ink); }
+.ga-hk-unrated { font-size: 12px; color: var(--faint); font-style: italic; margin-left: 6px; }
 .ga-profile { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; max-width: 90%; background: var(--panel); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg); transform: translateX(105%); transition: transform 0.25s cubic-bezier(.4,0,.2,1); z-index: 300; display: flex; flex-direction: column; overflow: hidden; }
 .ga-profile.open { transform: translateX(0); }
 .ga-profile-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); flex-shrink: 0; display: flex; align-items: flex-start; gap: 10px; }
@@ -1372,9 +1376,9 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
         </select>
         <select class="ga-filter-select" id="ga-f-hk" onchange="gaSearch()">
           <option value="">Alle havkat</option>
-          <option value="5">5+</option>
-          <option value="7">7+</option>
-          <option value="9">9+</option>
+          <option value="3">3+</option>
+          <option value="4">4+</option>
+          <option value="5">5</option>
         </select>
       </div>
       <div class="ga-search-bar">
@@ -1496,6 +1500,8 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
         <span id="ga-profile-gender"></span>
       </div>
       <div class="ga-pfield-label" id="ga-profile-status"></div>
+      <div class="ga-pfield-label">Havkatsfaktor <span style="font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;color:var(--faint)">— hvor sjove er de? 1–5</span></div>
+      <div class="ga-hk-rating" id="ga-profile-havkat"></div>
       <div class="ga-pfield-label">Emner</div>
       <div class="ga-topic-pills" id="ga-profile-topics"></div>
       <div class="ga-pfield-label">Noter</div>
@@ -2581,16 +2587,53 @@ function gaTopicPillsHtml(selected) {
   }).join('');
 }
 
-// One delegated listener handles every topic pill on the page.
+// Havkatsfaktor — how fun a guest is, rated 1–5. Stored on the guest, not on
+// individual appearances; null means "not rated yet".
+var GA_HAVKAT_MAX = 5;
+
+function gaHavkatHtml(value) {
+  var v = value == null ? 0 : value;
+  var dots = '';
+  for (var n = 1; n <= GA_HAVKAT_MAX; n++) {
+    dots += '<button type="button" class="ga-hk-dot' + (n <= v ? ' on' : '') +
+      '" data-havkat="' + n + '">' + n + '</button>';
+  }
+  if (v) dots += '<button type="button" class="ga-hk-clear" data-havkat="0" title="Ryd vurdering">×</button>';
+  else dots += '<span class="ga-hk-unrated">ikke vurderet</span>';
+  return dots;
+}
+
+// Ratings used to be 1–10 per appearance; the guest-level scale is 1–5.
+function gaHavkatFrom10(v) {
+  return Math.max(1, Math.min(GA_HAVKAT_MAX, Math.round(v / 2)));
+}
+
+// One delegated listener handles every topic pill and rating dot on the page.
 document.addEventListener('click', function(e) {
-  var pill = e.target.closest ? e.target.closest('.ga-topic-pill') : null;
-  if (!pill) return;
-  var topic = pill.getAttribute('data-topic');
-  var container = pill.parentNode;
-  if (container.id === 'ga-profile-topics') {
-    gaToggleProfileTopic(topic);
-  } else if (container.hasAttribute('data-candidate-index')) {
-    gaToggleCandidateTopic(parseInt(container.getAttribute('data-candidate-index'), 10), topic);
+  if (!e.target.closest) return;
+
+  var pill = e.target.closest('.ga-topic-pill');
+  if (pill) {
+    var topic = pill.getAttribute('data-topic');
+    var pillBox = pill.parentNode;
+    if (pillBox.id === 'ga-profile-topics') {
+      gaToggleProfileTopic(topic);
+    } else if (pillBox.hasAttribute('data-candidate-index')) {
+      gaToggleCandidateTopic(parseInt(pillBox.getAttribute('data-candidate-index'), 10), topic);
+    }
+    return;
+  }
+
+  var dot = e.target.closest('[data-havkat]');
+  if (dot) {
+    var raw = parseInt(dot.getAttribute('data-havkat'), 10);
+    var rating = raw === 0 ? null : raw;
+    var hkBox = dot.parentNode;
+    if (hkBox.id === 'ga-profile-havkat') {
+      gaSetProfileHavkat(rating);
+    } else if (hkBox.hasAttribute('data-candidate-index')) {
+      gaSetCandidateHavkat(parseInt(hkBox.getAttribute('data-candidate-index'), 10), rating);
+    }
   }
 });
 
@@ -2601,13 +2644,40 @@ function gaToggleInArray(arr, value) {
   return arr;
 }
 
+// Moves the old per-appearance 1–10 ratings onto the guest as a single 1–5
+// score (averaged across their appearances). Runs on load; idempotent, because
+// every guest ends up with an explicit havkat — a number or null — and only
+// `undefined` is treated as "not yet migrated".
+function gaMigrateHavkat() {
+  var guests = gaLoadGuests();
+  var eps = gaLoadEpisodes();
+  var pending = guests.filter(function(g){ return g.havkat === undefined; });
+  if (!pending.length) return;
+
+  pending.forEach(function(g) {
+    var old = [];
+    eps.forEach(function(ep) {
+      (ep.guests||[]).forEach(function(ge) {
+        if (ge.guestId === g.id && ge.havkat != null) old.push(ge.havkat);
+      });
+    });
+    if (old.length) {
+      var avg = old.reduce(function(s,v){ return s+v; }, 0) / old.length;
+      g.havkat = gaHavkatFrom10(avg);
+    } else {
+      g.havkat = null;
+    }
+  });
+  gaSaveGuests(guests);
+}
+
 // ── Guest registry ────────────────────────────────────
 function gaFindOrCreateGuest(name, defaultTitle, gender) {
   var guests = gaLoadGuests();
   var norm = name.trim().toLowerCase();
   var g = guests.find(function(x){ return x.name.toLowerCase() === norm; });
   if (!g) {
-    g = { id: Date.now()+'_'+Math.random().toString(36).slice(2,6), name: name.trim(), defaultTitle: defaultTitle||'', gender: gender||'andet', notes: '' };
+    g = { id: Date.now()+'_'+Math.random().toString(36).slice(2,6), name: name.trim(), defaultTitle: defaultTitle||'', gender: gender||'andet', notes: '', topics: [], havkat: null };
     guests.push(g);
     gaSaveGuests(guests);
   }
@@ -2642,6 +2712,7 @@ async function gaOnSwitch() {
       if (epList) epList.innerHTML = '<div style="color:var(--faint);font-size:13px;font-style:italic;padding:40px 0;text-align:center;">Indlæser…</div>';
       try {
         await gaFetchAll();
+        gaMigrateHavkat();
       } catch(e) {
         if (epList) epList.innerHTML = '<div style="color:var(--loss-ink);font-size:13px;padding:20px 0;">Kunne ikke hente data: ' + gaEscHtml(e.message) + '</div>';
         return;
@@ -2691,7 +2762,7 @@ async function gaExtractFromArticle() {
         name: p.name, descriptor: p.descriptor,
         gender: p.gender_guess === 'ukendt' ? 'andet' : p.gender_guess,
         category: p.category_guess === 'ukendt' ? 'ekspert' : p.category_guess,
-        topics: p.topics || [], added: false,
+        topics: p.topics || [], havkat: null, added: false,
       };
     });
     if (gaExtractCandidates.length === 0) {
@@ -2733,6 +2804,7 @@ function gaRenderExtractResults() {
       '</div>' +
       '<div class="ga-candidate-row full">' + gaField('Beskrivelse', descInput) + '</div>' +
       gaField('Kategori', gaSelectHtml('category', i, ['politiker','ekspert','case','pro-deb'], c.category)) +
+      gaField('Havkatsfaktor', '<div class="ga-hk-rating" data-candidate-index="' + i + '">' + gaHavkatHtml(c.havkat) + '</div>') +
       '<div class="ga-topic-pills" data-candidate-index="' + i + '">' + gaTopicPillsHtml(c.topics) + '</div>' +
       '<button class="ga-candidate-add"' + (c.added ? ' disabled' : '') + ' onclick="gaAddExtractedGuest(' + i + ')">' +
         (c.added ? 'Tilføjet ✓' : 'Tilføj til gæstearkiv') + '</button>' +
@@ -2745,6 +2817,13 @@ function gaToggleCandidateTopic(i, topic) {
   var c = gaExtractCandidates[i];
   if (!c) return;
   gaToggleInArray(c.topics, topic);
+  gaRenderExtractResults();
+}
+
+function gaSetCandidateHavkat(i, rating) {
+  var c = gaExtractCandidates[i];
+  if (!c) return;
+  c.havkat = (c.havkat === rating) ? null : rating;
   gaRenderExtractResults();
 }
 
@@ -2767,6 +2846,7 @@ function gaAddExtractedGuest(i) {
     if (g.topics.indexOf(t) === -1) g.topics.push(t);
   });
   if (!g.defaultTitle) g.defaultTitle = c.descriptor;
+  if (g.havkat == null) g.havkat = c.havkat;
   gaSaveGuests(gaLoadGuests());
 
   c.added = true;
@@ -2812,16 +2892,16 @@ function gaOpenEdit(epId) {
   document.getElementById('ga-form-desc').value  = ep.desc || '';
   gaGuestRows = (ep.guests||[]).map(function(ge) {
     var g = guests.find(function(x){ return x.id === ge.guestId; });
-    return { name: g ? g.name : '', role: ge.role||'', gender: g ? g.gender : 'kvinde', category: ge.category||'ekspert', party: ge.party||'', havkat: ge.havkat!=null?ge.havkat:5 };
+    return { name: g ? g.name : '', role: ge.role||'', gender: g ? g.gender : 'kvinde', category: ge.category||'ekspert', party: ge.party||'' };
   });
-  if (gaGuestRows.length === 0) gaGuestRows.push({ name:'', role:'', gender:'kvinde', category:'ekspert', party:'', havkat:5 });
+  if (gaGuestRows.length === 0) gaGuestRows.push({ name:'', role:'', gender:'kvinde', category:'ekspert', party:'' });
   gaRenderGuestRows();
   document.getElementById('ga-add-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function gaAddGuestRow() {
   gaReadGuestRows();
-  gaGuestRows.push({ name:'', role:'', gender:'kvinde', category:'ekspert', party:'', havkat:5 });
+  gaGuestRows.push({ name:'', role:'', gender:'kvinde', category:'ekspert', party:'' });
   gaRenderGuestRows();
 }
 
@@ -2832,13 +2912,11 @@ function gaReadGuestRows() {
     var g  = document.getElementById('ga-gr-gender-'+i);
     var c  = document.getElementById('ga-gr-cat-'+i);
     var p  = document.getElementById('ga-gr-party-'+i);
-    var hk = document.getElementById('ga-gr-hk-'+i);
     if(n)  row.name     = n.value;
     if(t)  row.role     = t.value;
     if(g)  row.gender   = g.value;
     if(c)  row.category = c.value;
     if(p)  row.party    = p.value;
-    if(hk) row.havkat   = parseInt(hk.value, 10);
   });
 }
 
@@ -2855,7 +2933,6 @@ function gaRenderGuestRows() {
   var genderOpts = ['kvinde','mand','andet'];
   var catOpts = ['ekspert','politiker','case','pro-deb'];
   gaGuestRows.forEach(function(row, i) {
-    var hkVal = row.havkat != null ? row.havkat : 5;
     var div = document.createElement('div');
     div.className = 'ga-guest-row';
     div.innerHTML =
@@ -2864,7 +2941,6 @@ function gaRenderGuestRows() {
       '<select id="ga-gr-gender-'+i+'">'+genderOpts.map(function(v){ return '<option value="'+v+'"'+(row.gender===v?' selected':'')+'>'+v.charAt(0).toUpperCase()+v.slice(1)+'</option>'; }).join('')+'</select>' +
       '<select id="ga-gr-cat-'+i+'">'+catOpts.map(function(v){ return '<option value="'+v+'"'+(row.category===v?' selected':'')+'>'+v+'</option>'; }).join('')+'</select>' +
       '<input type="text" placeholder="Parti" id="ga-gr-party-'+i+'" value="'+gaEscHtml(row.party||'')+'">' +
-      '<div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:600;">Havkatsfaktor</span><div class="ga-hk-row"><input type="range" min="1" max="10" value="'+hkVal+'" id="ga-gr-hk-'+i+'" class="ga-hk-slider" oninput="document.getElementById(\'ga-gr-hkv-'+i+'\').textContent=this.value"><span class="ga-hk-val" id="ga-gr-hkv-'+i+'">'+hkVal+'</span></div></div>' +
       '<button class="ga-rm-btn" onclick="gaRemoveGuestRow('+i+')" title="Fjern">×</button>';
     container.appendChild(div);
     gaBindAutocomplete(i);
@@ -2917,9 +2993,6 @@ function gaApplyAutocomplete(i, guest) {
     if (catSel) catSel.value = lastAppearance.category || 'ekspert';
     var partyInp = document.getElementById('ga-gr-party-'+i);
     if (partyInp) partyInp.value = lastAppearance.party || '';
-    var hkInp = document.getElementById('ga-gr-hk-'+i);
-    var hkVal = lastAppearance.havkat != null ? lastAppearance.havkat : 5;
-    if (hkInp) { hkInp.value = hkVal; document.getElementById('ga-gr-hkv-'+i).textContent = hkVal; }
   }
   gaReadGuestRows();
 }
@@ -2936,7 +3009,7 @@ function gaSaveEpisode() {
   gaGuestRows.forEach(function(row) {
     if (!row.name.trim()) return;
     var g = gaFindOrCreateGuest(row.name.trim(), row.role.trim(), row.gender);
-    guestEntries.push({ guestId: g.id, role: row.role.trim(), category: row.category, party: row.party||'', havkat: row.havkat!=null?row.havkat:5 });
+    guestEntries.push({ guestId: g.id, role: row.role.trim(), category: row.category, party: row.party||'' });
   });
   var eps = gaLoadEpisodes();
   if (gaEditingId) {
@@ -3055,7 +3128,10 @@ function gaRenderStats() {
   var topKw = Object.keys(kwCount).sort(function(a,b){ return kwCount[b]-kwCount[a]; }).slice(0, 20);
 
   // Havkatsfaktor gennemsnit
-  var hkVals = appearances.map(function(a){ return a.ge.havkat != null ? a.ge.havkat : 5; });
+  // Rated per guest now, so average distinct guests in range rather than appearances.
+  var ratedIds = {};
+  appearances.forEach(function(a){ if (a.guest && a.guest.havkat != null) ratedIds[a.guest.id] = a.guest.havkat; });
+  var hkVals = Object.keys(ratedIds).map(function(k){ return ratedIds[k]; });
   var hkAvg = hkVals.length ? (hkVals.reduce(function(s,v){ return s+v; },0) / hkVals.length).toFixed(1) : null;
 
   var html = '';
@@ -3088,7 +3164,8 @@ function gaRenderStats() {
   // Havkatsfaktor gennemsnit
   html += '<div class="ga-stat-block"><div class="ga-stat-title">Havkatsfaktor — snit</div>';
   if (hkAvg !== null) {
-    html += '<div class="ga-stat-avg">'+hkAvg+'</div><div class="ga-stat-avg-sub">baseret på '+hkVals.length+' optræden'+(hkVals.length===1?'':'er')+'</div>';
+    var rated = hkVals.length === 1 ? '1 vurderet gæst' : hkVals.length + ' vurderede gæster';
+    html += '<div class="ga-stat-avg">'+hkAvg+'</div><div class="ga-stat-avg-sub">baseret på '+rated+' (1–5)</div>';
   } else {
     html += '<div class="ga-stat-empty">Ingen data endnu.</div>';
   }
@@ -3184,9 +3261,10 @@ function gaRenderSidebar() {
     var row = document.createElement('div');
     row.className = 'ga-sg';
     var countLabel = counts[g.id] ? (counts[g.id]+'×') : 'kandidat';
+    var hkLabel = g.havkat != null ? ' · HK '+g.havkat : '';
     row.innerHTML = '<span class="ga-sg-name">'+gaEscHtml(g.name)+'</span>'+
       '<span class="ga-sg-gender">'+gaEscHtml(g.gender)+'</span>'+
-      '<span class="ga-sg-count">'+countLabel+'</span>';
+      '<span class="ga-sg-count">'+countLabel+hkLabel+'</span>';
     row.addEventListener('click', function(){ gaOpenProfile(g.id); });
     list.appendChild(row);
   });
@@ -3204,6 +3282,7 @@ function gaOpenProfile(guestId) {
   document.getElementById('ga-profile-title').textContent = g.defaultTitle || '';
   document.getElementById('ga-profile-gender').textContent = g.gender;
   document.getElementById('ga-profile-status').textContent = eps.length === 0 ? 'Kandidat — ikke optrådt endnu' : eps.length + ' optræden' + (eps.length===1?'':'er');
+  document.getElementById('ga-profile-havkat').innerHTML = gaHavkatHtml(g.havkat);
   document.getElementById('ga-profile-topics').innerHTML = gaTopicPillsHtml(g.topics);
   document.getElementById('ga-pnotes').value = g.notes || '';
   document.getElementById('ga-pep-head').textContent = eps.length + ' udsendelse' + (eps.length===1?'':'r');
@@ -3216,7 +3295,7 @@ function gaOpenProfile(guestId) {
       return '<div class="ga-pep">'+
         '<div class="ga-pep-date">'+gaFmtDate(ep.date)+'</div>'+
         '<div class="ga-pep-title">'+gaEscHtml(ep.title)+'</div>'+
-        (ge&&ge.role?'<div class="ga-pep-role">'+gaEscHtml(ge.role)+(ge.category?' · '+ge.category:'')+(ge.party?' · '+gaEscHtml(ge.party):'')+(ge.havkat!=null?' · HK '+ge.havkat:'')+'</div>':'')+
+        (ge&&ge.role?'<div class="ga-pep-role">'+gaEscHtml(ge.role)+(ge.category?' · '+ge.category:'')+(ge.party?' · '+gaEscHtml(ge.party):'')+'</div>':'')+
       '</div>';
     }).join('');
   }
@@ -3238,6 +3317,18 @@ function gaToggleProfileTopic(topic) {
   g.topics = gaToggleInArray(g.topics || [], topic);
   gaSaveGuests(guests);
   document.getElementById('ga-profile-topics').innerHTML = gaTopicPillsHtml(g.topics);
+}
+
+// Like the topic toggle, repaints only its own widget so unsaved notes survive.
+function gaSetProfileHavkat(rating) {
+  if (!gaCurrentProfile) return;
+  var guests = gaLoadGuests();
+  var g = guests.find(function(x){ return x.id===gaCurrentProfile; });
+  if (!g) return;
+  g.havkat = (g.havkat === rating) ? null : rating;
+  gaSaveGuests(guests);
+  document.getElementById('ga-profile-havkat').innerHTML = gaHavkatHtml(g.havkat);
+  gaRenderSidebar();
 }
 
 function gaSaveProfile() {
@@ -3274,7 +3365,7 @@ function gaSearch() {
   // Havkatsfaktor threshold detection (text query)
   var hkMin = ddHk ? parseInt(ddHk, 10) : null;
   if (!hkMin) {
-    if (/h[øo]j\s+havkat/.test(q) || /havkat[^\d]*h[øo]j/.test(q)) hkMin = 7;
+    if (/h[øo]j\s+havkat/.test(q) || /havkat[^\d]*h[øo]j/.test(q)) hkMin = 4;
     var hkExact = q.match(/havkat(?:sfaktor)?\s*[:\-≥>=]\s*(\d+)/);
     if (hkExact) hkMin = parseInt(hkExact[1], 10);
     var hkNum = q.match(/\bhavkat(?:sfaktor)?\s+(\d+)/);
@@ -3324,9 +3415,10 @@ function gaSearch() {
       if (!g) return;
       var entry = guestScores[g.id];
 
-      // Havkatsfaktor filter — skip if below threshold
-      var hk = ge.havkat != null ? ge.havkat : 5;
-      if (hkMin !== null && hk < hkMin) return;
+      // Havkatsfaktor filter — rated on the guest, so unrated guests are
+      // excluded whenever a threshold is set rather than assumed mid-scale.
+      var hk = g.havkat;
+      if (hkMin !== null && (hk == null || hk < hkMin)) return;
 
       // Gender filter
       if (genderFilter && g.gender !== genderFilter) return;
@@ -3338,7 +3430,7 @@ function gaSearch() {
       var blob = [
         g.name, g.defaultTitle||'', g.gender||'',
         ge.role||'', ge.category||'', ge.party||'',
-        String(hk),
+        hk != null ? String(hk) : '',
         ep.title||'', ep.desc||'', (ep.keywords||[]).join(' ')
       ].join(' ').toLowerCase();
 

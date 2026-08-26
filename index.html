@@ -2754,12 +2754,12 @@ initAuth();
 // ═══════════════════════════════════════════════════════
 // GÆSTEARKIV
 // ═══════════════════════════════════════════════════════
-const GA_PASSWORD  = 'REDACTED';
+const GA_PASSWORD  = 'debatten>deadline';
 const GA_SB_TABLE  = 'gaestearkiv';
 const GA_TOPICS = [
   'Klima & energi', 'Udlændinge & integration', 'Sundhed & ældrepleje', 'Uddannelse',
   'Ligestilling & køn', 'Digitalisering & tech/AI', 'Geopolitik', 'Forsvarspolitik',
-  'Business og nationaløkonomi', 'Dannelse og trivsel', 'Demokrati og folkestyre',
+  'Business og nationaløkonomi', 'Dannelse og trivsel', 'Demokrati og folkestyre', 'Ulighed',
 ];
 
 const GA_PARTIES = [
@@ -3159,14 +3159,20 @@ function gaFindOrCreateGuest(name, defaultTitle, gender, episodeDate) {
 function gaGetGuest(id) { return gaLoadGuests().find(function(g){ return g.id===id; }); }
 
 // ── Password gate ─────────────────────────────────────
-function gaCheckAuth() { return LOGIN_DISABLED || sessionStorage.getItem('gaestearkiv_auth')==='1'; }
+// Deliberately independent of LOGIN_DISABLED (the site-wide dev-mode auth
+// bypass) — Gæstearkiv holds personal data and stays gated by its own
+// password as a stopgap until real per-user accounts are back.
+function gaCheckAuth() { return sessionStorage.getItem('gaestearkiv_auth')==='1'; }
 
 function gaUnlock() {
   var pw = document.getElementById('ga-pw-input').value;
   if (pw === GA_PASSWORD) {
     sessionStorage.setItem('gaestearkiv_auth','1');
-    document.getElementById('ga-gate').classList.add('gone');
-    gaRender();
+    // gaOnSwitch() both hides the gate and does the (previously never-run-
+    // from-here) data fetch — this used to just hide the gate and render
+    // whatever was already in the empty in-memory cache, i.e. nothing,
+    // until the visitor switched tabs away and back.
+    gaOnSwitch();
   } else {
     document.getElementById('ga-pw-msg').textContent = 'Forkert adgangskode';
     document.getElementById('ga-pw-input').value = '';

@@ -17,6 +17,7 @@ const TOPICS = [
   'Business og nationaløkonomi',
   'Dannelse og trivsel',
   'Demokrati og folkestyre',
+  'Ulighed',
 ];
 const GENDERS = ['mand', 'kvinde', 'ukendt'];
 const CATEGORIES = ['politiker', 'ekspert', 'case', 'pro-deb', 'ukendt'];

@@ -21,6 +21,7 @@ const TOPICS = [
   'Business og nationaløkonomi',
   'Dannelse og trivsel',
   'Demokrati og folkestyre',
+  'Ulighed',
 ];
 const GENDERS = ['mand', 'kvinde', 'andet'];
 

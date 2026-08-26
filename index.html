@@ -962,6 +962,17 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-gt-table tr:hover td { background: var(--hover); }
 .ga-gt-name { color: var(--ink); font-weight: 600; cursor: pointer; }
 .ga-gt-name:hover { text-decoration: underline; }
+.ga-net-wrap { position: relative; flex: 1; overflow: hidden; background: var(--bg); }
+.ga-net-svg { width: 100%; height: 100%; display: block; cursor: grab; }
+.ga-net-svg:active { cursor: grabbing; }
+.ga-net-node { cursor: pointer; }
+.ga-net-legend { position: absolute; left: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--ink-2); box-shadow: var(--shadow-sm); pointer-events: none; }
+.ga-net-legend-item { display: flex; align-items: center; gap: 7px; }
+.ga-net-legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.ga-net-focus { position: absolute; right: 16px; top: 16px; display: flex; flex-direction: column; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; font-size: 13px; color: var(--ink); box-shadow: var(--shadow-md); max-width: 220px; }
+.ga-net-focus-name { font-family: 'Newsreader', serif; font-size: 16px; }
+.ga-net-focus-title { color: var(--ink-2); font-size: 12px; }
+.ga-net-focus-meta { color: var(--muted); font-size: 11.5px; margin-bottom: 4px; }
 @media (max-width: 820px) { .ga-gt-sheet { width: 100vw; height: 100vh; max-width: 100vw; border-radius: 0; } .ga-gt-toolbar { flex-wrap: wrap; } }
 @media (max-width: 820px) {
   .ga-layout { grid-template-columns: 1fr; }
@@ -1510,6 +1521,10 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9h18M9 4v16"/></svg>
           Alle gæster
         </button>
+        <button class="ga-add-toggle" onclick="gaOpenNetwork()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="6" cy="6" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="12" cy="18" r="2.3"/><path d="M8 7l6.5 9.5M16 7l-6.5 9.5M8.3 6h7.4"/></svg>
+          Netværk
+        </button>
       </div>
       <div style="margin-bottom:24px">
         <div class="ga-form" id="ga-gadd-form">
@@ -1805,6 +1820,36 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
       <span class="ga-gt-hint">Klik en kolonneoverskrift for at sortere</span>
     </div>
     <div class="ga-gt-scroll" id="ga-gt-body"></div>
+  </div>
+</div>
+
+<div class="ga-modal" id="ga-net-modal" aria-hidden="true">
+  <div class="ga-modal-bd" onclick="gaCloseNetwork()"></div>
+  <div class="ga-modal-sheet ga-gt-sheet" role="dialog" aria-modal="true" aria-labelledby="ga-net-modal-title">
+    <div class="ga-modal-head">
+      <div>
+        <div class="ga-modal-eyebrow">Gæstearkiv</div>
+        <div class="ga-modal-title" id="ga-net-modal-title">Netværk</div>
+      </div>
+      <button class="ga-modal-close" onclick="gaCloseNetwork()" title="Luk">&times;</button>
+    </div>
+    <div class="ga-gt-toolbar">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);flex:0 0 auto">
+        <input type="checkbox" id="ga-net-isolated" onchange="gaRenderNetwork()"> Vis også enlige gæster
+      </label>
+      <span class="ga-gt-hint" id="ga-net-count"></span>
+      <span class="ga-gt-hint" id="ga-net-status" style="margin-left:auto"></span>
+    </div>
+    <div class="ga-net-wrap">
+      <svg id="ga-net-svg" class="ga-net-svg"></svg>
+      <div class="ga-net-legend">
+        <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--a)"></span>Politiker</div>
+        <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--f)"></span>Ekspert</div>
+        <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--m)"></span>Case</div>
+        <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--b)"></span>Pro-deb</div>
+      </div>
+      <div class="ga-net-focus" id="ga-net-focus" style="display:none"></div>
+    </div>
   </div>
 </div>
 
@@ -4457,6 +4502,245 @@ function gaOpenGuestTable() {
 
 function gaCloseGuestTable() {
   document.getElementById('ga-gt-modal').classList.remove('on');
+}
+
+// ── Guest co-appearance network ────────────────────────
+// D3 is loaded lazily (only when this view is actually opened) rather than
+// unconditionally in <head> — every other visitor to the site (betting
+// pages etc.) would otherwise pay for a ~280KB library they never use.
+var gaD3Loaded = false;
+function gaLoadD3() {
+  return new Promise(function(resolve, reject) {
+    if (window.d3) { gaD3Loaded = true; resolve(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js';
+    s.onload = function(){ gaD3Loaded = true; resolve(); };
+    s.onerror = function(){ reject(new Error('Kunne ikke indlæse D3 fra CDN')); };
+    document.head.appendChild(s);
+  });
+}
+
+var gaNetSim = null;
+var gaNetNodeSel = null;
+var gaNetLinkSel = null;
+var gaNetLinksData = [];
+var gaNetFocusId = null;
+
+// Nodes = guests, edges = "appeared on the same episode together" weighted
+// by how many times. Guests with zero co-appearances are excluded by
+// default (they're just isolated dots that add clutter, not "network").
+function gaBuildNetworkData(includeIsolated) {
+  var guests = gaLoadGuests();
+  var eps = gaLoadEpisodes();
+  var counts = {};
+  var pairWeights = {};
+  eps.forEach(function(ep) {
+    var gs = (ep.guests||[]).map(function(ge){ return ge.guestId; })
+      .filter(function(id){ return guests.some(function(g){ return g.id===id; }); });
+    gs.forEach(function(id){ counts[id] = (counts[id]||0) + 1; });
+    for (var i = 0; i < gs.length; i++) {
+      for (var j = i+1; j < gs.length; j++) {
+        var a = gs[i], b = gs[j];
+        if (a === b) continue;
+        var key = a < b ? a+'|'+b : b+'|'+a;
+        pairWeights[key] = (pairWeights[key]||0) + 1;
+      }
+    }
+  });
+  // "Isolated" means no shared episode with anyone else — not just "fewer
+  // appearances than others". A guest who only ever appeared solo has
+  // appearances (counts[id] > 0) but zero edges, so exclusion has to be
+  // based on the links themselves, not on the appearance count.
+  var connected = {};
+  Object.keys(pairWeights).forEach(function(key) {
+    var parts = key.split('|');
+    connected[parts[0]] = true;
+    connected[parts[1]] = true;
+  });
+  var nodeIds = includeIsolated ? guests.map(function(g){ return g.id; }) : Object.keys(connected);
+  var nodes = nodeIds.map(function(id) {
+    var g = guests.find(function(x){ return x.id === id; });
+    var latest = gaLatestAppearance(id);
+    var category = (latest && latest.ge.category) || (g && g.category) || '';
+    return { id: id, name: g ? g.name : '?', count: counts[id] || 0, category: category };
+  });
+  var links = Object.keys(pairWeights).map(function(key) {
+    var parts = key.split('|');
+    return { source: parts[0], target: parts[1], weight: pairWeights[key] };
+  });
+  return { nodes: nodes, links: links };
+}
+
+function gaNetCatColor(cat) {
+  var map = { politiker: '--a', ekspert: '--f', case: '--m', 'pro-deb': '--b' };
+  var cs = getComputedStyle(document.documentElement);
+  var v = map[cat] ? cs.getPropertyValue(map[cat]).trim() : '';
+  return v || cs.getPropertyValue('--muted').trim();
+}
+
+function gaRenderNetwork() {
+  var svgEl = document.getElementById('ga-net-svg');
+  if (!svgEl || !window.d3) return;
+  var includeIsolated = document.getElementById('ga-net-isolated').checked;
+  var data = gaBuildNetworkData(includeIsolated);
+
+  var width = svgEl.clientWidth || 800;
+  var height = svgEl.clientHeight || 600;
+  var svg = d3.select(svgEl);
+  svg.selectAll('*').remove();
+
+  var countEl = document.getElementById('ga-net-count');
+  if (countEl) countEl.textContent = data.nodes.length + ' gæster · ' + data.links.length + ' forbindelser';
+
+  gaNetFocusId = null;
+  gaHideNetworkFocusPanel();
+
+  if (data.nodes.length === 0) {
+    svg.append('text').attr('x', width/2).attr('y', height/2).attr('text-anchor','middle')
+      .attr('font-family','inherit').attr('font-size',13).attr('fill', 'var(--faint)')
+      .text('Ingen gæster med fælles optrædener endnu');
+    gaNetNodeSel = null; gaNetLinkSel = null; gaNetLinksData = [];
+    return;
+  }
+
+  var root = svg.append('g');
+  svg.call(d3.zoom().scaleExtent([0.2, 4]).on('zoom', function(event) {
+    root.attr('transform', event.transform);
+  }));
+
+  var maxCount = Math.max.apply(null, data.nodes.map(function(n){ return n.count; }).concat([1]));
+  var radius = d3.scaleSqrt().domain([0, maxCount]).range([6, 26]);
+  var maxWeight = Math.max.apply(null, data.links.map(function(l){ return l.weight; }).concat([1]));
+  var strokeW = d3.scaleLinear().domain([1, maxWeight]).range([1, 6]);
+
+  if (gaNetSim) gaNetSim.stop();
+  gaNetSim = d3.forceSimulation(data.nodes)
+    .force('link', d3.forceLink(data.links).id(function(d){ return d.id; })
+      .distance(function(l){ return 60 + (10 - Math.min(l.weight,10)) * 8; }).strength(0.25))
+    .force('charge', d3.forceManyBody().strength(-180))
+    .force('center', d3.forceCenter(width/2, height/2))
+    .force('collision', d3.forceCollide().radius(function(d){ return radius(d.count) + 4; }));
+
+  var link = root.append('g').selectAll('line').data(data.links).enter().append('line')
+    .attr('stroke', 'var(--line-2)')
+    .attr('stroke-width', function(d){ return strokeW(d.weight); })
+    .attr('stroke-linecap', 'round');
+
+  var node = root.append('g').selectAll('g').data(data.nodes).enter().append('g')
+    .attr('class', 'ga-net-node')
+    .call(d3.drag()
+      .on('start', function(event, d){ if (!event.active) gaNetSim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag', function(event, d){ d.fx = event.x; d.fy = event.y; })
+      .on('end', function(event, d){ if (!event.active) gaNetSim.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+  node.append('circle')
+    .attr('r', function(d){ return radius(d.count); })
+    .attr('fill', function(d){ return gaNetCatColor(d.category); })
+    .attr('fill-opacity', 0.85)
+    .attr('stroke', 'var(--bg)')
+    .attr('stroke-width', 2);
+
+  node.append('text')
+    .text(function(d){ return d.name; })
+    .attr('text-anchor', 'middle')
+    .attr('dy', function(d){ return radius(d.count) + 13; })
+    .attr('font-size', 11)
+    .attr('font-family', 'inherit')
+    .attr('fill', 'var(--ink-2)')
+    .style('pointer-events', 'none');
+
+  node.on('click', function(event, d){ gaFocusNetworkNode(d.id); });
+  node.on('mouseenter', function(event, d){ gaHighlightNetworkNode(d.id); });
+  node.on('mouseleave', function(){ if (!gaNetFocusId) gaClearNetworkHighlight(); });
+
+  gaNetSim.on('tick', function() {
+    link
+      .attr('x1', function(d){ return d.source.x; })
+      .attr('y1', function(d){ return d.source.y; })
+      .attr('x2', function(d){ return d.target.x; })
+      .attr('y2', function(d){ return d.target.y; });
+    node.attr('transform', function(d){ return 'translate('+d.x+','+d.y+')'; });
+  });
+
+  gaNetNodeSel = node;
+  gaNetLinkSel = link;
+  gaNetLinksData = data.links;
+}
+
+function gaHighlightNetworkNode(id) {
+  if (!gaNetNodeSel) return;
+  var neighbors = {};
+  neighbors[id] = true;
+  gaNetLinksData.forEach(function(l) {
+    var s = l.source.id || l.source, t = l.target.id || l.target;
+    if (s === id) neighbors[t] = true;
+    if (t === id) neighbors[s] = true;
+  });
+  gaNetNodeSel.style('opacity', function(d){ return neighbors[d.id] ? 1 : 0.15; });
+  gaNetLinkSel.style('opacity', function(d){
+    var s = d.source.id || d.source, t = d.target.id || d.target;
+    return (s === id || t === id) ? 0.9 : 0.05;
+  });
+}
+
+function gaClearNetworkHighlight() {
+  if (!gaNetNodeSel) return;
+  gaNetNodeSel.style('opacity', 1);
+  gaNetLinkSel.style('opacity', 1);
+}
+
+function gaFocusNetworkNode(id) {
+  if (gaNetFocusId === id) {
+    gaNetFocusId = null;
+    gaClearNetworkHighlight();
+    gaHideNetworkFocusPanel();
+    return;
+  }
+  gaNetFocusId = id;
+  gaHighlightNetworkNode(id);
+  gaShowNetworkFocusPanel(id);
+}
+
+function gaShowNetworkFocusPanel(id) {
+  var g = gaGetGuest(id);
+  var panel = document.getElementById('ga-net-focus');
+  if (!g || !panel) return;
+  var datum = (gaNetNodeSel ? gaNetNodeSel.data() : []).find(function(d){ return d.id === id; });
+  var count = datum ? datum.count : 0;
+  panel.innerHTML =
+    '<div class="ga-net-focus-name">'+gaEscHtml(g.name)+'</div>'+
+    (g.defaultTitle ? '<div class="ga-net-focus-title">'+gaEscHtml(g.defaultTitle)+'</div>' : '') +
+    '<div class="ga-net-focus-meta">'+count+' optræden'+(count===1?'':'er')+'</div>'+
+    '<button class="ga-add-guest" style="justify-content:center" onclick="gaOpenProfileFromNetwork(\''+id+'\')">Åbn profil</button>';
+  panel.style.display = 'flex';
+}
+
+function gaHideNetworkFocusPanel() {
+  var panel = document.getElementById('ga-net-focus');
+  if (panel) panel.style.display = 'none';
+}
+
+function gaOpenProfileFromNetwork(id) {
+  gaCloseNetwork();
+  gaOpenProfile(id);
+}
+
+function gaOpenNetwork() {
+  document.getElementById('ga-net-modal').classList.add('on');
+  var status = document.getElementById('ga-net-status');
+  if (status) status.textContent = gaD3Loaded ? '' : 'Indlæser…';
+  gaLoadD3().then(function() {
+    if (status) status.textContent = '';
+    gaRenderNetwork();
+  }).catch(function(e) {
+    if (status) status.textContent = e.message;
+  });
+}
+
+function gaCloseNetwork() {
+  document.getElementById('ga-net-modal').classList.remove('on');
+  if (gaNetSim) { gaNetSim.stop(); gaNetSim = null; }
+  gaNetFocusId = null;
 }
 
 // ── Guest profile panel ───────────────────────────────

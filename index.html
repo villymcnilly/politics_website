@@ -775,10 +775,10 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-form { display: none; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px 18px; margin-bottom: 24px; }
 .ga-form.on { display: block; }
 .ga-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-.ga-form-field { display: flex; flex-direction: column; gap: 5px; }
+.ga-form-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .ga-form-field.full { grid-column: 1 / -1; }
 .ga-form-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-.ga-form-input { font-family: inherit; font-size: 13.5px; color: var(--ink); padding: 8px 10px; border: 1px solid var(--line-2); border-radius: 7px; background: var(--bg); outline: none; transition: border-color 0.15s; }
+.ga-form-input { font-family: inherit; font-size: 13.5px; color: var(--ink); padding: 8px 10px; border: 1px solid var(--line-2); border-radius: 7px; background: var(--bg); outline: none; transition: border-color 0.15s; width: 100%; }
 .ga-form-input:focus { border-color: var(--ink-2); }
 .ga-form-textarea { font-family: inherit; font-size: 13.5px; color: var(--ink); padding: 8px 10px; border: 1px solid var(--line-2); border-radius: 7px; background: var(--bg); outline: none; transition: border-color 0.15s; width: 100%; min-height: 72px; resize: vertical; line-height: 1.55; }
 .ga-form-textarea:focus { border-color: var(--ink-2); }
@@ -789,6 +789,7 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-guest-row { display: grid; grid-template-columns: 1fr 1fr 90px 110px 120px 28px; gap: 7px; align-items: center; }
 .ga-guest-row input, .ga-guest-row select { font-family: inherit; font-size: 13px; color: var(--ink); padding: 7px 8px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--bg); outline: none; width: 100%; }
 .ga-guest-row input:focus, .ga-guest-row select:focus { border-color: var(--ink-2); }
+.ga-gr-party-wrap { display: flex; flex-direction: column; gap: 4px; }
 .ga-rm-btn { background: none; border: none; cursor: pointer; color: var(--faint); font-size: 18px; line-height: 1; padding: 2px 4px; transition: color 0.12s; width: 100%; text-align: center; }
 .ga-rm-btn:hover { color: var(--loss-ink); }
 .ga-add-guest { display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px dashed var(--line-2); border-radius: 6px; padding: 6px 12px; font-family: inherit; font-size: 12.5px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.13s; margin-bottom: 14px; }
@@ -826,7 +827,7 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-episode { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 9px; overflow: hidden; transition: box-shadow 0.14s; }
 .ga-episode:hover { box-shadow: var(--shadow-sm); }
 .ga-ep-top { padding: 13px 16px 11px; display: flex; align-items: flex-start; gap: 14px; }
-.ga-ep-date { font-size: 11px; font-weight: 600; color: var(--faint); letter-spacing: 0.04em; white-space: nowrap; flex-shrink: 0; padding-top: 2px; }
+.ga-ep-date { font-size: 11px; font-weight: 600; color: var(--faint); letter-spacing: 0.04em; margin-bottom: 4px; }
 .ga-ep-info { flex: 1; min-width: 0; }
 .ga-ep-title { font-family: 'Newsreader', serif; font-size: 16px; font-weight: 400; color: var(--ink); margin-bottom: 5px; }
 .ga-kw-list { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -951,8 +952,10 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
   .ga-layout { grid-template-columns: 1fr; }
   .ga-sidebar { display: none; }
   .ga-profile { width: 100%; max-width: 100%; border-left: none; }
-  .ga-guest-row { grid-template-columns: 1fr 1fr; gap: 6px; }
-  .ga-guest-row select { display: none; }
+  .ga-guest-row { grid-template-columns: 1fr; gap: 6px; position: relative; padding: 10px 34px 10px 10px; border: 1px solid var(--line-2); border-radius: 8px; }
+  .ga-guest-row .ga-rm-btn { position: absolute; top: 6px; right: 6px; width: auto; }
+  .ga-ep-filters { flex-direction: column; align-items: stretch; }
+  .ga-form-row { grid-template-columns: 1fr; }
   .ga-main { padding: 20px 20px 32px; }
 }
 </style>
@@ -3656,9 +3659,11 @@ function gaPartyFieldHtml(party, i) {
   var opts = '<option value=""'+(!party?' selected':'')+'>— intet parti —</option>' +
     GA_PARTIES.map(function(p){ return '<option value="'+gaEscHtml(p)+'"'+(party===p?' selected':'')+'>'+gaEscHtml(p)+'</option>'; }).join('') +
     '<option value="__other__"'+(isOther?' selected':'')+'>Andet…</option>';
-  return '<select id="ga-gr-party-'+i+'" onchange="gaOnPartySelectChange('+i+')">'+opts+'</select>' +
+  return '<div class="ga-gr-party-wrap">' +
+    '<select id="ga-gr-party-'+i+'" onchange="gaOnPartySelectChange('+i+')">'+opts+'</select>' +
     '<input type="text" placeholder="Skriv parti" id="ga-gr-party-other-'+i+'" value="'+gaEscHtml(isOther?party:'')+'"' +
-    (isOther?'':' style="display:none"') + '>';
+    (isOther?'':' style="display:none"') + '>' +
+  '</div>';
 }
 
 function gaRenderGuestRows() {
@@ -3977,8 +3982,8 @@ function gaRenderEpisodes() {
     }).join('');
     card.innerHTML =
       '<div class="ga-ep-top">'+
-        '<div class="ga-ep-date">'+gaFmtDate(ep.date)+'</div>'+
         '<div class="ga-ep-info">'+
+          '<div class="ga-ep-date">'+gaFmtDate(ep.date)+'</div>'+
           '<div class="ga-ep-title">'+gaEscHtml(gaEpName(ep))+'</div>'+
           (topicHtml?'<div class="ga-topic-list">'+topicHtml+'</div>':'')+
           (kwHtml?'<div class="ga-kw-list">'+kwHtml+'</div>':'')+

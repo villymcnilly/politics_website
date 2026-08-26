@@ -833,8 +833,6 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-ep-date { font-size: 11px; font-weight: 600; color: var(--faint); letter-spacing: 0.04em; margin-bottom: 4px; }
 .ga-ep-info { flex: 1; min-width: 0; }
 .ga-ep-title { font-family: 'Newsreader', serif; font-size: 16px; font-weight: 400; color: var(--ink); margin-bottom: 5px; }
-.ga-kw-list { display: flex; flex-wrap: wrap; gap: 4px; }
-.ga-kw { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; color: var(--muted); background: var(--hover); padding: 2px 7px; border-radius: 4px; }
 .ga-topic-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
 .ga-topic-chip { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; color: var(--accent, #2b6cb0); background: rgba(43,108,176,0.1); padding: 2px 7px; border-radius: 4px; }
 .ga-ep-del { background: none; border: none; cursor: pointer; color: var(--faint); font-size: 12px; padding: 3px 5px; border-radius: 4px; transition: color 0.12s; flex-shrink: 0; margin-top: 1px; }
@@ -4259,7 +4257,6 @@ function gaRenderEpisodes() {
   eps.forEach(function(ep) {
     var card = document.createElement('div');
     card.className = 'ga-episode';
-    var kwHtml = (ep.keywords||[]).map(function(k){ return '<span class="ga-kw">'+gaEscHtml(k)+'</span>'; }).join('');
     var topicHtml = (ep.topics||[]).map(function(t){ return '<span class="ga-topic-chip">'+gaEscHtml(t)+'</span>'; }).join('');
     var guestHtml = (ep.guests||[]).map(function(ge) {
       var g = guests.find(function(x){ return x.id===ge.guestId; });
@@ -4274,7 +4271,6 @@ function gaRenderEpisodes() {
           '<div class="ga-ep-date">'+gaFmtDate(ep.date)+'</div>'+
           '<div class="ga-ep-title">'+gaEscHtml(gaEpName(ep))+'</div>'+
           (topicHtml?'<div class="ga-topic-list">'+topicHtml+'</div>':'')+
-          (kwHtml?'<div class="ga-kw-list">'+kwHtml+'</div>':'')+
           (ep.desc?'<div class="ga-ep-desc" onclick="this.classList.toggle(\'expanded\')">'+gaEscHtml(ep.desc)+'</div>':'')+
         '</div>'+
         '<button class="ga-ep-edit" onclick="gaOpenEdit(\''+ep.id+'\')" title="Rediger">✎</button>'+

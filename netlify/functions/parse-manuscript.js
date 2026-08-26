@@ -86,7 +86,7 @@ const SYSTEM = [
   '- gender: gæt ud fra navn og kontekst; brug "andet" hvis det er usikkert.',
   '- topics: 0-3 fra listen, ud fra personens fagområde.',
   '- havkat: hvor god en gæst personen er, 1-5. Manuskriptet har ofte en "Vurdering"-linje i præinterview-afsnittet ("Hun er rigtig god!" → 5, "God energi!" → 4, "havde ikke tid til at snakke" → 2) — brug KUN den slags eksplicitte vurderinger. Gæt aldrig ud fra rolle, tone eller andet. Findes der ingen eksplicit vurdering i manuskriptet, så svar 0.',
-  '- havkat_reason: den korte sætning fra manuskriptet du baserer vurderingen på. Tom streng hvis havkat er 0.',
+  '- havkat_reason: citér sætningen ORDRET fra manuskriptet — ikke omskrevet eller sammenfattet. Den bruges til at verificere at vurderingen rent faktisk står der; kan den ikke genfindes ordret, bliver vurderingen droppet. Tom streng hvis havkat er 0.',
   '',
   'Gæt aldrig oplysninger der ikke står i manuskriptet.',
 ].join('\n');
@@ -208,15 +208,29 @@ function findPhones(text, guestNames) {
   return out;
 }
 
-function sanitizeGuest(g) {
+// rawText is the manuscript the model saw. We don't take its word for "this
+// was an explicit assessment in the text" — a plausible-sounding number is
+// indistinguishable from a guessed one otherwise. The quote it gives for
+// havkat_reason has to actually appear in the manuscript, or the whole
+// rating is dropped rather than trusted.
+function sanitizeGuest(g, rawText) {
   const hk = Number(g && g.havkat);
+  let havkat = Number.isFinite(hk) && hk >= 1 && hk <= 5 ? Math.round(hk) : null;
+  let havkatReason = String((g && g.havkat_reason) || '').trim().slice(0, 300);
+  if (havkat != null) {
+    const needle = norm(havkatReason).slice(0, 25);
+    if (needle.length < 8 || !norm(rawText || '').includes(needle)) {
+      havkat = null;
+      havkatReason = '';
+    }
+  }
   return {
     name: String((g && g.name) || '').trim().slice(0, 200),
     role: String((g && g.role) || '').trim().slice(0, 300),
     gender: GENDERS.includes(g && g.gender) ? g.gender : 'andet',
     topics: Array.isArray(g && g.topics) ? g.topics.filter((t) => TOPICS.includes(t)).slice(0, 3) : [],
-    havkat: Number.isFinite(hk) && hk >= 1 && hk <= 5 ? Math.round(hk) : null,
-    havkatReason: String((g && g.havkat_reason) || '').trim().slice(0, 300),
+    havkat,
+    havkatReason,
   };
 }
 
@@ -265,7 +279,7 @@ exports.handler = async function (event) {
   }
 
   const ep = parsed.episode || {};
-  const guests = (Array.isArray(parsed.guests) ? parsed.guests : []).map(sanitizeGuest).filter((g) => g.name);
+  const guests = (Array.isArray(parsed.guests) ? parsed.guests : []).map((g) => sanitizeGuest(g, text)).filter((g) => g.name);
 
   const names = guests.map((g) => g.name);
   const { blocks, unmatchedHeadings } = extractPreinterviews(text, names);

@@ -1666,6 +1666,10 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
           <option value="date-asc">Ældste først</option>
           <option value="topic">Emne (A-Å)</option>
         </select>
+        <select class="ga-filter-select" id="ga-ep-f-season" onchange="gaRenderEpisodes()">
+          <option value="">Alle sæsoner</option>
+        </select>
+        <button class="ga-pdelete" id="ga-ep-season-del" onclick="gaDeleteSeason()" style="display:none">Slet sæson</button>
       </div>
       <div id="ga-ep-list"></div>
     </div>
@@ -4151,6 +4155,53 @@ function gaFmtDate(s) {
   return d.toLocaleDateString('da-DK', { day:'numeric', month:'long', year:'numeric' });
 }
 
+// ── Seasons ─────────────────────────────────────────────
+// Six-month broadcast seasons, derived from the date rather than stored,
+// so there's nothing to keep in sync and every existing episode already
+// has one automatically.
+function gaEpisodeSeason(dateStr) {
+  if (!dateStr || dateStr.length < 7) return null;
+  var year = dateStr.slice(0, 4);
+  var half = parseInt(dateStr.slice(5, 7), 10) <= 6 ? 1 : 2;
+  return { key: year + '-' + half, label: (half === 1 ? 'Forår ' : 'Efterår ') + year };
+}
+
+function gaAllSeasons() {
+  var seen = {};
+  gaLoadEpisodes().forEach(function(ep) {
+    var s = gaEpisodeSeason(ep.date);
+    if (s) seen[s.key] = s.label;
+  });
+  return Object.keys(seen).sort().reverse().map(function(k){ return { key: k, label: seen[k] }; });
+}
+
+// Two-click confirm (arm, then confirm), same pattern as the guest-profile
+// delete button — appropriate here since this can remove many episodes at
+// once. Only removes episodes; guests and their pre-interviews stay in the
+// archive, same as deleting a single episode already does.
+function gaDeleteSeason() {
+  var sel = document.getElementById('ga-ep-f-season');
+  var btn = document.getElementById('ga-ep-season-del');
+  var key = sel ? sel.value : '';
+  if (!key || !btn) return;
+  var toDelete = gaLoadEpisodes().filter(function(ep) {
+    var s = gaEpisodeSeason(ep.date);
+    return s && s.key === key;
+  });
+  if (!toDelete.length) return;
+
+  if (!btn.classList.contains('confirm')) {
+    btn.classList.add('confirm');
+    btn.textContent = 'Klik igen for at slette ' + toDelete.length + ' udsendelse' + (toDelete.length===1?'':'r');
+    return;
+  }
+
+  var ids = {};
+  toDelete.forEach(function(ep){ ids[ep.id] = true; });
+  gaSaveEpisodes(gaLoadEpisodes().filter(function(ep){ return !ids[ep.id]; }));
+  gaRender();
+}
+
 function gaRenderEpisodes() {
   var list = document.getElementById('ga-ep-list');
   if (!list) return;
@@ -4159,9 +4210,26 @@ function gaRenderEpisodes() {
 
   var topicFilter = (document.getElementById('ga-ep-f-topic')||{}).value || '';
   var themeQ = gaNormText((document.getElementById('ga-ep-f-theme')||{}).value || '');
+
+  var seasonSel = document.getElementById('ga-ep-f-season');
+  if (seasonSel) {
+    var curSeason = seasonSel.value;
+    var seasons = gaAllSeasons();
+    seasonSel.innerHTML = '<option value="">Alle sæsoner</option>' +
+      seasons.map(function(s){ return '<option value="'+s.key+'"'+(s.key===curSeason?' selected':'')+'>'+gaEscHtml(s.label)+'</option>'; }).join('');
+  }
+  var seasonFilter = seasonSel ? seasonSel.value : '';
+  var seasonDelBtn = document.getElementById('ga-ep-season-del');
+  if (seasonDelBtn) {
+    seasonDelBtn.style.display = seasonFilter ? '' : 'none';
+    seasonDelBtn.classList.remove('confirm');
+    seasonDelBtn.textContent = 'Slet sæson';
+  }
+
   var eps = all.filter(function(ep) {
     if (topicFilter && (ep.topics||[]).indexOf(topicFilter) === -1) return false;
     if (themeQ && !(ep.keywords||[]).some(function(k){ return gaNormText(k).includes(themeQ); })) return false;
+    if (seasonFilter) { var s = gaEpisodeSeason(ep.date); if (!s || s.key !== seasonFilter) return false; }
     return true;
   });
 

@@ -1685,6 +1685,9 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
             <option value="">Alle emner</option>
             <option value="__prospect__">Kun kandidater (ikke optrådt)</option>
           </select>
+          <select id="ga-sidebar-season" style="width:100%;margin-top:6px;font-family:inherit;font-size:12.5px;color:var(--ink);padding:6px 8px;border:1px solid var(--line-2);border-radius:6px;background:var(--bg);outline:none;" onchange="gaRenderSidebar()">
+            <option value="">Alle sæsoner</option>
+          </select>
           <button class="ga-add-guest" style="margin:8px 0 0;width:100%;justify-content:center" onclick="gaOpenGuestTable()">⤢ Fuld oversigt</button>
         </div>
         <div class="ga-sidebar-list" id="ga-sidebar-list"></div>
@@ -4300,15 +4303,38 @@ function gaRenderSidebar() {
   var qEl = document.getElementById('ga-sidebar-q');
   var q = qEl ? gaNormText(qEl.value) : '';
   var topicFilter = (document.getElementById('ga-sidebar-topic')||{}).value || '';
-  var counts = {};
-  eps.forEach(function(ep){ (ep.guests||[]).forEach(function(ge){ counts[ge.guestId]=(counts[ge.guestId]||0)+1; }); });
+
+  var seasonSel = document.getElementById('ga-sidebar-season');
+  if (seasonSel) {
+    var curSeason = seasonSel.value;
+    var seasons = gaAllSeasons();
+    seasonSel.innerHTML = '<option value="">Alle sæsoner</option>' +
+      seasons.map(function(s){ return '<option value="'+s.key+'"'+(s.key===curSeason?' selected':'')+'>'+gaEscHtml(s.label)+'</option>'; }).join('');
+  }
+  var seasonFilter = seasonSel ? seasonSel.value : '';
+
+  // Prospect detection ("never appeared, ever") always uses global counts,
+  // regardless of season — a candidate is a candidate independent of which
+  // season is being viewed. The displayed ×N badge and sort, though, use
+  // season-scoped counts when a season is selected, so a guest shows how
+  // many times they appeared *in that season*, not their lifetime total.
+  var globalCounts = {};
+  eps.forEach(function(ep){ (ep.guests||[]).forEach(function(ge){ globalCounts[ge.guestId]=(globalCounts[ge.guestId]||0)+1; }); });
+  var counts = globalCounts;
+  if (seasonFilter) {
+    var epsInSeason = eps.filter(function(ep){ var s = gaEpisodeSeason(ep.date); return s && s.key === seasonFilter; });
+    counts = {};
+    epsInSeason.forEach(function(ep){ (ep.guests||[]).forEach(function(ge){ counts[ge.guestId]=(counts[ge.guestId]||0)+1; }); });
+  }
+
   var sorted = guests
     .filter(function(g){ return !q || gaNormText(g.name).includes(q); })
     .filter(function(g){
       if (!topicFilter) return true;
-      if (topicFilter === '__prospect__') return !counts[g.id];
+      if (topicFilter === '__prospect__') return !globalCounts[g.id];
       return (g.topics||[]).indexOf(topicFilter) !== -1;
     })
+    .filter(function(g){ return !seasonFilter || counts[g.id]; })
     .sort(function(a,b){ return (counts[b.id]||0)-(counts[a.id]||0) || a.name.localeCompare(b.name,'da'); });
   if (sorted.length === 0) {
     list.innerHTML = '<div style="padding:16px;font-size:13px;color:var(--faint);font-style:italic;">Ingen gæster endnu</div>';

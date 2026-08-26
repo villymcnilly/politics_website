@@ -4613,11 +4613,23 @@ function gaRenderNetwork() {
   var maxWeight = Math.max.apply(null, data.links.map(function(l){ return l.weight; }).concat([1]));
   var strokeW = d3.scaleLinear().domain([1, maxWeight]).range([1, 6]);
 
+  // Seed nodes around a circle instead of leaving them all stacked at the
+  // origin — otherwise the simulation opens by violently flinging
+  // everything apart from the same point, which reads as laggy/jumpy even
+  // once it's actually settled down.
+  var seedR = Math.min(width, height) / 2.3;
+  data.nodes.forEach(function(n, i) {
+    var angle = (i / data.nodes.length) * 2 * Math.PI;
+    n.x = width/2 + seedR * Math.cos(angle);
+    n.y = height/2 + seedR * Math.sin(angle);
+  });
+
   if (gaNetSim) gaNetSim.stop();
   gaNetSim = d3.forceSimulation(data.nodes)
+    .velocityDecay(0.55)
     .force('link', d3.forceLink(data.links).id(function(d){ return d.id; })
-      .distance(function(l){ return 60 + (10 - Math.min(l.weight,10)) * 8; }).strength(0.25))
-    .force('charge', d3.forceManyBody().strength(-180))
+      .distance(function(l){ return 60 + (10 - Math.min(l.weight,10)) * 8; }).strength(0.35))
+    .force('charge', d3.forceManyBody().strength(-140).distanceMax(400))
     .force('center', d3.forceCenter(width/2, height/2))
     .force('collision', d3.forceCollide().radius(function(d){ return radius(d.count) + 4; }));
 
@@ -4629,7 +4641,10 @@ function gaRenderNetwork() {
   var node = root.append('g').selectAll('g').data(data.nodes).enter().append('g')
     .attr('class', 'ga-net-node')
     .call(d3.drag()
-      .on('start', function(event, d){ if (!event.active) gaNetSim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      // A gentle reheat, not the d3-tutorial-default 0.3 — that reheats the
+      // *whole* simulation hard enough that every other node visibly
+      // twitches whenever you drag just one.
+      .on('start', function(event, d){ if (!event.active) gaNetSim.alphaTarget(0.08).restart(); d.fx = d.x; d.fy = d.y; })
       .on('drag', function(event, d){ d.fx = event.x; d.fy = event.y; })
       .on('end', function(event, d){ if (!event.active) gaNetSim.alphaTarget(0); d.fx = null; d.fy = null; }));
 

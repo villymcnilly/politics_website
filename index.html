@@ -973,9 +973,24 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-net-focus-name { font-family: 'Newsreader', serif; font-size: 16px; }
 .ga-net-focus-title { color: var(--ink-2); font-size: 12px; }
 .ga-net-focus-meta { color: var(--muted); font-size: 11.5px; margin-bottom: 4px; }
+.ga-net-page { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.ga-net-page-head { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.ga-net-page-head h2 { font-family: 'Newsreader', serif; font-size: 19px; font-weight: 600; margin: 0; }
+.ga-net-back { display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--line-2); border-radius: 8px; padding: 7px 12px; font-family: inherit; font-size: 13px; color: var(--muted); cursor: pointer; transition: all 0.14s; }
+.ga-net-back:hover { color: var(--ink); border-color: var(--ink-2); }
+.ga-net-count { font-size: 12.5px; color: var(--muted); }
+.ga-net-status { font-size: 12.5px; color: var(--faint); }
+.ga-net-body { display: flex; flex: 1; min-height: 0; }
+.ga-net-controls { width: 220px; flex-shrink: 0; overflow-y: auto; padding: 16px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 18px; }
+.ga-net-ctrl-block { display: flex; flex-direction: column; gap: 6px; }
+.ga-net-ctrl-title { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.ga-net-cb-row { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
+.ga-net-slider { width: 100%; accent-color: var(--ink); }
 @media (max-width: 820px) { .ga-gt-sheet { width: 100vw; height: 100vh; max-width: 100vw; border-radius: 0; } .ga-gt-toolbar { flex-wrap: wrap; } }
 @media (max-width: 820px) {
   .ga-layout { grid-template-columns: 1fr; }
+  .ga-net-body { flex-direction: column; }
+  .ga-net-controls { width: 100%; border-right: none; border-bottom: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; gap: 14px 22px; }
   .ga-sidebar { display: none; }
   .ga-profile { width: 100%; max-width: 100%; border-left: none; }
   .ga-guest-row { grid-template-columns: 1fr; gap: 6px; position: relative; padding: 10px 34px 10px 10px; border: 1px solid var(--line-2); border-radius: 8px; }
@@ -1682,7 +1697,6 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
         <select class="ga-filter-select" id="ga-ep-f-season" onchange="gaRenderEpisodes()">
           <option value="">Alle sæsoner</option>
         </select>
-        <button class="ga-pdelete" id="ga-ep-season-del" onclick="gaDeleteSeason()" style="display:none">Slet sæson</button>
       </div>
       <div id="ga-ep-list"></div>
     </div>
@@ -1717,6 +1731,53 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
           </div>
         </div>
         <div id="ga-stat-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Network page (full page, not a popup) -->
+  <div class="ga-net-page" id="ga-net-page" style="display:none">
+    <div class="ga-net-page-head">
+      <button class="ga-net-back" onclick="gaCloseNetwork()">← Tilbage</button>
+      <h2>Gæstenetværk</h2>
+      <span class="ga-net-count" id="ga-net-count"></span>
+      <span class="ga-net-status" id="ga-net-status"></span>
+    </div>
+    <div class="ga-net-body">
+      <div class="ga-net-controls">
+        <div class="ga-net-ctrl-block">
+          <div class="ga-net-ctrl-title">Kategorier</div>
+          <label class="ga-net-cb-row"><input type="checkbox" class="ga-net-cat-cb" value="politiker" checked onchange="gaRenderNetwork()"> Politiker</label>
+          <label class="ga-net-cb-row"><input type="checkbox" class="ga-net-cat-cb" value="ekspert" checked onchange="gaRenderNetwork()"> Ekspert</label>
+          <label class="ga-net-cb-row"><input type="checkbox" class="ga-net-cat-cb" value="case" checked onchange="gaRenderNetwork()"> Case</label>
+          <label class="ga-net-cb-row"><input type="checkbox" class="ga-net-cat-cb" value="pro-deb" checked onchange="gaRenderNetwork()"> Pro-deb</label>
+          <label class="ga-net-cb-row"><input type="checkbox" class="ga-net-cat-cb" value="" checked onchange="gaRenderNetwork()"> Ukategoriseret</label>
+        </div>
+        <div class="ga-net-ctrl-block">
+          <div class="ga-net-ctrl-title">Min. optrædener: <span id="ga-net-minapp-val">1</span></div>
+          <input type="range" class="ga-net-slider" id="ga-net-minapp" min="1" max="10" step="1" value="1" oninput="document.getElementById('ga-net-minapp-val').textContent=this.value; gaRenderNetwork()">
+        </div>
+        <div class="ga-net-ctrl-block">
+          <label class="ga-net-cb-row"><input type="checkbox" id="ga-net-isolated" onchange="gaRenderNetwork()"> Vis også enlige gæster</label>
+        </div>
+        <div class="ga-net-ctrl-block">
+          <div class="ga-net-ctrl-title">Frastødning: <span id="ga-net-charge-val">140</span></div>
+          <input type="range" class="ga-net-slider" id="ga-net-charge" min="20" max="400" step="10" value="140" oninput="document.getElementById('ga-net-charge-val').textContent=this.value; gaNetUpdateForces()">
+        </div>
+        <div class="ga-net-ctrl-block">
+          <div class="ga-net-ctrl-title">Linjeafstand: <span id="ga-net-distance-val">60</span></div>
+          <input type="range" class="ga-net-slider" id="ga-net-distance" min="20" max="200" step="10" value="60" oninput="document.getElementById('ga-net-distance-val').textContent=this.value; gaNetUpdateForces()">
+        </div>
+      </div>
+      <div class="ga-net-wrap">
+        <svg id="ga-net-svg" class="ga-net-svg"></svg>
+        <div class="ga-net-legend">
+          <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--a)"></span>Politiker</div>
+          <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--f)"></span>Ekspert</div>
+          <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--m)"></span>Case</div>
+          <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--b)"></span>Pro-deb</div>
+        </div>
+        <div class="ga-net-focus" id="ga-net-focus" style="display:none"></div>
       </div>
     </div>
   </div>
@@ -1823,35 +1884,6 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
   </div>
 </div>
 
-<div class="ga-modal" id="ga-net-modal" aria-hidden="true">
-  <div class="ga-modal-bd" onclick="gaCloseNetwork()"></div>
-  <div class="ga-modal-sheet ga-gt-sheet" role="dialog" aria-modal="true" aria-labelledby="ga-net-modal-title">
-    <div class="ga-modal-head">
-      <div>
-        <div class="ga-modal-eyebrow">Gæstearkiv</div>
-        <div class="ga-modal-title" id="ga-net-modal-title">Netværk</div>
-      </div>
-      <button class="ga-modal-close" onclick="gaCloseNetwork()" title="Luk">&times;</button>
-    </div>
-    <div class="ga-gt-toolbar">
-      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);flex:0 0 auto">
-        <input type="checkbox" id="ga-net-isolated" onchange="gaRenderNetwork()"> Vis også enlige gæster
-      </label>
-      <span class="ga-gt-hint" id="ga-net-count"></span>
-      <span class="ga-gt-hint" id="ga-net-status" style="margin-left:auto"></span>
-    </div>
-    <div class="ga-net-wrap">
-      <svg id="ga-net-svg" class="ga-net-svg"></svg>
-      <div class="ga-net-legend">
-        <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--a)"></span>Politiker</div>
-        <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--f)"></span>Ekspert</div>
-        <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--m)"></span>Case</div>
-        <div class="ga-net-legend-item"><span class="ga-net-legend-dot" style="background:var(--b)"></span>Pro-deb</div>
-      </div>
-      <div class="ga-net-focus" id="ga-net-focus" style="display:none"></div>
-    </div>
-  </div>
-</div>
 
 <div class="picker" id="picker" aria-hidden="true">
   <div class="picker-bd" onclick="closePicker()"></div>
@@ -4221,33 +4253,6 @@ function gaAllSeasons() {
   return Object.keys(seen).sort().reverse().map(function(k){ return { key: k, label: seen[k] }; });
 }
 
-// Two-click confirm (arm, then confirm), same pattern as the guest-profile
-// delete button — appropriate here since this can remove many episodes at
-// once. Only removes episodes; guests and their pre-interviews stay in the
-// archive, same as deleting a single episode already does.
-function gaDeleteSeason() {
-  var sel = document.getElementById('ga-ep-f-season');
-  var btn = document.getElementById('ga-ep-season-del');
-  var key = sel ? sel.value : '';
-  if (!key || !btn) return;
-  var toDelete = gaLoadEpisodes().filter(function(ep) {
-    var s = gaEpisodeSeason(ep.date);
-    return s && s.key === key;
-  });
-  if (!toDelete.length) return;
-
-  if (!btn.classList.contains('confirm')) {
-    btn.classList.add('confirm');
-    btn.textContent = 'Klik igen for at slette ' + toDelete.length + ' udsendelse' + (toDelete.length===1?'':'r');
-    return;
-  }
-
-  var ids = {};
-  toDelete.forEach(function(ep){ ids[ep.id] = true; });
-  gaSaveEpisodes(gaLoadEpisodes().filter(function(ep){ return !ids[ep.id]; }));
-  gaRender();
-}
-
 function gaRenderEpisodes() {
   var list = document.getElementById('ga-ep-list');
   if (!list) return;
@@ -4265,12 +4270,6 @@ function gaRenderEpisodes() {
       seasons.map(function(s){ return '<option value="'+s.key+'"'+(s.key===curSeason?' selected':'')+'>'+gaEscHtml(s.label)+'</option>'; }).join('');
   }
   var seasonFilter = seasonSel ? seasonSel.value : '';
-  var seasonDelBtn = document.getElementById('ga-ep-season-del');
-  if (seasonDelBtn) {
-    seasonDelBtn.style.display = seasonFilter ? '' : 'none';
-    seasonDelBtn.classList.remove('confirm');
-    seasonDelBtn.textContent = 'Slet sæson';
-  }
 
   var eps = all.filter(function(ep) {
     if (topicFilter && (ep.topics||[]).indexOf(topicFilter) === -1) return false;
@@ -4529,7 +4528,11 @@ var gaNetFocusId = null;
 // Nodes = guests, edges = "appeared on the same episode together" weighted
 // by how many times. Guests with zero co-appearances are excluded by
 // default (they're just isolated dots that add clutter, not "network").
-function gaBuildNetworkData(includeIsolated) {
+// opts: { includeIsolated, minAppearances, categories: Set of allowed category values ('' = uncategorized) }
+function gaBuildNetworkData(opts) {
+  opts = opts || {};
+  var minAppearances = opts.minAppearances || 1;
+  var categories = opts.categories || null;
   var guests = gaLoadGuests();
   var eps = gaLoadEpisodes();
   var counts = {};
@@ -4557,18 +4560,25 @@ function gaBuildNetworkData(includeIsolated) {
     connected[parts[0]] = true;
     connected[parts[1]] = true;
   });
-  var nodeIds = includeIsolated ? guests.map(function(g){ return g.id; }) : Object.keys(connected);
-  var nodes = nodeIds.map(function(id) {
+  var nodeIds = opts.includeIsolated ? guests.map(function(g){ return g.id; }) : Object.keys(connected);
+  var allNodes = nodeIds.map(function(id) {
     var g = guests.find(function(x){ return x.id === id; });
     var latest = gaLatestAppearance(id);
     var category = (latest && latest.ge.category) || (g && g.category) || '';
     return { id: id, name: g ? g.name : '?', count: counts[id] || 0, category: category };
   });
+  var keep = allNodes.filter(function(n) {
+    if (n.count < minAppearances) return false;
+    if (categories && !categories.has(n.category)) return false;
+    return true;
+  });
+  var keepIds = {};
+  keep.forEach(function(n){ keepIds[n.id] = true; });
   var links = Object.keys(pairWeights).map(function(key) {
     var parts = key.split('|');
     return { source: parts[0], target: parts[1], weight: pairWeights[key] };
-  });
-  return { nodes: nodes, links: links };
+  }).filter(function(l){ return keepIds[l.source] && keepIds[l.target]; });
+  return { nodes: keep, links: links };
 }
 
 function gaNetCatColor(cat) {
@@ -4578,11 +4588,23 @@ function gaNetCatColor(cat) {
   return v || cs.getPropertyValue('--muted').trim();
 }
 
+function gaNetReadFilters() {
+  var categories = new Set();
+  document.querySelectorAll('.ga-net-cat-cb').forEach(function(cb) {
+    if (cb.checked) categories.add(cb.value);
+  });
+  var minAppEl = document.getElementById('ga-net-minapp');
+  return {
+    includeIsolated: document.getElementById('ga-net-isolated').checked,
+    minAppearances: minAppEl ? parseInt(minAppEl.value, 10) || 1 : 1,
+    categories: categories
+  };
+}
+
 function gaRenderNetwork() {
   var svgEl = document.getElementById('ga-net-svg');
   if (!svgEl || !window.d3) return;
-  var includeIsolated = document.getElementById('ga-net-isolated').checked;
-  var data = gaBuildNetworkData(includeIsolated);
+  var data = gaBuildNetworkData(gaNetReadFilters());
 
   var width = svgEl.clientWidth || 800;
   var height = svgEl.clientHeight || 600;
@@ -4624,12 +4646,17 @@ function gaRenderNetwork() {
     n.y = height/2 + seedR * Math.sin(angle);
   });
 
+  var chargeEl = document.getElementById('ga-net-charge');
+  var distEl = document.getElementById('ga-net-distance');
+  var chargeStrength = -(chargeEl ? parseInt(chargeEl.value, 10) : 140);
+  var baseDistance = distEl ? parseInt(distEl.value, 10) : 60;
+
   if (gaNetSim) gaNetSim.stop();
   gaNetSim = d3.forceSimulation(data.nodes)
     .velocityDecay(0.55)
     .force('link', d3.forceLink(data.links).id(function(d){ return d.id; })
-      .distance(function(l){ return 60 + (10 - Math.min(l.weight,10)) * 8; }).strength(0.35))
-    .force('charge', d3.forceManyBody().strength(-140).distanceMax(400))
+      .distance(function(l){ return baseDistance + (10 - Math.min(l.weight,10)) * 8; }).strength(0.35))
+    .force('charge', d3.forceManyBody().strength(chargeStrength).distanceMax(400))
     .force('center', d3.forceCenter(width/2, height/2))
     .force('collision', d3.forceCollide().radius(function(d){ return radius(d.count) + 4; }));
 
@@ -4740,8 +4767,29 @@ function gaOpenProfileFromNetwork(id) {
   gaOpenProfile(id);
 }
 
+// Live-update force strengths on the running simulation instead of
+// rebuilding + reseeding the whole graph — a full gaRenderNetwork() rebuild
+// while dragging a slider would reset node positions on every input event,
+// which reads as the whole graph jumping around rather than smoothly
+// responding to the slider.
+function gaNetUpdateForces() {
+  if (!gaNetSim) return;
+  var chargeEl = document.getElementById('ga-net-charge');
+  var distEl = document.getElementById('ga-net-distance');
+  var chargeStrength = -(chargeEl ? parseInt(chargeEl.value, 10) : 140);
+  var baseDistance = distEl ? parseInt(distEl.value, 10) : 60;
+  var chargeForce = gaNetSim.force('charge');
+  if (chargeForce) chargeForce.strength(chargeStrength);
+  var linkForce = gaNetSim.force('link');
+  if (linkForce) linkForce.distance(function(l){ return baseDistance + (10 - Math.min(l.weight,10)) * 8; });
+  gaNetSim.alpha(0.3).restart();
+}
+
 function gaOpenNetwork() {
-  document.getElementById('ga-net-modal').classList.add('on');
+  var page = document.getElementById('ga-net-page');
+  var layout = document.querySelector('.ga-layout');
+  if (layout) layout.style.display = 'none';
+  if (page) page.style.display = 'flex';
   var status = document.getElementById('ga-net-status');
   if (status) status.textContent = gaD3Loaded ? '' : 'Indlæser…';
   gaLoadD3().then(function() {
@@ -4753,7 +4801,10 @@ function gaOpenNetwork() {
 }
 
 function gaCloseNetwork() {
-  document.getElementById('ga-net-modal').classList.remove('on');
+  var page = document.getElementById('ga-net-page');
+  var layout = document.querySelector('.ga-layout');
+  if (page) page.style.display = 'none';
+  if (layout) layout.style.display = '';
   if (gaNetSim) { gaNetSim.stop(); gaNetSim = null; }
   gaNetFocusId = null;
 }

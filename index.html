@@ -949,6 +949,21 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 .ga-modal-foot { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px; border-top: 1px solid var(--line); }
 .ga-modal-hint { font-size: 11.5px; color: var(--faint); }
 @media (max-width: 640px) { .ga-modal-sheet { height: 90vh; border-radius: 10px; } .ga-modal-body { padding: 16px 18px 20px; font-size: 13.5px; } }
+
+/* Pre-interview reader: raw manuscript text reflowed into real paragraphs
+   (see gaFormatPreinterviewText) instead of dumped as pre-wrapped plain
+   text, which just replayed the source doc's hard line-wraps as jagged
+   forced breaks. Serif body copy at a narrower measure matches the
+   magazine-editorial reading treatment used elsewhere on the site
+   (.verdict-story) rather than the site's UI sans. */
+.ga-pre-sheet { width: 700px; }
+.ga-pre-sheet .ga-modal-body { white-space: normal; max-width: 560px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+#ga-pre-modal-body p { font-family: 'Newsreader', serif; font-size: 16.5px; line-height: 1.65; margin: 0 0 1.1em; color: var(--ink); }
+#ga-pre-modal-body p:last-child { margin-bottom: 0; }
+#ga-pre-modal-body .ga-pre-rating { margin: 4px 0 22px; padding: 11px 15px; background: var(--hover); border-left: 3px solid var(--a); border-radius: 0 8px 8px 0; font-family: 'Hanken Grotesk', sans-serif; font-size: 13px; font-style: italic; color: var(--ink-2); line-height: 1.5; }
+#ga-pre-modal-body .ga-pre-list { font-family: 'Newsreader', serif; font-size: 16.5px; line-height: 1.55; margin: 0 0 1.1em; padding-left: 22px; color: var(--ink); }
+#ga-pre-modal-body .ga-pre-list li { margin-bottom: 7px; }
+@media (max-width: 640px) { .ga-pre-sheet .ga-modal-body { max-width: none; } #ga-pre-modal-body p, #ga-pre-modal-body .ga-pre-list { font-size: 15px; } }
 .ga-gt-sheet { width: 96vw; max-width: 1400px; height: 90vh; }
 .ga-gt-toolbar { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 12px 24px; border-bottom: 1px solid var(--line); }
 .ga-gt-toolbar input { flex: 0 0 260px; font-family: inherit; font-size: 13px; color: var(--ink); padding: 7px 10px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--bg); outline: none; }
@@ -1850,7 +1865,7 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 
 <div class="ga-modal" id="ga-pre-modal" aria-hidden="true">
   <div class="ga-modal-bd" onclick="gaClosePre()"></div>
-  <div class="ga-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="ga-pre-modal-title">
+  <div class="ga-modal-sheet ga-pre-sheet" role="dialog" aria-modal="true" aria-labelledby="ga-pre-modal-title">
     <div class="ga-modal-head">
       <div>
         <div class="ga-modal-eyebrow" id="ga-pre-modal-who">–</div>
@@ -3199,6 +3214,33 @@ async function gaAddPreinterview(guestId, entry) {
 var gaPreShown = [];
 var gaPreCurrent = null;
 
+// The raw manuscript text still carries the source Word doc's hard line
+// wraps (a newline every ~80 chars, not just at real paragraph ends), so a
+// straight pre-wrap dump renders as a jagged staircase instead of prose.
+// extractPreinterviews() (parse-manuscript.js) already normalizes genuine
+// paragraph breaks down to a blank line, so: split on blank lines for real
+// paragraphs, then join the hard-wrapped single newlines within each back
+// into flowing sentences. A block of short bullet-marked lines becomes a
+// real list instead of flowing text, and a standalone "Vurdering: …" line
+// (the havkat assessment quote) gets pulled into its own callout since it's
+// the one line in here that's actually load-bearing for the site.
+function gaFormatPreinterviewText(text) {
+  var blocks = String(text || '').split(/\n\s*\n/).map(function(b){ return b.trim(); }).filter(Boolean);
+  return blocks.map(function(block) {
+    var lines = block.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+    var isList = lines.length > 1 && lines.every(function(l){ return /^[-•*]\s+/.test(l); });
+    if (isList) {
+      return '<ul class="ga-pre-list">' + lines.map(function(l) {
+        return '<li>' + gaEscHtml(l.replace(/^[-•*]\s+/, '')) + '</li>';
+      }).join('') + '</ul>';
+    }
+    if (lines.length === 1 && /^vurdering\s*[:\-]/i.test(lines[0])) {
+      return '<div class="ga-pre-rating">' + gaEscHtml(lines[0]) + '</div>';
+    }
+    return '<p>' + gaEscHtml(lines.join(' ')) + '</p>';
+  }).join('');
+}
+
 function gaOpenPre(i) {
   var entry = gaPreShown[i];
   if (!entry) return;
@@ -3208,7 +3250,7 @@ function gaOpenPre(i) {
   document.getElementById('ga-pre-modal-who').textContent = 'Præinterview · ' + (g ? g.name : '');
   document.getElementById('ga-pre-modal-title').textContent =
     gaEpName({ date: entry.date, title: entry.title }) || 'Præinterview';
-  document.getElementById('ga-pre-modal-body').textContent = entry.text || '';
+  document.getElementById('ga-pre-modal-body').innerHTML = gaFormatPreinterviewText(entry.text || '');
   var words = (entry.text || '').trim().split(/\s+/).filter(Boolean).length;
   document.getElementById('ga-pre-modal-meta').textContent = words + ' ord';
 

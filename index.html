@@ -3240,7 +3240,12 @@ function gaIsQuestionSentence(s) {
 }
 
 function gaFormatQaText(raw) {
-  var chunks = raw.split(/ [-*•–] /);
+  // A dash/asterisk only counts as a bullet marker when it comes right after
+  // a sentence has just ended — real transcribers are consistent about that.
+  // Without the lookbehind, an ordinary mid-sentence dash ("tisse i bukserne
+  // – ikke en langvarig løsning") gets misread as starting a new bullet and
+  // chops one answer into two.
+  var chunks = raw.split(/(?<=[.?!])\s+[-*•–]\s+/);
   var turns = [];
   var preamble = [];
   var current = [];
@@ -3266,12 +3271,32 @@ function gaFormatQaText(raw) {
   });
   flush();
 
+  // Two questions typed back-to-back with no answer in between ("Skal X?
+  // Går der for mange Y?") share the bullets that follow — fold the
+  // answerless one into the question after it instead of showing an empty
+  // question block.
+  for (var i = turns.length - 2; i >= 0; i--) {
+    if (turns[i].bullets.length === 0) {
+      turns[i+1].q = turns[i].q + ' ' + turns[i+1].q;
+      turns.splice(i, 1);
+    }
+  }
+
   var html = '';
   var pre = preamble.join(' ').trim();
   if (pre) {
-    html += /^vurdering\s*[:\-]/i.test(pre)
-      ? '<div class="ga-pre-rating">' + gaEscHtml(pre) + '</div>'
-      : '<p>' + gaEscHtml(pre) + '</p>';
+    // "Vurdering: ..." often isn't the first thing in the preamble — a role
+    // or phone number can sit in front of it — so search for it instead of
+    // requiring it at position 0.
+    var vIdx = pre.search(/vurdering\s*[:\-]/i);
+    if (vIdx === -1) {
+      html += '<p>' + gaEscHtml(pre) + '</p>';
+    } else {
+      var before = pre.slice(0, vIdx).trim();
+      var rating = pre.slice(vIdx).trim();
+      if (before) html += '<p>' + gaEscHtml(before) + '</p>';
+      html += '<div class="ga-pre-rating">' + gaEscHtml(rating) + '</div>';
+    }
   }
   turns.forEach(function(t) {
     html += '<div class="ga-pre-qa"><p class="ga-pre-q">' + gaEscHtml(t.q) + '</p>' +
@@ -3305,7 +3330,7 @@ function gaFormatPlainText(text) {
 
 function gaFormatPreinterviewText(text) {
   var raw = String(text || '').replace(/\s+/g, ' ').trim();
-  if (/\?/.test(raw) && / [-*•–] /.test(raw)) return gaFormatQaText(raw);
+  if (/\?/.test(raw) && /(?<=[.?!])\s+[-*•–]\s+/.test(raw)) return gaFormatQaText(raw);
   return gaFormatPlainText(text);
 }
 

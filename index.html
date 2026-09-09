@@ -963,7 +963,12 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
 #ga-pre-modal-body .ga-pre-rating { margin: 4px 0 22px; padding: 11px 15px; background: var(--hover); border-left: 3px solid var(--a); border-radius: 0 8px 8px 0; font-family: 'Hanken Grotesk', sans-serif; font-size: 13px; font-style: italic; color: var(--ink-2); line-height: 1.5; }
 #ga-pre-modal-body .ga-pre-list { font-family: 'Newsreader', serif; font-size: 16.5px; line-height: 1.55; margin: 0 0 1.1em; padding-left: 22px; color: var(--ink); }
 #ga-pre-modal-body .ga-pre-list li { margin-bottom: 7px; }
-@media (max-width: 640px) { .ga-pre-sheet .ga-modal-body { max-width: none; } #ga-pre-modal-body p, #ga-pre-modal-body .ga-pre-list { font-size: 15px; } }
+#ga-pre-modal-body .ga-pre-qa { margin: 0 0 22px; }
+#ga-pre-modal-body .ga-pre-qa:not(:first-child) { padding-top: 20px; border-top: 1px solid var(--line); }
+#ga-pre-modal-body .ga-pre-qa:last-child { margin-bottom: 0; }
+#ga-pre-modal-body .ga-pre-qa .ga-pre-q { font-weight: 600; font-style: italic; margin-bottom: 10px; }
+#ga-pre-modal-body .ga-pre-qa .ga-pre-list { margin-bottom: 0; }
+@media (max-width: 640px) { .ga-pre-sheet .ga-modal-body { max-width: none; } #ga-pre-modal-body p, #ga-pre-modal-body .ga-pre-list, #ga-pre-modal-body .ga-pre-q { font-size: 15px; } }
 .ga-gt-sheet { width: 96vw; max-width: 1400px; height: 90vh; }
 .ga-gt-toolbar { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 12px 24px; border-bottom: 1px solid var(--line); }
 .ga-gt-toolbar input { flex: 0 0 260px; font-family: inherit; font-size: 13px; color: var(--ink); padding: 7px 10px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--bg); outline: none; }
@@ -3214,17 +3219,74 @@ async function gaAddPreinterview(guestId, entry) {
 var gaPreShown = [];
 var gaPreCurrent = null;
 
-// The raw manuscript text still carries the source Word doc's hard line
-// wraps (a newline every ~80 chars, not just at real paragraph ends), so a
-// straight pre-wrap dump renders as a jagged staircase instead of prose.
-// extractPreinterviews() (parse-manuscript.js) already normalizes genuine
-// paragraph breaks down to a blank line, so: split on blank lines for real
-// paragraphs, then join the hard-wrapped single newlines within each back
-// into flowing sentences. A block of short bullet-marked lines becomes a
-// real list instead of flowing text, and a standalone "Vurdering: …" line
-// (the havkat assessment quote) gets pulled into its own callout since it's
-// the one line in here that's actually load-bearing for the site.
-function gaFormatPreinterviewText(text) {
+// The pre-interview manuscript is a Q&A transcript, but not a structured
+// one: it's typed as one continuous run of text, questions ending in "?"
+// with their bulleted answer points strung inline after a " - " or " * "
+// marker rather than on their own lines — e.g. "...demokrati? - Jeg ser
+// ikke... - Fastlåste flertal... Hvad fylder hos dig? - De gamle...". So
+// reconstructing "question, then its answers as bullets" means walking the
+// text sentence by sentence: whenever a sentence ends in "?" it starts a
+// new question; a " - "/" * " marker starts a new bullet under the current
+// question; everything else keeps extending the bullet/question in
+// progress. This is a best-effort heuristic, not a real parser — the source
+// occasionally reuses " - " as an ordinary sentence dash rather than a
+// bullet marker, which can split a bullet where it shouldn't, but that's
+// far more readable than one undifferentiated wall of text.
+function gaSplitSentences(s) {
+  return s.split(/(?<=[.?!])\s+(?=[A-ZÆØÅ0-9"“])/).map(function(x){ return x.trim(); }).filter(Boolean);
+}
+function gaIsQuestionSentence(s) {
+  return /\?[”"'’]?$/.test(s.trim());
+}
+
+function gaFormatQaText(raw) {
+  var chunks = raw.split(/ [-*•–] /);
+  var turns = [];
+  var preamble = [];
+  var current = [];
+
+  function flush() {
+    if (!current.length) return;
+    var block = current.join(' ');
+    current = [];
+    if (turns.length) turns[turns.length - 1].bullets.push(block);
+    else preamble.push(block);
+  }
+
+  chunks.forEach(function(chunk, ci) {
+    gaSplitSentences(chunk).forEach(function(sentence, si) {
+      if (gaIsQuestionSentence(sentence)) {
+        flush();
+        turns.push({ q: sentence, bullets: [] });
+      } else {
+        if (ci > 0 && si === 0) flush();
+        current.push(sentence);
+      }
+    });
+  });
+  flush();
+
+  var html = '';
+  var pre = preamble.join(' ').trim();
+  if (pre) {
+    html += /^vurdering\s*[:\-]/i.test(pre)
+      ? '<div class="ga-pre-rating">' + gaEscHtml(pre) + '</div>'
+      : '<p>' + gaEscHtml(pre) + '</p>';
+  }
+  turns.forEach(function(t) {
+    html += '<div class="ga-pre-qa"><p class="ga-pre-q">' + gaEscHtml(t.q) + '</p>' +
+      (t.bullets.length ? '<ul class="ga-pre-list">' + t.bullets.map(function(b){ return '<li>' + gaEscHtml(b) + '</li>'; }).join('') + '</ul>' : '') +
+      '</div>';
+  });
+  return html;
+}
+
+// Fallback for pre-interview text with no detectable Q&A structure (no "?"
+// or no bullet markers at all) — free-form notes rather than a transcript.
+// Still worth reflowing: the manuscript's hard line-wraps (a newline every
+// ~80 chars, not just at real paragraph ends) otherwise render as a jagged
+// staircase under white-space:pre-wrap instead of prose.
+function gaFormatPlainText(text) {
   var blocks = String(text || '').split(/\n\s*\n/).map(function(b){ return b.trim(); }).filter(Boolean);
   return blocks.map(function(block) {
     var lines = block.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
@@ -3239,6 +3301,12 @@ function gaFormatPreinterviewText(text) {
     }
     return '<p>' + gaEscHtml(lines.join(' ')) + '</p>';
   }).join('');
+}
+
+function gaFormatPreinterviewText(text) {
+  var raw = String(text || '').replace(/\s+/g, ' ').trim();
+  if (/\?/.test(raw) && / [-*•–] /.test(raw)) return gaFormatQaText(raw);
+  return gaFormatPlainText(text);
 }
 
 function gaOpenPre(i) {

@@ -1619,6 +1619,10 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
             <label class="ga-form-label">Noter</label>
             <textarea class="ga-form-textarea" id="ga-gadd-notes"></textarea>
           </div>
+          <div class="ga-form-field full" style="margin-bottom:12px">
+            <label class="ga-form-label">Præinterview <span style="font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;color:var(--faint)">— valgfrit, til gæster der ikke kom med i udsendelsen</span></label>
+            <textarea class="ga-form-textarea" id="ga-gadd-preinterview" placeholder="Indsæt spørgsmål/svar som almindelig tekst…" style="min-height:120px"></textarea>
+          </div>
           <button class="ga-save-btn" onclick="gaSaveStandaloneGuest()">Gem gæst</button>
         </div>
       </div>
@@ -3483,6 +3487,7 @@ function gaToggleGuestAddForm() {
     document.getElementById('ga-gadd-email').value = '';
     document.getElementById('ga-gadd-phone').value = '';
     document.getElementById('ga-gadd-notes').value = '';
+    document.getElementById('ga-gadd-preinterview').value = '';
     gaGaddTopics = [];
     gaGaddTopicsOpen = false;
     gaGaddHavkat = null;
@@ -3493,7 +3498,7 @@ function gaToggleGuestAddForm() {
   }
 }
 
-function gaSaveStandaloneGuest() {
+async function gaSaveStandaloneGuest() {
   var name = document.getElementById('ga-gadd-name').value.trim();
   if (!name) { alert('Navn er påkrævet'); return; }
   var guests = gaLoadGuests();
@@ -3504,7 +3509,7 @@ function gaSaveStandaloneGuest() {
   var partySel = document.getElementById('ga-gadd-party-sel');
   var partyOther = document.getElementById('ga-gadd-party-other');
   var party = partySel.value === '__other__' ? (partyOther.value.trim()) : partySel.value;
-  guests.push({
+  var guest = {
     id: Date.now()+'_'+Math.random().toString(36).slice(2,6),
     name: name,
     defaultTitle: document.getElementById('ga-gadd-title').value.trim(),
@@ -3520,8 +3525,24 @@ function gaSaveStandaloneGuest() {
       phone: document.getElementById('ga-gadd-phone').value.trim(),
       other: '',
     },
-  });
+  };
+  guests.push(guest);
   gaSaveGuests(guests);
+
+  // Not tied to an episode — this guest never made it to air — so the
+  // preinterview gets a synthetic episodeId (unique per guest, so a second
+  // standalone guest's preinterview can never collide with or overwrite
+  // this one) and a title explaining why there's no broadcast date.
+  var preinterview = document.getElementById('ga-gadd-preinterview').value.trim();
+  if (preinterview) {
+    await gaAddPreinterview(guest.id, {
+      episodeId: 'standalone_' + guest.id,
+      date: new Date().toISOString().slice(0, 10),
+      title: 'Ikke bragt i udsendelse',
+      text: preinterview,
+    });
+  }
+
   gaToggleGuestAddForm();
   gaRenderSidebar();
 }

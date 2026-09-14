@@ -1,0 +1,32 @@
+[
+  {
+    "roster_id": 1,
+    "owner_id": "500000000000000001",
+    "players": ["4046", "4881", "4993", "5859", "6797"],
+    "starters": ["4046", "4881", "6797", "4993"],
+    "settings": {
+      "wins": 6,
+      "losses": 3,
+      "ties": 0,
+      "fpts": 1024,
+      "fpts_decimal": 42,
+      "fpts_against": 967,
+      "fpts_against_decimal": 10
+    }
+  },
+  {
+    "roster_id": 2,
+    "owner_id": "500000000000000002",
+    "players": ["4034", "4137"],
+    "starters": ["4034", "4137"],
+    "settings": {
+      "wins": 5,
+      "losses": 4,
+      "ties": 0,
+      "fpts": 990,
+      "fpts_decimal": 5,
+      "fpts_against": 1001,
+      "fpts_against_decimal": 0
+    }
+  }
+]

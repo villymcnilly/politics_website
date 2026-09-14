@@ -1,0 +1,12 @@
+[
+  {
+    "user_id": "500000000000000001",
+    "display_name": "vilhelm",
+    "metadata": {"team_name": "Basement Dwellers"}
+  },
+  {
+    "user_id": "500000000000000002",
+    "display_name": "rival_manager",
+    "metadata": {}
+  }
+]

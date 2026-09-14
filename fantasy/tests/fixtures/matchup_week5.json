@@ -1,0 +1,18 @@
+{
+  "matchup": {
+    "roster_id": 1,
+    "points": 46.5,
+    "players_points": {
+      "4046": 18.5,
+      "4881": 9.5,
+      "4993": 18.5,
+      "5859": 0.0
+    }
+  },
+  "stat_lines": {
+    "4046": {"pass_yd": 275, "pass_td": 2, "pass_int": 1, "rush_yd": 15},
+    "4881": {"rush_yd": 95},
+    "4993": {"rec": 7, "rec_yd": 90, "rec_td": 1},
+    "5859": {"rec": 0, "rec_yd": 0}
+  }
+}

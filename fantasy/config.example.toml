@@ -1,0 +1,9 @@
+# Copy this file to config.toml (gitignored) and fill in your values so you
+# don't have to pass --league-id/--username on every run. CLI flags and the
+# FF_LEAGUE_ID / FF_SLEEPER_USERNAME / FF_CACHE_DIR / FF_SEASON env vars both
+# take precedence over this file.
+
+league_id = "your-sleeper-league-id"   # from sleeper.com/leagues/<this>/team
+username = "your-sleeper-username"     # not your email -- your Sleeper handle
+cache_dir = "cache"
+season = "2026"

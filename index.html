@@ -1474,14 +1474,14 @@ tr.sr-3 td.sc-pts { color: #9C6A40; }
             <button class="admin-ok" onclick="checkAdmin()">Log ind</button>
             <div class="admin-status" id="admin-status"></div>
           </div>
-          <div id="admin-ban-section" style="display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
-            <label style="margin-bottom:8px;display:block">Bannede emails</label>
-            <div id="ban-list" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;"></div>
+          <div id="admin-allow-section" style="display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
+            <label style="margin-bottom:8px;display:block">Godkendte emails <span style="font-weight:400;color:var(--faint)">— kun disse kan logge ind</span></label>
+            <div id="allow-list" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;"></div>
             <div style="display:flex;gap:6px;">
-              <input type="email" id="ban-input" placeholder="email@eksempel.dk" style="flex:1;font-size:13px;padding:7px 9px;border:1px solid var(--line-2);border-radius:6px;background:var(--bg);outline:none;font-family:inherit;" onkeydown="if(event.key==='Enter')addBan()">
-              <button class="admin-ok" style="margin-top:0;width:auto;padding:7px 12px;" onclick="addBan()">Ban</button>
+              <input type="email" id="allow-input" placeholder="email@eksempel.dk" style="flex:1;font-size:13px;padding:7px 9px;border:1px solid var(--line-2);border-radius:6px;background:var(--bg);outline:none;font-family:inherit;" onkeydown="if(event.key==='Enter')addAllow()">
+              <button class="admin-ok" style="margin-top:0;width:auto;padding:7px 12px;" onclick="addAllow()">Godkend</button>
             </div>
-            <div class="admin-status" id="ban-status"></div>
+            <div class="admin-status" id="allow-status"></div>
           </div>
         </div>
       </div>
@@ -2345,8 +2345,8 @@ async function loadBets() {
   }
 }
 
-const ADMIN_HASH = 'vikj2026';
-const BANS_KEY   = 'dkpol_banned_emails_v1';
+const ALLOW_KEY  = 'dkpol_allowed_emails_v1';
+const ADMIN_TOKEN_KEY = 'dkpol_admin_token';
 let isAdmin = false;
 
 function toggleAdmin() {
@@ -2357,76 +2357,126 @@ function toggleAdmin() {
   toggle.classList.toggle('open', open);
 }
 
-function checkAdmin() {
+function unlockAdminUi() {
+  isAdmin = true;
+  document.getElementById('admin-login-section').style.display = 'none';
+  document.getElementById('admin-allow-section').style.display = '';
+  renderBets();
+  renderAllowList();
+}
+
+// The password is checked by a Netlify function, never in this file — a
+// constant compared here would sit in plain text in the page source for
+// anyone to read. Only a short-lived signed token comes back, which is what
+// proves admin status from here on (including to any other admin-only
+// server endpoint that wants to check it).
+async function checkAdmin() {
   const pw = document.getElementById('admin-pw').value;
   const st = document.getElementById('admin-status');
-  if(pw === ADMIN_HASH) {
-    isAdmin = true;
+  st.textContent = 'Tjekker…';
+  st.style.color = 'var(--muted)';
+  try {
+    const res = await fetch('/.netlify/functions/admin-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      st.textContent = data.error || 'Forkert kode';
+      st.style.color = 'var(--loss-ink)';
+      return;
+    }
+    sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token);
     st.textContent = '✓ Logget ind som admin';
     st.style.color = 'var(--win-ink)';
-    document.getElementById('admin-ban-section').style.display = '';
-    renderBets();
-    renderBanList();
-  } else {
-    st.textContent = 'Forkert kode';
+    unlockAdminUi();
+  } catch (e) {
+    st.textContent = 'Kunne ikke kontakte serveren';
     st.style.color = 'var(--loss-ink)';
   }
 }
 
-async function loadBans() {
+// Lets a page refresh keep an admin logged in (same idea as Gæstearkiv's
+// sessionStorage gate) without re-asking for the password — but the token
+// is re-verified against the server every time, not just trusted because
+// it's present, so a token from a previous, since-expired session doesn't
+// silently keep working.
+async function restoreAdminSession() {
+  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  if (!token) return;
   try {
-    const r = await fetch(SB_URL + '/rest/v1/bets?id=eq.' + BANS_KEY + '&select=data', { headers: SB_GET });
+    const res = await fetch('/.netlify/functions/admin-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      unlockAdminUi();
+    } else {
+      sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    }
+  } catch (e) {}
+}
+
+// The allowlist is the single source of truth for "who can log in" — an
+// email not on it never gets a magic link sent, and a session belonging to
+// an email that's since been removed gets signed out on next load (see
+// initAuth). Stored the same way as bets/other rows: one JSON blob under a
+// fixed id in the shared 'bets' table.
+async function loadAllowlist() {
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/bets?id=eq.' + ALLOW_KEY + '&select=data', { headers: SB_GET });
     if(!r.ok) return [];
     const rows = await r.json();
     return rows.length ? (rows[0].data || []) : [];
   } catch(e) { return []; }
 }
 
-async function saveBans(list) {
+async function saveAllowlist(list) {
   try {
     await fetch(SB_URL + '/rest/v1/bets', {
       method: 'POST', headers: SB_POST,
-      body: JSON.stringify({ id: BANS_KEY, data: list, updated_at: new Date().toISOString() })
+      body: JSON.stringify({ id: ALLOW_KEY, data: list, updated_at: new Date().toISOString() })
     });
   } catch(e) {}
 }
 
-async function renderBanList() {
-  const bans = await loadBans();
-  const el = document.getElementById('ban-list');
+async function renderAllowList() {
+  const allowed = await loadAllowlist();
+  const el = document.getElementById('allow-list');
   if(!el) return;
-  if(!bans.length) { el.innerHTML = '<span style="font-size:12px;color:var(--faint);font-style:italic;">Ingen bannede endnu</span>'; return; }
-  el.innerHTML = bans.map(function(email) {
+  if(!allowed.length) { el.innerHTML = '<span style="font-size:12px;color:var(--faint);font-style:italic;">Ingen godkendt endnu — ingen kan logge ind</span>'; return; }
+  el.innerHTML = allowed.map(function(email) {
     return '<div style="display:flex;align-items:center;gap:7px;font-size:12.5px;">' +
       '<span style="flex:1;color:var(--ink-2);">'+email+'</span>' +
-      '<button onclick="removeBan(\''+email+'\')" style="background:none;border:none;cursor:pointer;color:var(--faint);font-size:14px;padding:0 2px;" title="Fjern ban">×</button>' +
+      '<button onclick="removeAllow(\''+email+'\')" style="background:none;border:none;cursor:pointer;color:var(--faint);font-size:14px;padding:0 2px;" title="Fjern adgang">×</button>' +
       '</div>';
   }).join('');
 }
 
-async function addBan() {
-  const input = document.getElementById('ban-input');
+async function addAllow() {
+  const input = document.getElementById('allow-input');
   const email = input.value.trim().toLowerCase();
-  const st = document.getElementById('ban-status');
+  const st = document.getElementById('allow-status');
   if(!email || !email.includes('@')) { st.textContent = 'Ugyldig email'; st.style.color = 'var(--loss-ink)'; return; }
-  const bans = await loadBans();
-  if(bans.includes(email)) { st.textContent = 'Allerede bannet'; st.style.color = 'var(--loss-ink)'; return; }
-  bans.push(email);
-  await saveBans(bans);
+  const allowed = await loadAllowlist();
+  if(allowed.includes(email)) { st.textContent = 'Har allerede adgang'; st.style.color = 'var(--loss-ink)'; return; }
+  allowed.push(email);
+  await saveAllowlist(allowed);
   input.value = '';
-  st.textContent = email + ' er nu bannet';
+  st.textContent = email + ' har nu adgang';
   st.style.color = 'var(--win-ink)';
   setTimeout(function(){ st.textContent = ''; }, 3000);
-  renderBanList();
-  // If this person is currently logged in via Supabase, sign them out server-side
-  // (best-effort — they'll be blocked on next login attempt)
+  renderAllowList();
 }
 
-async function removeBan(email) {
-  const bans = await loadBans();
-  const updated = bans.filter(function(e){ return e !== email; });
-  await saveBans(updated);
-  renderBanList();
+async function removeAllow(email) {
+  const allowed = await loadAllowlist();
+  const updated = allowed.filter(function(e){ return e !== email; });
+  await saveAllowlist(updated);
+  renderAllowList();
 }
 
 // ── Storage with in-memory fallback ──────────────────────────────────────────
@@ -2722,8 +2772,7 @@ async function renderBets() {
 const sbClient = supabase.createClient(SB_URL, SB_KEY);
 let currentUser = null; // { email, displayName, id }
 
-// TEMP: both login gates disabled while testing. Set to false to re-enable.
-const LOGIN_DISABLED = true;
+const LOGIN_DISABLED = false;
 
 function showStep(step) {
   document.querySelectorAll('.auth-step').forEach(function(el){ el.classList.remove('on'); });
@@ -2743,10 +2792,11 @@ async function sendMagicLink() {
   btn.disabled = true;
   setAuthMsg('auth-msg','Tjekker…','');
 
-  // Check ban list
-  const bans = await loadBans();
-  if(bans.includes(email)) {
-    setAuthMsg('auth-msg', 'Denne email har ikke adgang til siden.', 'err');
+  // Only send a login link to an approved email — nobody else even gets
+  // the chance to create an account.
+  const allowed = await loadAllowlist();
+  if(!allowed.includes(email)) {
+    setAuthMsg('auth-msg', 'Denne email har ikke adgang til siden. Kontakt Vilhelm for at blive tilføjet.', 'err');
     btn.disabled = false;
     return;
   }
@@ -2838,12 +2888,15 @@ async function initAuth() {
   const { data: { session }, error } = await sbClient.auth.getSession();
 
   if(session && session.user) {
-    const bans = await loadBans();
-    if(bans.includes(session.user.email)) {
+    // Re-check on every load, not just at sign-in — if someone's access is
+    // pulled after they've already logged in, this is what actually
+    // signs them back out instead of leaving their old session valid.
+    const allowed = await loadAllowlist();
+    if(!allowed.includes(session.user.email)) {
       await sbClient.auth.signOut();
       document.getElementById('auth-wall').classList.remove('gone');
       showStep('email');
-      setAuthMsg('auth-msg', 'Denne email har ikke adgang til siden.', 'err');
+      setAuthMsg('auth-msg', 'Denne email har ikke længere adgang til siden.', 'err');
       return;
     }
     const meta = session.user.user_metadata || {};
@@ -2924,6 +2977,7 @@ function toggleBetsIntro() {
 updateTitle();
 refresh();
 initAuth();
+restoreAdminSession();
 
 // ═══════════════════════════════════════════════════════
 // GÆSTEARKIV

@@ -2345,8 +2345,8 @@ async function loadBets() {
   }
 }
 
-const ADMIN_HASH = 'vikj2026';
 const ALLOW_KEY  = 'dkpol_allowed_emails_v1';
+const ADMIN_TOKEN_KEY = 'dkpol_admin_token';
 let isAdmin = false;
 
 function toggleAdmin() {
@@ -2357,20 +2357,67 @@ function toggleAdmin() {
   toggle.classList.toggle('open', open);
 }
 
-function checkAdmin() {
+function unlockAdminUi() {
+  isAdmin = true;
+  document.getElementById('admin-login-section').style.display = 'none';
+  document.getElementById('admin-allow-section').style.display = '';
+  renderBets();
+  renderAllowList();
+}
+
+// The password is checked by a Netlify function, never in this file — a
+// constant compared here would sit in plain text in the page source for
+// anyone to read. Only a short-lived signed token comes back, which is what
+// proves admin status from here on (including to any other admin-only
+// server endpoint that wants to check it).
+async function checkAdmin() {
   const pw = document.getElementById('admin-pw').value;
   const st = document.getElementById('admin-status');
-  if(pw === ADMIN_HASH) {
-    isAdmin = true;
+  st.textContent = 'Tjekker…';
+  st.style.color = 'var(--muted)';
+  try {
+    const res = await fetch('/.netlify/functions/admin-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      st.textContent = data.error || 'Forkert kode';
+      st.style.color = 'var(--loss-ink)';
+      return;
+    }
+    sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token);
     st.textContent = '✓ Logget ind som admin';
     st.style.color = 'var(--win-ink)';
-    document.getElementById('admin-allow-section').style.display = '';
-    renderBets();
-    renderAllowList();
-  } else {
-    st.textContent = 'Forkert kode';
+    unlockAdminUi();
+  } catch (e) {
+    st.textContent = 'Kunne ikke kontakte serveren';
     st.style.color = 'var(--loss-ink)';
   }
+}
+
+// Lets a page refresh keep an admin logged in (same idea as Gæstearkiv's
+// sessionStorage gate) without re-asking for the password — but the token
+// is re-verified against the server every time, not just trusted because
+// it's present, so a token from a previous, since-expired session doesn't
+// silently keep working.
+async function restoreAdminSession() {
+  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  if (!token) return;
+  try {
+    const res = await fetch('/.netlify/functions/admin-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      unlockAdminUi();
+    } else {
+      sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    }
+  } catch (e) {}
 }
 
 // The allowlist is the single source of truth for "who can log in" — an
@@ -2930,6 +2977,7 @@ function toggleBetsIntro() {
 updateTitle();
 refresh();
 initAuth();
+restoreAdminSession();
 
 // ═══════════════════════════════════════════════════════
 // GÆSTEARKIV

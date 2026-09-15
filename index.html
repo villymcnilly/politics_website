@@ -2725,8 +2725,7 @@ async function renderBets() {
 const sbClient = supabase.createClient(SB_URL, SB_KEY);
 let currentUser = null; // { email, displayName, id }
 
-// TEMP: both login gates disabled while testing. Set to false to re-enable.
-const LOGIN_DISABLED = true;
+const LOGIN_DISABLED = false;
 
 function showStep(step) {
   document.querySelectorAll('.auth-step').forEach(function(el){ el.classList.remove('on'); });

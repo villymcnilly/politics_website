@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bulletin – Spuriøse projekter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+// Sæt tema før første tegning, så siden ikke blinker lyst i mørk tilstand.
+(function(){
+  var saved = null;
+  try { saved = localStorage.getItem('dkpol-theme'); } catch(e){}
+  if (saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* Samme variabler som index.html */
+:root {
+  color-scheme: light;
+  --bg: #FCFBF8;
+  --panel: #FFFFFF;
+  --ink: #1A1916;
+  --ink-2: #56524A;
+  --muted: #8C887D;
+  --faint: #B6B2A6;
+  --line: #E8E5DD;
+  --line-2: #DEDACF;
+  --hover: #F4F2EC;
+  --f: #2E8B57;
+  --win-bg: #EBF7E4; --win-ink: #2E7D32;
+  --stake-bg: #FDF4D8; --stake-line: #F0D878;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #161412;
+  --panel: #1F1C19;
+  --ink: #F2EEE6;
+  --ink-2: #B8B2A6;
+  --muted: #8A8478;
+  --faint: #5E594F;
+  --line: #2C2823;
+  --line-2: #38332C;
+  --hover: #25211C;
+  --f: #5CC088;
+  --win-bg: #1B2E1A; --win-ink: #7FD89A;
+  --stake-bg: #2E2818; --stake-line: #4A4020;
+}
+html, body { height: 100%; }
+body {
+  font-family: 'Hanken Grotesk', sans-serif;
+  color: var(--ink); background: var(--bg);
+  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  -webkit-font-smoothing: antialiased; letter-spacing: -0.01em;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+button { font-family: inherit; }
+
+/* ── HEADER (som index.html) ── */
+.head { flex-shrink: 0; padding: 22px 40px 18px; border-bottom: 1px solid var(--line); }
+.head-row { display: flex; align-items: flex-end; gap: 32px; }
+.brand { min-width: 0; flex: 1; text-decoration: none; display: block; }
+.title {
+  font-family: 'Newsreader', serif; font-weight: 400; font-size: 33px; line-height: 1.08;
+  letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.title .it { font-style: italic; }
+.head-tools { display: flex; align-items: flex-end; gap: 26px; flex-shrink: 0; }
+.theme-toggle { background: none; border: 1px solid var(--line-2); border-radius: 8px; width: 34px; height: 34px; cursor: pointer; color: var(--ink-2); display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s, border-color 0.15s, color 0.15s; padding: 0; }
+.theme-toggle:hover { background: var(--hover); color: var(--ink); }
+.theme-toggle svg { width: 16px; height: 16px; }
+.theme-toggle .icon-moon { display: none; }
+[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+
+/* ── TABS (som index.html) ── */
+.tabs { display: flex; border-bottom: 1px solid var(--line); background: var(--bg); flex-shrink: 0; padding: 0 40px; gap: 0; }
+.tab { font-size: 13px; font-weight: 500; color: var(--muted); padding: 12px 18px 11px; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; background: none; margin-bottom: -1px; letter-spacing: 0.01em; text-decoration: none; }
+.tab:hover { color: var(--ink); }
+.tab.on { color: var(--ink); border-bottom-color: var(--ink); font-weight: 600; }
+
+/* ── LAYOUT ── */
+.bl { display: grid; grid-template-columns: 320px 1fr; flex: 1; min-height: 0; }
+.bl-list { border-right: 1px solid var(--line); overflow-y: auto; padding: 24px 0 32px; }
+.bl-main { overflow-y: auto; padding: 40px 48px 80px; }
+.bl-list::-webkit-scrollbar, .bl-main::-webkit-scrollbar { width: 9px; }
+.bl-list::-webkit-scrollbar-thumb, .bl-main::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--bg); }
+.bl-msg { padding: 64px 40px; font-size: 14.5px; color: var(--ink-2); line-height: 1.6; }
+
+/* ── LISTE ── */
+.bl-label { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink); font-weight: 700; padding: 0 22px; }
+.bl-updated { font-size: 12.5px; color: var(--muted); padding: 6px 22px 0; }
+.bl-group { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 26px 22px 8px; }
+.bl-item {
+  display: block; width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+  padding: 13px 22px 14px; border-top: 1px solid var(--line); border-left: 2px solid transparent;
+  color: inherit; letter-spacing: inherit; transition: background 0.15s;
+}
+.bl-item:last-child { border-bottom: 1px solid var(--line); }
+.bl-item:hover { background: var(--hover); }
+.bl-item.on { background: var(--hover); border-left-color: var(--ink); }
+.bl-item-title { font-family: 'Newsreader', serif; font-size: 18.5px; line-height: 1.22; color: var(--ink); display: block; }
+.bl-item-status { font-size: 13px; line-height: 1.5; color: var(--ink-2); margin-top: 5px; display: block; }
+.bl-item-moved { font-size: 11.5px; color: var(--muted); margin-top: 7px; display: flex; align-items: center; gap: 7px; }
+.bl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--f); box-shadow: 0 0 0 3px color-mix(in srgb, var(--f) 22%, transparent); flex-shrink: 0; }
+
+/* ── BRIEF ── */
+.br { max-width: 720px; }
+.br-eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 12px; }
+.br-title { font-family: 'Newsreader', serif; font-weight: 400; font-size: 40px; line-height: 1.1; letter-spacing: -0.02em; color: var(--ink); }
+.br-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; font-size: 12.5px; color: var(--muted); }
+.br-pill { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: var(--win-bg); color: var(--win-ink); }
+.br-pill.closed { background: var(--hover); color: var(--muted); }
+.br-empty { margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 14.5px; color: var(--ink-2); font-style: italic; }
+
+.br-sec { margin-top: 38px; }
+.br-h { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding-bottom: 9px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+.br-sec b { font-weight: 600; color: var(--ink); }
+.br-sec a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
+.br-sec a:hover { text-decoration-color: var(--ink); }
+
+.br-latest p { font-family: 'Newsreader', serif; font-size: 20px; line-height: 1.55; color: var(--ink); letter-spacing: 0; }
+.br-latest p + p { margin-top: 15px; }
+.br-latest b { font-weight: 500; }
+
+.br-delta { background: var(--stake-bg); border: 1px solid var(--stake-line); border-radius: 10px; padding: 14px 18px; font-size: 14.5px; line-height: 1.6; color: var(--ink); }
+
+.br-sub + .br-sub { margin-top: 24px; }
+.br-sub h3 { font-family: 'Newsreader', serif; font-weight: 500; font-size: 19px; color: var(--ink); margin-bottom: 8px; letter-spacing: 0; }
+.br-sub p { font-size: 14.5px; line-height: 1.65; color: var(--ink-2); margin-bottom: 8px; }
+.br-ul { list-style: none; }
+.br-ul li { position: relative; padding-left: 18px; font-size: 14.5px; line-height: 1.65; color: var(--ink-2); }
+.br-ul li + li { margin-top: 7px; }
+.br-ul li::before { content: ''; position: absolute; left: 3px; top: 0.72em; width: 5px; height: 5px; border-radius: 50%; background: var(--faint); }
+
+.br-row { display: grid; grid-template-columns: 170px 1fr; gap: 20px; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; line-height: 1.6; }
+.br-row:first-of-type { padding-top: 0; }
+.br-row:last-child { border-bottom: none; }
+.br-row-k { font-weight: 600; color: var(--ink); }
+.br-row-v { color: var(--ink-2); min-width: 0; }
+.br-row-sub { display: block; margin-top: 5px; font-size: 13px; color: var(--muted); }
+.br-row.date { grid-template-columns: 124px 1fr; }
+.br-row.date .br-row-k { font-weight: 500; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 1px; }
+.br-outlet { font-size: 12px; margin-left: 6px; white-space: nowrap; }
+.br-sec a.br-outlet, .br-outlet { color: var(--muted); }
+
+.br-src { list-style: none; }
+.br-src li { font-size: 14px; line-height: 1.55; color: var(--ink-2); padding: 9px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.br-src li:last-child { border-bottom: none; }
+.br-tag { display: inline-block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; color: var(--muted); background: var(--hover); padding: 3px 8px; border-radius: 5px; margin-left: 8px; white-space: nowrap; vertical-align: 1px; }
+
+/* ── TELEFON (samme breakpoint som index.html) ── */
+@media (max-width: 820px) {
+  body { height: auto; min-height: 100vh; overflow: auto; }
+  .head { padding: 18px 20px 14px; position: sticky; top: 0; background: var(--bg); z-index: 50; }
+  .head-row { align-items: center; gap: 16px; }
+  .title { font-size: 25px; white-space: normal; }
+  .tabs { padding: 0 20px; overflow-x: auto; }
+  .tab { white-space: nowrap; }
+  .bl { display: block; }
+  .bl-list { border-right: none; border-bottom: 1px solid var(--line); overflow: visible; padding: 22px 0 0; }
+  .bl-label, .bl-updated, .bl-group, .bl-item { padding-left: 20px; padding-right: 20px; }
+  .bl-item:last-child { border-bottom: none; }
+  .bl-main { overflow: visible; padding: 30px 20px 64px; scroll-margin-top: 90px; }
+  .bl-msg { padding: 40px 20px; }
+  .br-title { font-size: 30px; }
+  .br-latest p { font-size: 18.5px; }
+  .br-row, .br-row.date { grid-template-columns: 1fr; gap: 3px; }
+}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="head-row">
+    <a class="brand" href="index.html">
+      <div class="title"><span class="it">Spuriøse</span> projekter</div>
+    </a>
+    <div class="head-tools">
+      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Skift tema" aria-label="Skift mellem lys og mørk tilstand">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <a class="tab" href="index.html">Forside</a>
+  <a class="tab on" href="bulletin.html" aria-current="page">Bulletin</a>
+</nav>
+
+<div class="bl" id="bl">
+  <aside class="bl-list" id="bl-list"></aside>
+  <main class="bl-main" id="bl-main"><div class="bl-msg">Henter Bulletin …</div></main>
+</div>
+
+<script>
+// ── Tema (samme nøgle som index.html) ────────────────────────────────────────
+function applyTheme(theme) {
+  if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  else document.documentElement.removeAttribute('data-theme');
+}
+function toggleTheme() {
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var next = isDark ? 'light' : 'dark';
+  applyTheme(next);
+  try { localStorage.setItem('dkpol-theme', next); } catch(e){}
+}
+
+// ── Tekst og links ───────────────────────────────────────────────────────────
+// Al tekst fra JSON escapes. Kun <b>…</b> slippes igennem.
+function esc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function rich(v) {
+  return esc(v).replace(/&lt;b&gt;([\s\S]*?)&lt;\/b&gt;/g, '<b>$1</b>');
+}
+function safeUrl(u) {
+  return (typeof u === 'string' && /^https?:\/\//i.test(u)) ? u : null;
+}
+function link(url, label, cls) {
+  var u = safeUrl(url);
+  if (!u) return label ? '<span' + (cls ? ' class="' + cls + '"' : '') + '>' + rich(label) + '</span>' : '';
+  return '<a' + (cls ? ' class="' + cls + '"' : '') + ' href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + rich(label || u) + '</a>';
+}
+function arr(v) { return Array.isArray(v) ? v : []; }
+function has(v) { return typeof v === 'string' ? v.trim() !== '' : v != null; }
+
+// ── Datoer ───────────────────────────────────────────────────────────────────
+var MONTHS = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
+function parseDay(s) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || '');
+  return m ? { y: +m[1], m: +m[2], d: +m[3] } : null;
+}
+function fmtDay(s) {
+  var p = parseDay(s);
+  if (!p) return has(s) ? String(s) : '';
+  return p.d + '. ' + MONTHS[p.m - 1] + ' ' + p.y;
+}
+function fmtStamp(iso) {
+  var d = new Date(iso);
+  if (!has(iso) || isNaN(d)) return '';
+  try {
+    var parts = {};
+    new Intl.DateTimeFormat('da-DK', { timeZone: 'Europe/Copenhagen', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+      .formatToParts(d).forEach(function(p){ parts[p.type] = p.value; });
+    return parts.weekday + ' ' + parts.day + '. ' + parts.month + ' ' + parts.year + ' kl. ' + parts.hour + '.' + parts.minute;
+  } catch(e) { return d.toLocaleString('da-DK'); }
+}
+// Hele dage mellem en dato og i dag, regnet i dansk tid.
+function daysSince(s) {
+  var p = parseDay(s);
+  if (!p) return Infinity;
+  var t = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  var n = parseDay(t);
+  if (!n) return Infinity;
+  return Math.round((Date.UTC(n.y, n.m - 1, n.d) - Date.UTC(p.y, p.m - 1, p.d)) / 86400000);
+}
+
+// ── Tilstand ─────────────────────────────────────────────────────────────────
+var DATA = null;
+var STORIES = [];
+
+function currentId() {
+  var h = '';
+  try { h = decodeURIComponent(location.hash.replace(/^#/, '')); } catch(e){}
+  for (var i = 0; i < STORIES.length; i++) if (STORIES[i].id === h) return h;
+  var first = STORIES.filter(function(s){ return s.status !== 'closed'; })[0] || STORIES[0];
+  return first ? first.id : null;
+}
+
+// ── Liste ────────────────────────────────────────────────────────────────────
+function renderList(activeId) {
+  var groups = [
+    ['Korte forløb', STORIES.filter(function(s){ return s.status !== 'closed' && s.kind !== 'long'; })],
+    ['Lange forløb', STORIES.filter(function(s){ return s.status !== 'closed' && s.kind === 'long'; })],
+    ['Afsluttede',   STORIES.filter(function(s){ return s.status === 'closed'; })]
+  ];
+  var h = '<div class="bl-label">Bulletin</div>';
+  var stamp = fmtStamp(DATA.updated_at);
+  if (stamp) h += '<div class="bl-updated">Opdateret ' + esc(stamp) + '</div>';
+  groups.forEach(function(g) {
+    if (!g[1].length) return;
+    h += '<div class="bl-group">' + g[0] + '</div><div>';
+    g[1].forEach(function(s) {
+      h += '<button class="bl-item' + (s.id === activeId ? ' on' : '') + '" data-id="' + esc(s.id) + '"' + (s.id === activeId ? ' aria-current="true"' : '') + '>';
+      h += '<span class="bl-item-title">' + rich(s.title) + '</span>';
+      if (has(s.status_line)) h += '<span class="bl-item-status">' + rich(s.status_line) + '</span>';
+      if (has(s.last_moved)) {
+        h += '<span class="bl-item-moved">' + (daysSince(s.last_moved) < 2 && daysSince(s.last_moved) >= 0 ? '<span class="bl-dot" title="Har rykket sig inden for to dage"></span>' : '') +
+             'Rykkede sig sidst ' + esc(fmtDay(s.last_moved)) + '</span>';
+      }
+      h += '</button>';
+    });
+    h += '</div>';
+  });
+  document.getElementById('bl-list').innerHTML = h;
+}
+
+// ── Brief ────────────────────────────────────────────────────────────────────
+function sec(title, body) { return '<section class="br-sec"><h2 class="br-h">' + title + '</h2>' + body + '</section>'; }
+function ul(items) {
+  return '<ul class="br-ul">' + items.map(function(i){ return '<li>' + rich(i) + '</li>'; }).join('') + '</ul>';
+}
+
+function renderBrief(s) {
+  var main = document.getElementById('bl-main');
+  if (!s) { main.innerHTML = '<div class="bl-msg">Der er ingen historier i Bulletin endnu.</div>'; return; }
+  var latest = s.latest || {};
+  var paras = arr(latest.paragraphs).filter(has);
+  var closed = s.status === 'closed';
+
+  var h = '<article class="br">';
+  h += '<div class="br-eyebrow">' + (s.kind === 'long' ? 'Langt forløb' : 'Kort forløb') + '</div>';
+  h += '<h1 class="br-title">' + rich(s.title) + '</h1>';
+  h += '<div class="br-meta"><span class="br-pill' + (closed ? ' closed' : '') + '">' + (closed ? 'Afsluttet' : 'Følges') + '</span>';
+  if (has(latest.date)) h += '<span>Opdateret ' + esc(fmtDay(latest.date)) + '</span>';
+  h += '</div>';
+
+  if (!paras.length) {
+    h += '<p class="br-empty">Briefet skrives ved første morgenkørsel.</p></article>';
+    main.innerHTML = h;
+    return;
+  }
+
+  h += sec('Her står sagen', '<div class="br-latest">' + paras.map(function(p){ return '<p>' + rich(p) + '</p>'; }).join('') + '</div>');
+
+  if (has(s.delta)) h += sec('Nyt siden sidst', '<div class="br-delta">' + rich(s.delta) + '</div>');
+
+  var subs = arr(s.substance).filter(function(b){ return b && (has(b.heading) || has(b.body) || arr(b.items).length); });
+  if (subs.length) {
+    h += sec('Substansen', subs.map(function(b) {
+      var x = '<div class="br-sub">';
+      if (has(b.heading)) x += '<h3>' + rich(b.heading) + '</h3>';
+      if (has(b.body)) x += '<p>' + rich(b.body) + '</p>';
+      var items = arr(b.items).filter(has);
+      if (items.length) x += ul(items);
+      return x + '</div>';
+    }).join(''));
+  }
+
+  var players = arr(s.players).filter(function(p){ return p && has(p.name); });
+  if (players.length) {
+    h += sec('Aktørerne', players.map(function(p) {
+      return '<div class="br-row"><div class="br-row-k">' + rich(p.name) + '</div><div class="br-row-v">' + rich(p.wants) +
+        (has(p.latest) ? '<span class="br-row-sub">Senest: ' + rich(p.latest) + '</span>' : '') + '</div></div>';
+    }).join(''));
+  }
+
+  var tl = arr(s.timeline).filter(function(t){ return t && has(t.text); });
+  if (tl.length) {
+    h += sec('Tidslinje', tl.map(function(t) {
+      var src = safeUrl(t.url) ? link(t.url, has(t.outlet) ? t.outlet : 'Kilde', 'br-outlet')
+              : (has(t.outlet) ? '<span class="br-outlet">' + rich(t.outlet) + '</span>' : '');
+      return '<div class="br-row date"><div class="br-row-k">' + esc(fmtDay(t.date)) + '</div><div class="br-row-v">' + rich(t.text) + ' ' + src + '</div></div>';
+    }).join(''));
+  }
+
+  var open = arr(s.open).filter(has);
+  if (open.length) h += sec('Ubekræftet og åbent', ul(open));
+
+  var log = arr(s.changelog).filter(function(c){ return c && has(c.text); });
+  if (log.length) {
+    h += sec('Ændringslog', log.map(function(c) {
+      return '<div class="br-row date"><div class="br-row-k">' + esc(fmtDay(c.date)) + '</div><div class="br-row-v">' + rich(c.text) + '</div></div>';
+    }).join(''));
+  }
+
+  var srcs = arr(s.sources).filter(function(x){ return x && (has(x.title) || has(x.url)); });
+  if (srcs.length) {
+    h += sec('Kilder', '<ul class="br-src">' + srcs.map(function(x) {
+      var tag = x.read === 'full' ? 'læst i fuld længde' : (x.read === 'excerpt' ? 'læst i uddrag' : '');
+      return '<li>' + link(x.url, has(x.title) ? x.title : x.url) + (tag ? '<span class="br-tag">' + tag + '</span>' : '') + '</li>';
+    }).join('') + '</ul>');
+  }
+
+  main.innerHTML = h + '</article>';
+}
+
+function render() {
+  var id = currentId();
+  renderList(id);
+  renderBrief(STORIES.filter(function(s){ return s.id === id; })[0]);
+}
+
+// Klik vælger historien og sætter hash; hashchange dækker frem/tilbage i browseren.
+document.getElementById('bl-list').addEventListener('click', function(e) {
+  var btn = e.target.closest('.bl-item');
+  if (!btn) return;
+  var id = btn.getAttribute('data-id');
+  location.hash = encodeURIComponent(id);
+  render();
+  var main = document.getElementById('bl-main');
+  if (window.matchMedia('(max-width: 820px)').matches) main.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  else main.scrollTop = 0;
+});
+window.addEventListener('hashchange', function(){ if (DATA) render(); });
+
+fetch('./bulletin.json', { cache: 'no-store' })
+  .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function(d) {
+    if (!d || !Array.isArray(d.stories)) throw new Error('Uventet format');
+    DATA = d;
+    STORIES = d.stories.filter(function(s){ return s && has(s.id); });
+    render();
+  })
+  .catch(function() {
+    document.getElementById('bl-list').innerHTML = '<div class="bl-label">Bulletin</div>';
+    document.getElementById('bl-main').innerHTML = '<div class="bl-msg">Bulletin kunne ikke hentes lige nu. Prøv igen om lidt.</div>';
+  });
+</script>
+</body>
+</html>

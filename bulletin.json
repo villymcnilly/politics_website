@@ -1,0 +1,204 @@
+{
+  "updated_at": "2026-11-11T09:30:00+01:00",
+  "stories": [
+    {
+      "id": "skattereform",
+      "title": "Skattereformen",
+      "kind": "short",
+      "status": "active",
+      "status_line": "Ingen aftale. Regeringen forhandler i to spor: med fire blå partier og med DF.",
+      "last_moved": "2026-11-04",
+      "latest": {
+        "date": "2026-11-11",
+        "paragraphs": [
+          "Der er ingen skatteaftale endnu. Regeringen har aftalt pakken internt i regeringsgrundlaget, men mangler flertal i Folketinget, fordi Enhedslisten og Alternativet har sagt nej.",
+          "Skatteminister Jakob Engel-Schmidt (M) forhandler derfor i to spor: med V, K, LA og DD, som kræver lettelser i bunden, og med DF, som kræver billigere benzin og diesel. Seneste dækning, jeg har fundet, er fra 3.–6. november.",
+          "Lettelserne har som udgangspunkt virkning fra 2030. En fremrykning til 2027 forudsætter ifølge ministeren en aftale med blå partier."
+        ]
+      },
+      "delta": "Første udgave af briefet. Ingen ændringer at sammenligne med.",
+      "substance": [
+        {
+          "heading": "De tre hovedlettelser",
+          "items": [
+            "<b>Mellemskatten afskaffes.</b> Satsen på 7,5 pct. fjernes. Berører ca. 619.000 personer med indkomst over 641.200 kr. årligt efter AM-bidrag; gennemsnitligt ca. 7.200 kr. om året.",
+            "<b>Toptopskatten afskaffes.</b> Virkningstidspunkt er ikke oplyst.",
+            "<b>Selskabsskatten sænkes</b> fra 22 til 19 pct.",
+            "Samlet lettes skatten med over 10 mia. kr. i 2030."
+          ]
+        },
+        {
+          "heading": "Øvrige elementer",
+          "items": [
+            "Aktiesparekontoens loft hæves til 500.000 kr.",
+            "Progressionsgrænsen for aktieindkomst hæves med ca. 22.900 kr.",
+            "Ny hovedaktionærmodel, koblet til afskaffelsen af toptopskatten – udformningen er ikke fastlagt.",
+            "Boafgiftens bundfradrag hæves fra 403.700 til 566.000 kr."
+          ]
+        },
+        {
+          "heading": "Finansiering",
+          "items": [
+            "<b>Loft over rentefradrag:</b> højst 150.000 kr. for enlige og 300.000 kr. for par; omfatter også eksisterende lån og kurstab. Ministeriet regner med virkning fra 2028.",
+            "<b>Boafgift:</b> nyt trin på 15 pct. af boer over 10 mio. kr., så den samlede sats bliver 30 pct. af den del.",
+            "<b>Erhvervslivet:</b> underskudsfremførsel begrænses til 17 år, og FoU-merfradraget afskaffes.",
+            "<b>Tech-skat:</b> særskat på digitale selskabers omsætning, ca. 1 mia. kr. årligt fra 2029; modellen er ikke fastlagt.",
+            "<b>Afgifter:</b> chokolade- og sukkervareafgiften bevares, selv om den var aftalt afskaffet 1. juli 2026."
+          ]
+        }
+      ],
+      "players": [
+        {
+          "name": "Regeringen",
+          "wants": "De tre lettelser gennemført, helst med virkning fra 2027 – til lavest mulig pris.",
+          "latest": "Engel-Schmidt har ikke villet kommentere DF's tilbud."
+        },
+        {
+          "name": "V, K, LA og DD",
+          "wants": "Lettelser i bunden, så også lønmodtagere under ca. 58.000 kr. om måneden får noget; desuden at “snigerskatten” droppes.",
+          "latest": "Forhandler som samlet blok og har kaldt kravet ufravigeligt."
+        },
+        {
+          "name": "Dansk Folkeparti",
+          "wants": "Mindst 2 kr. lavere afgift på både benzin og diesel i mindst et år, helst permanent. Pris ifølge DF: godt 3 mia. kr.",
+          "latest": "Mødte op i Skatteministeriet 4. november."
+        },
+        {
+          "name": "Enhedslisten og Alternativet",
+          "wants": "Støtter ikke pakken.",
+          "latest": "Finansloven forhandles sideløbende med Enhedslisten."
+        }
+      ],
+      "timeline": [
+        {
+          "date": "2026-11-05",
+          "text": "Analyse i DR og Information: DF er enten en dyr vej til flertal eller en lokkedue, der skal presse de fire andre blå.",
+          "url": "https://www.dr.dk/nyheder/politik/magtens-morgenbrief-er-messerschmidt-regeringens-lokkedue",
+          "outlet": "DR"
+        },
+        {
+          "date": "2026-11-04",
+          "text": "DF møder op i Skatteministeriet med krav om billigere benzin og diesel.",
+          "url": "https://www.dr.dk/nyheder/politik/df-stiller-ultimatum-til-regeringen-kraever-lavere-benzinpriser-stoette-skattelettelser-til-de",
+          "outlet": "DR"
+        },
+        {
+          "date": "2026-11-03",
+          "text": "Kristeligt Dagblad vurderer, at regeringen satser på en aftale med DF uden om resten af blå blok.",
+          "url": "https://www.kristeligt-dagblad.dk/danmark/nu-satser-regeringen-paa-en-skatteaftale-med-dansk-folkeparti-udenom-de-oevrige-blaa",
+          "outlet": "Kristeligt Dagblad"
+        },
+        {
+          "date": "2026-10-21",
+          "text": "Fire blå partier stiller fælles krav om skattelettelser til almindelige lønmodtagere.",
+          "url": "https://www.dr.dk/nyheder/politik/fire-blaa-partier-vil-have-skattelettelser-til-alle-i-regeringens-plan",
+          "outlet": "DR"
+        },
+        {
+          "date": "2026-10-09",
+          "text": "Regeringen fremlægger finanslovsforslaget for 2027 med skatteelementerne.",
+          "url": "https://www.fsr.dk/her-er-regeringens-skatteforslag-til-finansloven-for-2027",
+          "outlet": "FSR"
+        },
+        {
+          "date": "2026-09-28",
+          "text": "Engel-Schmidt inviterer de blå partier: mellemskatten kan afskaffes med virkning fra 2027, hvis de er med.",
+          "url": "https://svmn.dk/aktuelt/presse-nyheder/pressemeddelelser/engel-schmidt-til-blaa-partier-sammen-kan-vi-give-619000-danskere-en-skattelettelse",
+          "outlet": "Skatte- og Vækstministeriet"
+        }
+      ],
+      "open": [
+        "Er der forhandlet siden 6. november, og er der sat en deadline?",
+        "Hvad dækker “snigerskatten” over? DR bruger betegnelsen uden at definere den i det, jeg har kunnet læse.",
+        "Fordelingsprofilen: sekundær omtale henviser til en TjekDet-beregning, hvorefter skatten isoleret set stiger for personer under ca. 58.000 kr. om måneden. Primærkilden er ikke læst.",
+        "Provenu: samlet finansieringsoversigt mangler. Kristeligt Dagblad nævner ca. 2,5 mia. kr. for mellemskatten."
+      ],
+      "changelog": [
+        {
+          "date": "2026-11-11",
+          "text": "Brief oprettet."
+        }
+      ],
+      "sources": [
+        {
+          "title": "FSR: Her er regeringens skatteforslag til finansloven for 2027",
+          "url": "https://www.fsr.dk/her-er-regeringens-skatteforslag-til-finansloven-for-2027",
+          "read": "full"
+        },
+        {
+          "title": "Skatte- og Vækstministeriet: Engel-Schmidt til blå partier",
+          "url": "https://svmn.dk/aktuelt/presse-nyheder/pressemeddelelser/engel-schmidt-til-blaa-partier-sammen-kan-vi-give-619000-danskere-en-skattelettelse",
+          "read": "full"
+        },
+        {
+          "title": "DR: DF stiller ultimatum til regeringen",
+          "url": "https://www.dr.dk/nyheder/politik/df-stiller-ultimatum-til-regeringen-kraever-lavere-benzinpriser-stoette-skattelettelser-til-de",
+          "read": "excerpt"
+        },
+        {
+          "title": "DR: Fire blå partier vil have skattelettelser til alle",
+          "url": "https://www.dr.dk/nyheder/politik/fire-blaa-partier-vil-have-skattelettelser-til-alle-i-regeringens-plan",
+          "read": "excerpt"
+        },
+        {
+          "title": "DR: Magtens Morgenbrief – Er Messerschmidt regeringens lokkedue?",
+          "url": "https://www.dr.dk/nyheder/politik/magtens-morgenbrief-er-messerschmidt-regeringens-lokkedue",
+          "read": "excerpt"
+        },
+        {
+          "title": "Kristeligt Dagblad: Nu satser regeringen på en skatteaftale med DF",
+          "url": "https://www.kristeligt-dagblad.dk/danmark/nu-satser-regeringen-paa-en-skatteaftale-med-dansk-folkeparti-udenom-de-oevrige-blaa",
+          "read": "excerpt"
+        },
+        {
+          "title": "Information: Messerschmidt giver regeringen en dyr vej til flertal",
+          "url": "https://www.information.dk/indland/2026/11/messerschmidt-giver-regeringen-dyr-vej-flertal",
+          "read": "excerpt"
+        },
+        {
+          "title": "Folketinget: L 73, 1. behandling af finanslovsforslaget",
+          "url": "https://www.ft.dk/samling/20261/lovforslag/l73/beh1/forhandling.htm",
+          "read": "excerpt"
+        }
+      ]
+    },
+    {
+      "id": "venstre-krise",
+      "title": "Krisen i Venstre",
+      "kind": "short",
+      "status": "active",
+      "status_line": "Afventer første kørsel.",
+      "last_moved": "",
+      "latest": {
+        "date": "",
+        "paragraphs": []
+      },
+      "delta": "",
+      "substance": [],
+      "players": [],
+      "timeline": [],
+      "open": [],
+      "changelog": [],
+      "sources": []
+    },
+    {
+      "id": "ukraine-europa",
+      "title": "Europas støtte til Ukraine – og den danske dækning",
+      "kind": "long",
+      "status": "active",
+      "status_line": "Afventer første kørsel.",
+      "last_moved": "",
+      "latest": {
+        "date": "",
+        "paragraphs": []
+      },
+      "delta": "",
+      "substance": [],
+      "players": [],
+      "timeline": [],
+      "open": [],
+      "changelog": [],
+      "sources": []
+    }
+  ]
+}

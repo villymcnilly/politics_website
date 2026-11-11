@@ -34,6 +34,7 @@
   --f: #2E8B57;
   --win-bg: #EBF7E4; --win-ink: #2E7D32;
   --stake-bg: #FDF4D8; --stake-line: #F0D878;
+  --ch-a: #4A7A9B; --ch-b: #C25A2E; --ch-c: #C09A2B; --ch-d: #7A6F8F; --ch-base: #D4D0C4;
 }
 [data-theme="dark"] {
   color-scheme: dark;
@@ -49,6 +50,7 @@
   --f: #5CC088;
   --win-bg: #1B2E1A; --win-ink: #7FD89A;
   --stake-bg: #2E2818; --stake-line: #4A4020;
+  --ch-a: #6FA3C6; --ch-b: #E07A4D; --ch-c: #D9B54A; --ch-d: #A396BC; --ch-base: #4A453D;
 }
 html, body { height: 100%; }
 body {
@@ -131,7 +133,57 @@ button { font-family: inherit; }
 
 .br-sub + .br-sub { margin-top: 24px; }
 .br-sub h3 { font-family: 'Newsreader', serif; font-weight: 500; font-size: 19px; color: var(--ink); margin-bottom: 8px; letter-spacing: 0; }
-.br-sub p { font-size: 14.5px; line-height: 1.65; color: var(--ink-2); margin-bottom: 8px; }
+.br-sub p { font-size: 15.5px; line-height: 1.72; color: var(--ink-2); margin-bottom: 12px; }
+.br-sub p + .br-ul, .br-sub .ch + .br-ul { margin-top: 4px; }
+.br-sub .br-ul { margin-top: 6px; }
+
+/* ── DIAGRAMMER ── */
+.ch { margin: 20px 0 22px; padding: 16px 18px 15px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.ch + .ch { margin-top: 14px; }
+.ch-t { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; color: var(--ink); margin-bottom: 14px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.ch-u { font-size: 11.5px; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--muted); }
+.ch-c { margin: 14px 0 0 !important; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12.5px !important; line-height: 1.55 !important; color: var(--muted) !important; }
+.ch-row { display: grid; grid-template-columns: minmax(110px, 190px) 1fr auto; gap: 14px; align-items: center; padding: 6px 0; font-size: 13.5px; color: var(--ink-2); }
+.ch-l { line-height: 1.35; }
+.ch-track { height: 14px; background: var(--hover); border-radius: 4px; overflow: hidden; }
+.ch-bar { height: 100%; border-radius: 4px; background: var(--faint); min-width: 2px; }
+.ch-bar.t-a { background: var(--ch-a); } .ch-bar.t-b { background: var(--ch-b); } .ch-bar.t-c { background: var(--ch-c); } .ch-bar.t-d { background: var(--ch-d); }
+.ch-v { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; min-width: 56px; text-align: right; }
+.ch-n { font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 6px; }
+.ch-chg { display: grid; grid-template-columns: minmax(110px, 190px) 1fr; gap: 14px; padding: 9px 0; align-items: center; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.ch-chg:last-of-type { border-bottom: none; }
+.ch-chg-v { min-width: 0; }
+.ch-chg-n { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; font-size: 14px; }
+.ch-chg-n .from { color: var(--muted); font-weight: 400; text-decoration: line-through; text-decoration-color: var(--faint); }
+.ch-chg-n .arr { color: var(--faint); margin: 0 7px; }
+.ch-chg-n .unit { font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 7px; }
+.ch-chg .ch-track { margin-top: 6px; height: 8px; background: var(--hover); }
+.ch-chg .ch-track + .ch-track { margin-top: 3px; }
+.ch-dots { display: flex; flex-wrap: wrap; gap: 7px; padding: 4px 0 10px; }
+.ch-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--ch-base); border: 1px solid var(--line-2); }
+.ch-dot.t-a { background: var(--ch-a); border-color: transparent; } .ch-dot.t-b { background: var(--ch-b); border-color: transparent; } .ch-dot.t-c { background: var(--ch-c); border-color: transparent; } .ch-dot.t-d { background: var(--ch-d); border-color: transparent; }
+.ch-leg { list-style: none; display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+.ch-leg li { display: flex; align-items: center; gap: 9px; font-size: 13px; line-height: 1.4; color: var(--ink-2); padding: 0 !important; }
+.ch-leg li::before { display: none !important; }
+.ch-sw { width: 11px; height: 11px; border-radius: 3px; background: var(--ch-base); flex-shrink: 0; border: 1px solid var(--line-2); }
+.ch-sw.t-a { background: var(--ch-a); border-color: transparent; } .ch-sw.t-b { background: var(--ch-b); border-color: transparent; } .ch-sw.t-c { background: var(--ch-c); border-color: transparent; } .ch-sw.t-d { background: var(--ch-d); border-color: transparent; }
+.ch-leg b { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink) !important; }
+.ch-stack { display: flex; height: 30px; border-radius: 6px; overflow: hidden; gap: 2px; margin-bottom: 12px; }
+.ch-seg { display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 600; color: #fff; background: var(--faint); min-width: 0; font-variant-numeric: tabular-nums; }
+.ch-seg.t-a { background: var(--ch-a); } .ch-seg.t-b { background: var(--ch-b); } .ch-seg.t-c { background: var(--ch-c); } .ch-seg.t-d { background: var(--ch-d); }
+[data-theme="dark"] .ch-seg { color: #14120F; }
+.ch-tbl-w { overflow-x: auto; }
+.ch-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.ch-tbl th { text-align: left; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; color: var(--muted); padding: 0 12px 8px 0; border-bottom: 1px solid var(--line); }
+.ch-tbl td, .ch-tbl th:first-child { padding-right: 12px; }
+.ch-tbl td { padding-top: 9px; padding-bottom: 9px; border-bottom: 1px solid var(--line); color: var(--ink-2); vertical-align: top; line-height: 1.45; }
+.ch-tbl tr:last-child td { border-bottom: none; }
+.ch-tbl td:first-child { font-weight: 600; color: var(--ink); }
+.ch-tbl.dense th, .ch-tbl.dense td { text-align: center; } .ch-tbl.dense th:first-child, .ch-tbl.dense td:first-child { text-align: left; }
+.ch-tag { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 12px; font-weight: 600; background: var(--hover); color: var(--ink-2); }
+.ch-tag.yes { background: var(--win-bg); color: var(--win-ink); }
+.ch-tag.mid { background: var(--stake-bg); color: var(--ink); }
+.ch-tag.no { background: color-mix(in srgb, var(--ch-b) 18%, transparent); color: var(--ch-b); }
 .br-ul { list-style: none; }
 .br-ul li { position: relative; padding-left: 18px; font-size: 14.5px; line-height: 1.65; color: var(--ink-2); }
 .br-ul li + li { margin-top: 7px; }
@@ -203,6 +255,10 @@ button { font-family: inherit; }
   .br-title { font-size: 30px; }
   .br-latest p { font-size: 18.5px; }
   .br-row, .br-row.date { grid-template-columns: 1fr; gap: 3px; }
+  .ch { padding: 14px 14px 13px; }
+  .ch-row { grid-template-columns: 1fr auto; gap: 4px 10px; }
+  .ch-row .ch-l { grid-column: 1 / -1; }
+  .ch-chg { grid-template-columns: 1fr; gap: 4px; }
   /* Noten ligger som et ark i bunden af skærmen. */
   .note { position: fixed; top: auto !important; left: 12px !important; right: 12px; bottom: 12px; width: auto; transform: translateY(8px); box-shadow: 0 10px 40px rgba(20, 18, 14, 0.22); }
 }
@@ -389,6 +445,55 @@ function renderList(activeId) {
 }
 
 // ── Brief ────────────────────────────────────────────────────────────────────
+// ── Diagrammer ───────────────────────────────────────────────────────────────
+// Ren HTML/CSS, ingen biblioteker. Alle tal og tekster kommer fra "charts" i JSON.
+function fnum(v, dec) {
+  var n = Number(v);
+  if (!isFinite(n)) return esc(v);
+  var d = (dec == null) ? (n % 1 ? 1 : 0) : +dec;
+  return n.toLocaleString('da-DK', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+function tone(t) { return /^[abcd]$/.test(t) ? ' t-' + t : ''; }
+function chartHtml(c) {
+  if (!c || !has(c.type)) return '';
+  var data = arr(c.data), h = '<figure class="ch ct-' + esc(c.type) + '">';
+  if (has(c.title)) h += '<figcaption class="ch-t">' + rich(c.title) + (has(c.unit) ? '<span class="ch-u">' + rich(c.unit) + '</span>' : '') + '</figcaption>';
+  if (c.type === 'bars') {
+    var max = +c.max || Math.max.apply(null, data.map(function(d){ return +d.value || 0; })) || 1;
+    h += data.map(function(d) {
+      var w = Math.max(0, Math.min(100, (+d.value || 0) / max * 100));
+      return '<div class="ch-row"><div class="ch-l">' + rich(d.label) + '</div><div class="ch-track"><div class="ch-bar' + tone(d.tone) + (d.hl ? ' hl' : '') + '" style="width:' + w + '%"></div></div>' +
+        '<div class="ch-v">' + fnum(d.value, c.dec) + (has(d.note) ? '<span class="ch-n">' + rich(d.note) + '</span>' : '') + '</div></div>';
+    }).join('');
+  } else if (c.type === 'change') {
+    h += data.map(function(d) {
+      var m = Math.max(+d.from || 0, +d.to || 0) || 1;
+      return '<div class="ch-chg"><div class="ch-l">' + rich(d.label) + '</div><div class="ch-chg-v"><div class="ch-chg-n"><span class="from">' + fnum(d.from, d.dec) + '</span><span class="arr">→</span>' + fnum(d.to, d.dec) +
+        (has(d.unit) ? '<span class="unit">' + rich(d.unit) + '</span>' : '') + '</div>' +
+        '<div class="ch-track"><div class="ch-bar" style="width:' + ((+d.from || 0) / m * 100) + '%"></div></div>' +
+        '<div class="ch-track"><div class="ch-bar t-a" style="width:' + ((+d.to || 0) / m * 100) + '%"></div></div></div></div>';
+    }).join('');
+  } else if (c.type === 'dots') {
+    h += '<div class="ch-dots" role="img" aria-label="' + esc(data.map(function(d){ return d.count + ' ' + d.label; }).join(', ')) + '">' +
+      data.map(function(d) { var x = ''; for (var i = 0; i < (+d.count || 0); i++) x += '<span class="ch-dot' + tone(d.tone) + '"></span>'; return x; }).join('') + '</div>' +
+      '<ul class="ch-leg">' + data.map(function(d){ return '<li><span class="ch-sw' + tone(d.tone) + '"></span>' + rich(d.label) + '<b>' + fnum(d.count, 0) + '</b></li>'; }).join('') + '</ul>';
+  } else if (c.type === 'stack') {
+    var tot = data.reduce(function(s, d){ return s + (+d.value || 0); }, 0) || 1;
+    h += '<div class="ch-stack">' + data.map(function(d){ return '<div class="ch-seg' + tone(d.tone) + '" style="flex:' + (+d.value || 0) + ' 1 0" title="' + esc(d.label) + '">' + fnum(d.value, c.dec) + '</div>'; }).join('') + '</div>' +
+      '<ul class="ch-leg">' + data.map(function(d){ return '<li><span class="ch-sw' + tone(d.tone) + '"></span>' + rich(d.label) + '<b>' + fnum(d.value, c.dec) + '</b></li>'; }).join('') + '</ul>';
+  } else if (c.type === 'matrix') {
+    var cols = arr(c.columns), dense = cols.length > 2 && data.every(function(r){ return arr(r.cells).every(function(x){ var t = typeof x === 'string' ? x : (x && x.t); return !t || String(t).length < 3; }); });
+    h += '<div class="ch-tbl-w"><table class="ch-tbl' + (dense ? ' dense' : '') + '"><thead><tr><th></th>' + cols.map(function(x){ return '<th>' + rich(x) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      data.map(function(r) {
+        return '<tr><td>' + rich(r.label) + '</td>' + arr(r.cells).map(function(x) {
+          var t = typeof x === 'string' ? x : (x && x.t), k = (x && x.tone) || '';
+          return '<td>' + (has(t) ? (/^(yes|mid|no)$/.test(k) ? '<span class="ch-tag ' + k + '">' + rich(t) + '</span>' : rich(t)) : '') + '</td>';
+        }).join('') + '</tr>';
+      }).join('') + '</tbody></table></div>';
+  } else return '';
+  if (has(c.caption)) h += '<p class="ch-c">' + note(c.caption) + '</p>';
+  return h + '</figure>';
+}
 function sec(title, body) { return '<section class="br-sec"><h2 class="br-h">' + title + '</h2>' + body + '</section>'; }
 function ul(items) {
   return '<ul class="br-ul">' + items.map(function(i){ return '<li>' + note(i) + '</li>'; }).join('') + '</ul>';
@@ -421,12 +526,14 @@ function renderBrief(s) {
 
   if (has(s.delta)) h += sec('Nyt siden sidst', '<div class="br-delta">' + note(s.delta) + '</div>');
 
-  var subs = arr(s.substance).filter(function(b){ return b && (has(b.heading) || has(b.body) || arr(b.items).length); });
+  var subs = arr(s.substance).filter(function(b){ return b && (has(b.heading) || has(b.body) || arr(b.items).length || arr(b.charts).length); });
   if (subs.length) {
     h += sec('Substansen', subs.map(function(b) {
       var x = '<div class="br-sub">';
       if (has(b.heading)) x += '<h3>' + rich(b.heading) + '</h3>';
-      if (has(b.body)) x += '<p>' + note(b.body) + '</p>';
+      // Blanke linjer i "body" giver nye afsnit; noter markeres højst én gang pr. afsnit.
+      if (has(b.body)) x += String(b.body).split(/\n\s*\n/).map(function(p){ return '<p>' + note(p.trim()) + '</p>'; }).join('');
+      arr(b.charts).forEach(function(c){ x += chartHtml(c); });
       var items = arr(b.items).filter(has);
       if (items.length) x += ul(items);
       return x + '</div>';

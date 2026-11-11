@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-11T13:19:57+01:00",
+  "updated_at": "2026-11-11T13:46:33+01:00",
   "stories": [
     {
       "id": "skattereform",
@@ -20,33 +20,132 @@
       "delta": "DR melder 11. november, at forhandlingerne er i slutspurt med DF som den sandsynlige flertalspartner, og at et tredje møde med V, K, LA og DD blev aflyst tirsdag 10. november. [12]",
       "substance": [
         {
-          "heading": "De tre hovedlettelser",
-          "items": [
-            "<b>Mellemskatten afskaffes.</b> Satsen på 7,5 pct. fjernes. Berører ca. 619.000 personer med indkomst over 641.200 kr. årligt efter AM-bidrag; gennemsnitligt ca. 7.200 kr. om året. [2, 13, 3]",
-            "<b>Toptopskatten afskaffes.</b> Den rammer indkomst over 2.592.700 kr. årligt efter AM-bidrag. Virkningstidspunkt er ikke oplyst. [3]",
-            "<b>Selskabsskatten sænkes</b> fra 22 til 19 pct. [1, 3]",
-            "Samlet lettes skatten med over 10 mia. kr. i 2030. [1]"
+          "heading": "Hvad reformen går ud på",
+          "body": "Regeringen – Socialdemokratiet, SF, Moderaterne og Radikale, der har siddet siden 3. juni – fremlagde 9. oktober sit finanslovsforslag for 2027 med skatteelementerne. [1] Kernen er tre lettelser: Mellemskatten på 7,5 pct. afskaffes, toptopskatten afskaffes, og selskabsskatten sænkes fra 22 til 19 pct. [1, 3] Samlet lettes skatten med over 10 mia. kr. i 2030. [1]\n\nÅrstallet er en del af striden. Lettelserne har som udgangspunkt virkning fra 2030, men skatteminister Jakob Engel-Schmidt (M) tilbød 28. september de blå partier, at mellemskatten kan afskaffes allerede fra 2027, hvis de er med i en aftale. [2, 13] Ministeren har ikke sagt, hvordan den lettelse skal betales; Ritzau nævner et beløb på ca. 2,5 mia. kr. for mellemskatten alene. [13]\n\nRegeringen er en mindretalsregering og skal finde flertal fra sag til sag. Det oplagte støtteparti til venstre, Enhedslisten, har sammen med Alternativet sagt nej til skattelettelserne, så regeringen må kigge mod højre. [13, 3]",
+          "charts": [
+            {
+              "type": "change",
+              "title": "Hvad ændrer sig",
+              "data": [
+                {
+                  "label": "Mellemskatten",
+                  "from": 7.5,
+                  "to": 0,
+                  "unit": "pct. af indkomst over 641.200 kr."
+                },
+                {
+                  "label": "Selskabsskatten",
+                  "from": 22,
+                  "to": 19,
+                  "unit": "pct."
+                },
+                {
+                  "label": "Boafgiftens bundfradrag",
+                  "from": 403700,
+                  "to": 566000,
+                  "unit": "kr."
+                }
+              ],
+              "caption": "Tallene er fra regeringens forslag. Virkningstidspunktet er som udgangspunkt 2030. [1, 3]"
+            }
           ]
         },
         {
-          "heading": "Øvrige elementer",
-          "body": "Efter FSR's gennemgang af finanslovsforslaget. [1]",
-          "items": [
-            "Aktiesparekontoens loft hæves til 500.000 kr.",
-            "Progressionsgrænsen for aktieindkomst hæves med ca. 22.900 kr.",
-            "Ny hovedaktionærmodel, koblet til afskaffelsen af toptopskatten – udformningen er ikke fastlagt.",
-            "Boafgiftens bundfradrag hæves fra 403.700 til 566.000 kr."
+          "heading": "Hvem får noget – og hvem betaler",
+          "body": "Mellemskatten rammer personer med en indkomst over 641.200 kr. om året efter AM-bidrag. Ministeriet regner med, at ca. 619.000 af dem får en gennemsnitlig lettelse på ca. 7.200 kr. om året. [2, 13] Ritzau understreger, at 7.200 kr. er et gennemsnit og ikke det, hver enkelt får, og at tallet kan blive lavere, hvis finansieringen koster skatteyderne noget. [13]\n\nToptopskatten rammer kun indkomster over 2.592.700 kr. efter AM-bidrag – en grænse, der ligger fire gange højere end mellemskattens. [3] Lettelsen på selskabsskatten kommer erhvervslivet til gode.\n\nDet er netop fordelingen, de fire blå partier angriber. Venstre, Konservative, Liberal Alliance og Danmarksdemokraterne vil have en lettelse i bunden, så alle i arbejde får en gevinst, og de vil have den såkaldte snigerskat droppet. [3, 9] Ifølge uddrag, jeg ikke har kunnet læse i fuld længde, er snigerskatten regeringens plan om at sætte reguleringen af personfradraget og beskæftigelsesfradraget på pause i to år. [10, 11] To tidligere rådgivere i Statsministeriet, Thomas Juul-Dam og Jacob Bruun, vurderede i DR's Magtens Morgenbrief 22. oktober, at kravet er let for regeringen at imødekomme. [9] Fra regeringssiden lyder det ifølge DR 11. november modsat, at kravet er langt dyrere – ekstra milliarder – og at det er svært at se, hvorfor de blå partier skal have noget til gengæld. [12]",
+          "charts": [
+            {
+              "type": "bars",
+              "title": "Hvor begynder skatterne?",
+              "unit": "indkomst efter AM-bidrag, kr. om året",
+              "data": [
+                {
+                  "label": "Mellemskat starter",
+                  "value": 641200,
+                  "tone": "a"
+                },
+                {
+                  "label": "Toptopskat starter",
+                  "value": 2592700,
+                  "tone": "b"
+                }
+              ],
+              "caption": "Toptopskatten rammer en langt snævrere gruppe end mellemskatten. [3]"
+            }
           ]
         },
         {
-          "heading": "Finansiering",
-          "body": "Efter FSR's gennemgang af finanslovsforslaget. [1]",
+          "heading": "Finansieringen",
+          "body": "Det meste af finansieringen kommer fra to steder: boligejere og erhvervsliv. Rentefradraget loftes, boafgiften skærpes for de største boer, og erhvervslivet mister fradrag. Det er også her, de blå partiers egne ønsker går ind: Venstres skatteordfører Marie Brixtofte har peget på, at partiet vil drøfte hovedaktionærbeskatningen og loftet over rentefradraget. [13]\n\nOgså afgifterne indgår i regnestykket: Chokolade- og sukkervareafgiften bevares, selv om den efter en tidligere aftale skulle være afskaffet 1. juli 2026. [1]",
           "items": [
-            "<b>Loft over rentefradrag:</b> højst 150.000 kr. for enlige og 300.000 kr. for par; omfatter også eksisterende lån og kurstab. Ministeriet regner med virkning fra 2028.",
-            "<b>Boafgift:</b> nyt trin på 15 pct. af boer over 10 mio. kr., så den samlede sats bliver 30 pct. af den del.",
-            "<b>Erhvervslivet:</b> underskudsfremførsel begrænses til 17 år, og FoU-merfradraget afskaffes.",
-            "<b>Tech-skat:</b> særskat på digitale selskabers omsætning, ca. 1 mia. kr. årligt fra 2029; modellen er ikke fastlagt.",
-            "<b>Afgifter:</b> chokolade- og sukkervareafgiften bevares, selv om den var aftalt afskaffet 1. juli 2026."
+            "<b>Loft over rentefradrag:</b> højst 150.000 kr. for enlige og 300.000 kr. for par. Loftet omfatter også eksisterende lån og kurstab, og ministeriet regner med virkning fra 2028. [1]",
+            "<b>Boafgift:</b> nyt trin på 15 pct. af boer over 10 mio. kr., så den samlede sats bliver 30 pct. af den del. Bundfradraget hæves samtidig fra 403.700 til 566.000 kr. [1]",
+            "<b>Erhvervslivet:</b> underskudsfremførsel begrænses til 17 år, og FoU-merfradraget afskaffes. [1]",
+            "<b>Tech-skat:</b> særskat på digitale selskabers omsætning, ca. 1 mia. kr. årligt fra 2029; modellen er ikke fastlagt. [1]",
+            "<b>Øvrige elementer:</b> aktiesparekontoens loft hæves til 500.000 kr., progressionsgrænsen for aktieindkomst hæves med ca. 22.900 kr., og der kommer en ny hovedaktionærmodel koblet til afskaffelsen af toptopskatten – udformningen er ikke fastlagt. [1]"
+          ]
+        },
+        {
+          "heading": "To forhandlingsspor",
+          "body": "Ministeren forhandler i to spor, og de trækker i hver sin retning. I det ene sidder de fire blå partier, som har meldt ud, at enten er alle fire med i en aftale, eller også er ingen. [9] De har kun været til to møder hos ministeren, og et tredje blev aflyst tirsdag 10. november. [12] Venstre meldte sig allerede 28. september klar til at forhandle, selv om lettelserne ville blive finansieret af de røde partier, men ville også have egne ønsker igennem. [13]\n\nI det andet spor sidder Dansk Folkeparti. DF's finansordfører Anders Vistisen har sagt, at partiet kun vil forhandle, hvis afgiften på benzin og diesel falder med mindst to kroner i mindst et år; DF vil helst have det permanent og sætter selv prisen til godt tre milliarder kroner. [3, 14] Til gengæld er partiet klar til at se på finansieringen, herunder besparelser på SU til hjemmeboende og strammere regler for dagpenge til nyuddannede. [3] Med 16 mandater har DF nok til at gøre en forskel. [14]\n\nHvor alvorligt tilbuddet er, har været omdiskuteret. DR's kommentatorer kaldte 5. november DF for enten en dyr vej til flertal eller en lokkedue, der skal presse de fire andre. [5] Kristeligt Dagblad vurderede 3. november, at regeringen satser på en aftale med DF uden om resten af blå blok. [6] 11. november skriver DR, at det er DF, der tegner til at levere flertallet. [12]",
+          "charts": [
+            {
+              "type": "matrix",
+              "title": "Hvem kræver hvad",
+              "columns": [
+                "Hovedkrav",
+                "Holdning til DF's benzinkrav"
+              ],
+              "data": [
+                {
+                  "label": "Venstre og Konservative",
+                  "cells": [
+                    {
+                      "t": "Lettelse i bunden"
+                    },
+                    {
+                      "t": "Velkommen",
+                      "tone": "yes"
+                    }
+                  ]
+                },
+                {
+                  "label": "Liberal Alliance og Danmarksdemokraterne",
+                  "cells": [
+                    {
+                      "t": "Lettelse i bunden"
+                    },
+                    {
+                      "t": "Ikke nok alene",
+                      "tone": "mid"
+                    }
+                  ]
+                },
+                {
+                  "label": "Dansk Folkeparti",
+                  "cells": [
+                    {
+                      "t": "Mindst 2 kr. billigere benzin og diesel i mindst et år"
+                    },
+                    {
+                      "t": "–"
+                    }
+                  ]
+                },
+                {
+                  "label": "Enhedslisten og Alternativet",
+                  "cells": [
+                    {
+                      "t": "Støtter ikke skattelettelserne"
+                    },
+                    {
+                      "t": "–"
+                    }
+                  ]
+                }
+              ],
+              "caption": "Efter DR's gennemgang 4. november; V og K har taget imod en lavere brændstofafgift, LA og DD mener ikke, at den kan stå alene. [3]"
+            }
           ]
         }
       ],
@@ -136,6 +235,10 @@
         "Provenu: samlet finansieringsoversigt mangler. Ritzau nævner ca. 2,5 mia. kr. for mellemskatten alene. [13]"
       ],
       "changelog": [
+        {
+          "date": "2026-11-11",
+          "text": "Substansen skrevet ud i fire blokke med sammenhængende forklaring af reformens indhold, fordeling, finansiering og de to forhandlingsspor; tre diagrammer tilføjet."
+        },
         {
           "date": "2026-11-11",
           "text": "Anden kørsel samme dag: DR's historie om slutspurt med DF og det aflyste møde 10. november er skrevet ind. Kildehenvisninger i teksten og noter om personer og begreber tilføjet."
@@ -353,30 +456,100 @@
       "substance": [
         {
           "heading": "Hvad striden handler om",
-          "items": [
-            "<b>Gødskningsloven (L 5).</b> Loven tildeler landmænd kvoter for udledning af kvælstof til fjorde og kyster og er et led i aftalen om et grønt Danmark, som Venstre er med i. Fem af 18 folketingsmedlemmer stemte imod partilinjen i september. [8, 16]",
-            "<b>Partiets retning.</b> Ledelsen vil ifølge DR gøre Venstre til et grønnere og mere moderne liberalt velfærdsparti. [2] Kritikerne står i partiets landbrugsbagland, hvor loven er upopulær. [12]",
-            "<b>Disciplin.</b> Troels Lund Poulsen har sagt, at han ikke vil lede en gruppe, der stemmer i øst og vest. Hovedbestyrelsen forventer, at gruppen fremover stemmer sammen. [6]"
+          "body": "I september stemte Folketinget om gødskningsloven (L 5). Loven tildeler landmænd kvoter for, hvor meget kvælstof de må udlede til fjorde og kyster, og den er et led i aftalen om et grønt Danmark, som Venstre selv er med i. [8, 16] Partiet støttede loven, men fem af de 18 folketingsmedlemmer stemte imod. [8, 5] De fem fordelte sig over uger: Søren Gade og Amanda Heitmann meldte fra sidst i august, Preben Bang Henriksen og Anni Matthiesen 31. august og Peter Juel-Jensen 1. september. [5] Matthiesen, der er gruppesekretær, sagde, at det var første gang på 15 år som folketingsmedlem, hun stemte imod partilinjen. [5]\n\nUnder uenigheden om loven ligger en uenighed om, hvad Venstre er. Formanden Troels Lund Poulsen har ifølge DR en vision om et grønnere og mere moderne liberalt velfærdsparti. [2] Det støder mod landbrugsbaglandet: På Landbrug & Fødevarers delegeretmøde i Herning 4. november sagde organisationens formand, Søren Søndergaard, at landbruget ikke har nogen nærmeste samarbejdspartner på Christiansborg. [12] En analyse i POV peger på, at partiet både skal frigøre sig fra rollen som landbrugets talerør og vise, hvad der adskiller det fra de andre borgerlige partier – og at den rejse knap nok er begyndt. [15]",
+          "charts": [
+            {
+              "type": "dots",
+              "title": "De 18 folketingsmedlemmer ved afstemningen om L 5",
+              "data": [
+                {
+                  "label": "Stemte med partilinjen",
+                  "count": 13,
+                  "tone": "base"
+                },
+                {
+                  "label": "Stemte imod og sidder fortsat i gruppen",
+                  "count": 3,
+                  "tone": "c"
+                },
+                {
+                  "label": "Stemte imod og forlod Folketinget",
+                  "count": 1,
+                  "tone": "b"
+                },
+                {
+                  "label": "Stemte imod og blev ekskluderet",
+                  "count": 1,
+                  "tone": "d"
+                }
+              ],
+              "caption": "Imod: Heitmann, Matthiesen og Juel-Jensen (fortsat i gruppen, ingen sanktion bekræftet), Gade (forlod Folketinget i oktober) og Bang Henriksen (ekskluderet 27. oktober). [5, 3, 10]"
+            }
           ]
         },
         {
-          "heading": "De fem, der brød linjen",
-          "items": [
-            "<b>Søren Gade</b> – forlod Folketinget i oktober; er ifølge Pio stadig medlem af partiet. [1, 9]",
-            "<b>Preben Bang Henriksen</b> – ekskluderet 27. oktober, nu løsgænger. Mangeårig retsordfører; havde ifølge DR kun én gang på 15 år stemt imod gruppen. [3, 10]",
-            "<b>Amanda Heitmann</b> – skrev 24. oktober, at hun forventer at stemme med gruppen fremover, uden at garantere det. [4]",
-            "<b>Anni Matthiesen</b> – gruppesekretær; sagde nej til hastebehandlingen og kaldte det første gang på 15 år, hun gik imod partilinjen. [5]",
-            "<b>Peter Juel-Jensen</b> – transportordfører; meldte fra på Facebook 1. september. [5]"
+          "heading": "Opgøret trin for trin",
+          "body": "Søren Gade forlod Folketinget i oktober, fordi han ikke længere kunne stå inde for ledelsens linje. DR kobler det også til en strid om et kritisk portræt i Jyllands-Posten; Lex daterer hans formelle udtræden til 22. oktober. [1, 16] Næste skridt var hovedbestyrelsen. På et ekstraordinært møde på Hotel Nyborg Strand 25. oktober fik Troels Lund Poulsen og næstformand Stephanie Lose enstemmig opbakning efter tre timer, og bestyrelsen forventer, at gruppen fremover stemmer samlet. [4, 6] DR og TV 2 beskriver opbakningen som også at omfatte sanktioner – fratagelse af ordførerskaber og i sidste ende eksklusion. [2, 4] Poulsen selv har sagt, at han ikke vil lede en gruppe, der stemmer i øst og vest. [6]\n\nForud for mødet havde enkelte medlemmer af hovedbestyrelsen advaret mod eksklusioner, men de bakkede ifølge TV 2 op om erklæringen bagefter. [4] Så fulgte gruppen. Ved et gruppemøde 27. oktober afgjorde et flertal ved hemmelig afstemning, at Preben Bang Henriksen skulle ud, fordi han ikke ville love at stemme med gruppen fremover. [3, 9] Han havde ifølge DR kun én gang på 15 år stemt imod gruppen og fortsætter nu som løsgænger. [3, 10]\n\nBaglandet tog det ikke pænt. Pio skriver, at eksklusionen har udløst stor kritik, og at flere lokale tillidsfolk har trukket sig fra deres poster i protest. [9] Formanden for Hals Venstre har ifølge POV over for B.T. sagt, at han er parat til at melde sig ud og stemme på et andet parti, hvis kursen fastholdes. [15] Den 10. november fulgte en ordførerkabale: Altinget skriver, at ledelsen har lagt en større kabale efter de to exit, så blandt andet rets-, fiskeri-, kultur- og kommuneområdet har fået en ny ordfører. [14]"
+        },
+        {
+          "heading": "Målingerne",
+          "body": "Vælgerne har ikke belønnet roen. Voxmeter for Ritzau målte i ugen til 8. november Venstre til 5,8 pct., svarende til 10 mandater – samme tal som i september og det laveste, instituttet har målt, siden det begyndte i 2001. [8, 9] Ved valget i marts fik partiet 10,1 pct. og 18 mandater; målingen ligger altså under 60 pct. af valgresultatet. [8] Epinion for DR viste også 5,8 pct. i oktober. [1] Målingen er baseret på 1.014 interview, og usikkerheden kan være op til 2,5 procentpoint for det enkelte parti. [8]\n\nBilledet er værst for Venstre selv. De Konservative står til 10,7 pct. – deres bedste måling siden 2022 – og peger på Troels Lund Poulsen som blå bloks statsministerkandidat, mens Dansk Folkeparti med 13,4 pct. er blå bloks største parti. [8] Venstres politiske ordfører Sophie Løhde læser målingen som et signal om, at vælgerne ikke gider intern uro, og siger, at uenighederne nu er lagt bag partiet. [8]",
+          "charts": [
+            {
+              "type": "bars",
+              "title": "Venstre – fra valg til måling",
+              "unit": "pct. af stemmerne",
+              "dec": 1,
+              "data": [
+                {
+                  "label": "Valget i marts",
+                  "value": 10.1,
+                  "tone": "a"
+                },
+                {
+                  "label": "Voxmeter 20. september",
+                  "value": 5.8,
+                  "tone": "b"
+                },
+                {
+                  "label": "Voxmeter 9. november",
+                  "value": 5.8,
+                  "tone": "b",
+                  "hl": true
+                }
+              ],
+              "caption": "Voxmeter for Ritzau, begge gange 5,8 pct.; valgresultat fra Lex. [8, 9]"
+            },
+            {
+              "type": "bars",
+              "title": "Blå blok i Voxmeter",
+              "unit": "pct. af stemmerne, målt 2.–8. november",
+              "dec": 1,
+              "data": [
+                {
+                  "label": "Dansk Folkeparti",
+                  "value": 13.4,
+                  "tone": "a"
+                },
+                {
+                  "label": "Konservative",
+                  "value": 10.7,
+                  "tone": "a"
+                },
+                {
+                  "label": "Venstre",
+                  "value": 5.8,
+                  "tone": "b",
+                  "hl": true
+                }
+              ],
+              "caption": "Kun de tre partier, kilderne giver tal for. Maksimal usikkerhed ±2,5 procentpoint. [8]"
+            }
           ]
         },
         {
-          "heading": "Styrkeforholdet",
-          "items": [
-            "Hovedbestyrelsen (136 medlemmer ifølge DR) bakkede 25. oktober enstemmigt op om ledelsen efter tre timers møde på Hotel Nyborg Strand. [2, 4, 6]",
-            "Den eneste gennemførte sanktion er eksklusionen af Bang Henriksen. Den har ifølge Pio udløst stor kritik i baglandet, og flere lokale tillidsfolk har trukket sig fra deres poster i protest. [9]",
-            "Målinger: Voxmeter for Ritzau 5,8 pct. (10 mandater), målt 2.–8. november blandt 1.014 personer, usikkerhed op til 2,5 procentpoint. Samme tal som 20. september. [8, 9] Epinion for DR viste også 5,8 pct. i oktober. [1]",
-            "Venstre har ifølge en analyse i POV omkring 300 lokale vælgerforeninger, mange i Nord- og Vestjylland, som fylder meget på landsmøder og i hovedbestyrelsen. [15]"
-          ]
+          "heading": "Landsmødet – og hvad der står på spil",
+          "body": "Landsmødet i Herning 14.–15. november er næste prøve. Troels Lund Poulsen holder tale lørdag og er efter planen på genvalg samme dag. [8] En analyse i POV vurderer, at der ikke er noget alternativ til ham, og at Stephanie Lose og de andre, der nævnes, vil samme vej. [15]\n\nAlligevel er der uro. Et byrådsmedlem fra Aabenraa, Eivind Underbjerg Hansen, vil som delegeret foreslå en hemmelig og skriftlig afstemning om formandsposten for at få afklaret, om opbakningen er reel; han siger selv, at et formandsopgør vil splitte partiet og helst skal undgås. [13] Formanden for Venstre i Region Syddanmark, Birthe Kargaard, har kaldt det utidigt og forkert at gå til pressen med forslaget, og Fredericias lokalformand Søren Schou kalder hemmelige afstemninger en dårlig sti. [13] Det er et forslag om afstemningsform – ikke et krav om formandens afgang.\n\nPå landbrugets delegeretmøde 4. november fik formanden en mere blandet modtagelse. En kvægavler, Jacob Spangsberg, har forladt Venstre, og en tidligere lokalformand, Leif Søndergaard, siger, at han er i tvivl om kursen, og at partiet taber stemmer hele tiden. [12] DR's overskrift siger, at der tvivles på formanden; i selve artiklen er det én landmands tvivl. [12]"
         }
       ],
       "players": [
@@ -488,6 +661,10 @@
         "Hvor mange lokale tillidsfolk har trukket sig? Pio skriver “flere” uden tal; POV citerer en lokalformand i Hals, der over for B.T. har erklæret sig parat til at melde sig ud. [9, 15]"
       ],
       "changelog": [
+        {
+          "date": "2026-11-11",
+          "text": "Substansen skrevet ud i fire blokke om striden, opgøret, målingerne og landsmødet; tre diagrammer tilføjet (stemmefordeling og to måleserier)."
+        },
         {
           "date": "2026-11-11",
           "text": "Anden kørsel samme dag: Voxmeter-målingen er bekræftet, og tre nye begivenheder (L&F's delegeretmøde 4. november, ordførerrokaden og forslaget om hemmelig afstemning 10. november) er skrevet ind. Rettet: Søren Gades formelle udtræden er ifølge Lex 22. oktober; 18. oktober er datoen for meddelelsen. Kildehenvisninger og noter tilføjet."
@@ -766,30 +943,155 @@
       "substance": [
         {
           "heading": "Forhandlingerne i Abu Dhabi",
-          "items": [
-            "<b>Parterne:</b> Rusland, Ukraine og USA. USA er repræsenteret af Jared Kushner og Steve Witkoff, Ukraine af Rustem Umerov. Rusland har sendt viceudenrigsministrene Sergej Rjabkov og Mikhail Galuzin, Kreml-rådgiveren Vladimir Medinskij og chefen for den militære efterretningstjeneste, Igor Kostjukov. [14]",
-            "<b>Europas rolle:</b> separate møder, ikke en plads ved bordet. E4-landene (Storbritannien, Frankrig, Tyskland og Italien), Nato og EU-Kommissionen mødtes med ukrainerne og amerikanerne før tirsdagens trilaterale møde. Rusland vil holde formatet strengt trilateralt. [14]",
-            "<b>Knasterne:</b> territorium, sikkerhedsgarantier og vilkårene for en våbenhvile. Zelenskyj siger, at territoriale spørgsmål må afgøres mellem lederne, ikke af forhandlerne. Donald Trump har sagt, at Ukraine ender med en lidt anden form. [6, 14]",
-            "<b>Sikkerhedsarkitekturen:</b> Kushner efterlyser faste konsultationer, krisekommunikation og større militær gennemsigtighed mellem Rusland og Europa. DR's korrespondent Ole Ryborg peger på, at meget af det allerede findes i OSCE-regi; professor Mikkel Vedby Rasmussen kalder begrebet Kreml-sprog. [15]",
-            "<b>Strid om formatet i Europa:</b> Giorgia Meloni vil have én EU-forhandler med mandat fra alle 27. Polens udenrigsminister Radosław Sikorski foretrækker ifølge Politiken en fælles EU-repræsentant frem for de store vesteuropæiske lande alene. [2, 1]"
+          "body": "Det er de første trilaterale forhandlinger mellem Rusland, Ukraine og USA siden februar; forinden var der forberedende møder i Miami. [14, 3] USA er repræsenteret af Jared Kushner og Steve Witkoff, Ukraine af Rustem Umerov. Rusland har sendt viceudenrigsministrene Sergej Rjabkov og Mikhail Galuzin, Kreml-rådgiveren Vladimir Medinskij, militærefterretningens chef Igor Kostjukov og et medlem af generalstaben. [14] Rjabkovs deltagelse bemærkes, fordi han før invasionen i 2022 stod bag Moskvas krav om, at Nato skulle trække sig tilbage fra Østeuropa. [6]\n\nFørste dag varede over fire timer. Rubio kaldte forhandlingerne meget produktive, og Kushner sagde, at USA havde indsnævret afstanden mellem parterne uden at sige hvordan. [6, 14] Zelenskyj kaldte dagen konstruktiv og sagde, at han ser ændringer i den amerikanske tilgang. [6] Anden dag skulle handle om deeskalering – energianlæg og Sortehavet – og om muligheden for et møde mellem Zelenskyj og Putin. Zelenskyj sagde, at han ikke er sikker på, at Rusland er klar. [6, 14]\n\nKnasterne er de gamle. Rusland kræver, at Ukraine trækker sig fra områder i øst, det stadig kontrollerer, og afviser en øjeblikkelig våbenhvile; Lavrov beskylder europæiske regeringer for at ville give Ukraine tid til at komme sig. [6] Zelenskyj siger, at de russiske forhandlere uberettiget påstod at have erobret halvdelen af det ukrainsk kontrollerede Donbas, og at Natos øverste militære chef, general Alexus Grynkewich, som var til stede, bekræftede, at de ukrainske kort var tættest på virkeligheden. [6] Spørgsmål om territorium må ifølge Zelenskyj i sidste ende afgøres mellem lederne, ikke af forhandlerne i Abu Dhabi. [6]",
+          "charts": [
+            {
+              "type": "matrix",
+              "title": "Hvem er hvor",
+              "columns": [
+                "Ved forhandlingsbordet",
+                "Møder ved siden af",
+                "Ikke til stede"
+              ],
+              "data": [
+                {
+                  "label": "Rusland",
+                  "cells": [
+                    {
+                      "t": "●",
+                      "tone": "yes"
+                    },
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "label": "Ukraine",
+                  "cells": [
+                    {
+                      "t": "●",
+                      "tone": "yes"
+                    },
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "label": "USA (mægler)",
+                  "cells": [
+                    {
+                      "t": "●",
+                      "tone": "yes"
+                    },
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "label": "Storbritannien, Frankrig, Tyskland, Italien",
+                  "cells": [
+                    "",
+                    {
+                      "t": "●",
+                      "tone": "mid"
+                    },
+                    ""
+                  ]
+                },
+                {
+                  "label": "Nato",
+                  "cells": [
+                    "",
+                    {
+                      "t": "●",
+                      "tone": "mid"
+                    },
+                    ""
+                  ]
+                },
+                {
+                  "label": "EU-Kommissionen",
+                  "cells": [
+                    "",
+                    {
+                      "t": "●",
+                      "tone": "mid"
+                    },
+                    ""
+                  ]
+                },
+                {
+                  "label": "Danmark",
+                  "cells": [
+                    "",
+                    "",
+                    {
+                      "t": "●",
+                      "tone": "no"
+                    }
+                  ]
+                }
+              ],
+              "caption": "Rusland vil holde formatet strengt trilateralt; europæerne mødtes med ukrainerne og amerikanerne forud for tirsdagens trilaterale møde. Danmark deltager ikke. [14, 1]"
+            }
           ]
         },
         {
+          "heading": "Striden om en europæisk sikkerhedsarkitektur",
+          "body": "For første gang vil USA have en ny europæisk sikkerhedsarkitektur på dagsordenen. Kushner har på X skrevet, at der er brug for en bredere europæisk arkitektur for at sikre en varig fred, og at Europa og Rusland i mere end 30 år har kæmpet for at bygge en holdbar ramme. [15] Hans mål er ifølge DR faste sikkerhedskonsultationer, krisekommunikation, større militær gennemsigtighed og mekanismer, der mindsker risikoen for optrapning. [15]\n\nKaja Kallas afviste det efter G7-udenrigsministermødet i Paris 9. november: Europa har allerede en sikkerhedsarkitektur, og problemet er, at Rusland ikke overholder aftalerne – hun henviste til Budapest-memorandummet fra 1994. [15] Ursula von der Leyen siger, at en meningsfuld drøftelse først er mulig efter en våbenhvile og med Nato og EU som deltagere. [15] DR's EU- og Nato-korrespondent Ole Ryborg peger på, at meget af det, Kushner nævner, allerede findes i OSCE-regi, blandt andet Helsingfors-slutakten fra 1975 og Paris-chartret fra 1990, mens Wien-dokumentet fra 2011 blev suspenderet af Rusland i 2023. [15] Professor Mikkel Vedby Rasmussen kalder “sikkerhedsarkitektur” Kreml-sprog og minder om, at Rusland gik i krig efter at have foreslået en ny arkitektur, hvor USA trak sig. [15]\n\nDe danske analyser peger i samme retning. Berlingskes Simon Kruse skriver, at Rusland vil have Nato rullet tilbage til 1997-niveau, hvilket europæerne afviser, og Børsens Jacob Kaarsbo, at Putins krav rækker langt ud over territorium. [1] Elyséepaladset har sagt, at fred i Ukraine og sikkerhed i Europa er uadskillelige. [14] Zelenskyj siger til DR, at han ikke forstår Trumps formulering om, at Ukraine ender med en lidt anden form; han tror, det hænger sammen med en russisk-europæisk sikkerhedsinfrastruktur. [15]"
+        },
+        {
+          "heading": "Hvem taler for Europa?",
+          "body": "Europa har et format-problem. Den store gruppe, som har ført an, er Frankrig, Tyskland og Storbritannien (E3), nogle gange med Italien (E4). Giorgia Meloni har kritiseret EU's ukoordinerede tilgang og vil have én forhandler med mandat fra alle 27 og en formel beslutning i december; Costa vil have et fælles budskab, og Kallas bakker op, skriver Jyllands-Posten. [2] Polens udenrigsminister Radosław Sikorski advarer ifølge Politiken mod, at Vesteuropa forhandler med Rusland uden Østeuropa, og foretrækker en fælles EU-repræsentant frem for E3. [1] Zelenskyj siger også, at Europa bør finde en fælles repræsentant. [16]\n\nSplittelsen viste sig også i Norden. I slutningen af oktober talte Norges statsminister og Finlands præsident 90 minutter i telefon med Putin; Mette Frederiksen kritiserede, at samtalen ikke var koordineret med de øvrige nordiske lande. [12] Zelenskyj sagde i København, at Danmark ikke skal ringe til Putin. [16] Ekstra Bladet melder, at Kreml afviser europæisk deltagelse, og at Danmark ikke selv er med i Abu Dhabi. [1] Spørgsmålet om en fælles EU-stemme skal drøftes på det uformelle topmøde i Dublin 13. november. [2, 15]"
+        },
+        {
           "heading": "Pengene",
-          "items": [
-            "<b>Hullet i 2027:</b> 70 mia. euro. Kommissionen foreslår ifølge Ritzau yderligere 45 mia. euro fra EU, og Valdis Dombrovskis er forsigtigt optimistisk om en aftale inden årets udgang. [1]",
-            "<b>Det eksisterende lån:</b> 90 mia. euro, tænkt tilbagebetalt med russiske krigsskadeerstatninger. Kommer de ikke, risikerer 24 EU-lande, herunder Danmark, ifølge Ritzau at hæfte. [1]",
-            "<b>Andre bidragydere:</b> Ursula von der Leyen og António Costa presser Storbritannien, Canada og Japan til at bidrage mere. [1]",
-            "<b>Næste skridt:</b> uformelt EU-topmøde i Dublin 13. november, hvor lederne også skal drøfte, om én person skal tale på Europas vegne. [2, 15]"
+          "body": "Ukraine mangler 70 mia. euro i 2027. Kommissionen foreslår ifølge Ritzau yderligere 45 mia. euro, som skal dække det meste af hullet, og kommissær Valdis Dombrovskis er forsigtigt optimistisk om en aftale inden årets udgang. [1] Resten – efter min egen udregning ca. 25 mia. euro – må findes andre steder; von der Leyen og António Costa presser Storbritannien, Canada og Japan til at bidrage mere. [1]\n\nPengene kommer oven i det eksisterende EU-lån på 90 mia. euro, som Rådet gjorde endeligt klar i april. [11, 1] Lånet er tænkt tilbagebetalt af russiske krigsskadeerstatninger; kommer de ikke, risikerer 24 EU-lande, herunder Danmark, ifølge Ritzau at hæfte. [1] Hvordan de nye penge skal skaffes, er stadig åbent. Ifølge et søgeuddrag af Bloomberg presser Kommissionen og flere lande på for mere fælles låntagning, mens brugen af indefrosne russiske aktiver fortsat er blokeret af Belgien, og Tyskland vil acceptere låneløsningen – men artiklen er bag betalingsmur, så det er ubekræftet. [8]",
+          "charts": [
+            {
+              "type": "stack",
+              "title": "Ukraines finansieringshul i 2027",
+              "unit": "mia. euro",
+              "data": [
+                {
+                  "label": "Kommissionens forslag",
+                  "value": 45,
+                  "tone": "a"
+                },
+                {
+                  "label": "Resten (min udregning) – skal findes hos andre bidragydere",
+                  "value": 25,
+                  "tone": "c"
+                }
+              ],
+              "caption": "Hullet er 70 mia. euro; Kommissionen foreslår 45. Resten er hullet minus forslaget og er ikke oplyst i kilden. [1]"
+            }
           ]
         },
         {
           "heading": "Danmarks bidrag",
-          "items": [
-            "<b>32. donationspakke:</b> 4,8 mia. kr. i militær støtte, annonceret 10. november af udenrigsminister Lars Løkke Rasmussen efter møde i Det Udenrigspolitiske Nævn. DR oplyser ikke, hvad pakken indeholder. [4]",
-            "<b>Energi:</b> 150 mio. kr. ekstra til Ukraines energisektor. Løkke henviste til strømafbrydelser på et niveau, der ikke er set tidligere i krigen. [4]",
-            "<b>Det nordiske møde:</b> Mette Frederiksen var vært for Zelenskyj og de nordiske regeringschefer; luftforsvar og beskyttelse af energisektoren stod på dagsordenen. [13] Hun har kritiseret, at Norges statsminister og Finlands præsident i slutningen af oktober ringede til Putin uden at koordinere det med de øvrige nordiske lande. [12]",
-            "Danmark har ifølge DR givet over 90 mia. kr. siden invasionen. [16]"
+          "body": "Statsminister Mette Frederiksen var 10. november vært for Zelenskyj og de nordiske regeringschefer i København; luftforsvar og beskyttelse af energisektoren var på dagsordenen, og Sveriges, Norges og Finlands statsministre var ventet. [13, 12] Samme dag annoncerede udenrigsminister Lars Løkke Rasmussen (M) efter et møde i Det Udenrigspolitiske Nævn Danmarks 32. donationspakke: 4,8 mia. kr. i militær støtte, ca. 643 mio. euro, og 150 mio. kr. ekstra til Ukraines energisektor. [4, 12] Pakkens indhold er ikke oplyst. [4]\n\nLøkke begrundede energistøtten med, at der er strømafbrydelser i Ukraine på et niveau, der ikke er set tidligere i krigen. [4] Frederiksen sagde, at støtten skal fortsætte, og at Danmark skal lære af Ukraines erfaringer. [13] Samlet har Danmark ifølge DR givet over 90 mia. kr. siden invasionen, og DR's politiske korrespondent peger på bred enighed i Folketinget om støtten. [16] Fra dansk side er budskabet, at Europa må tage et større ansvar og sikre langsigtet finansiering via EU-budgettet. [3]",
+          "charts": [
+            {
+              "type": "bars",
+              "title": "Dansk støtte – pakken i forhold til det hele",
+              "unit": "mia. kr.",
+              "dec": 1,
+              "data": [
+                {
+                  "label": "32. donationspakke",
+                  "value": 4.8,
+                  "tone": "b",
+                  "hl": true
+                },
+                {
+                  "label": "Samlet siden 2022 (over)",
+                  "value": 90,
+                  "tone": "a"
+                }
+              ],
+              "caption": "“Over 90” er DR's afrunding; pakken er med i det samlede tal. [4, 16]"
+            }
           ]
         },
         {
@@ -913,6 +1215,10 @@
         "Afsnittet om dansk dækning hviler – bortset fra DR – på EU-repræsentationens resuméer, ikke på avisernes egne artikler."
       ],
       "changelog": [
+        {
+          "date": "2026-11-11",
+          "text": "Substansen skrevet ud i seks blokke: forhandlingerne, sikkerhedsarkitekturen, Europas repræsentation, pengene og Danmarks bidrag; tre diagrammer tilføjet. Resten af hullet i 2027 (ca. 25 mia. euro) er min egen udregning og er mærket som sådan."
+        },
         {
           "date": "2026-11-11",
           "text": "Anden kørsel samme dag: forløbet i Abu Dhabi er nu bygget på fuldt læste artikler fra CNN, Euronews og DR i stedet for søgeuddrag; Statsministeriets pressemeddelelse er læst. Kildehenvisninger og noter tilføjet."

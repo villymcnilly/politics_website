@@ -29,7 +29,7 @@ changes, so a commit of `bulletin.json` to `main` is the publication.
     "last_moved": "YYYY-MM-DD" (last real development, not last run),
     "latest": { "date": "YYYY-MM-DD", "paragraphs": [..] },
     "delta": what changed since the previous run,
-    "substance": [ { "heading", "body"?, "items": [..] } ],
+    "substance": [ { "heading", "body"?, "items"?: [..], "charts"?: [..] } ],
     "players": [ { "name", "wants", "latest" } ],
     "timeline": [ { "date", "text", "url", "outlet" } ]  newest first,
     "open": [..]  unverified points and open questions,
@@ -45,7 +45,44 @@ URL hash people link to. Do not add or remove stories unless the owner asks.
 The page shows only `http://` and `https://` URLs as links, and lets only
 `<b>…</b>` through as markup; everything else is shown as literal text.
 
-### Source references in the text
+### Substance: write it out, and show the numbers
+
+`substance` is the part of the brief that explains the story, and it should be
+written out, not summarised. Each block has a `heading` and, as a rule:
+
+- `body`: two to four paragraphs of running prose, separated by a blank line
+  (`\n\n`). Explain how the pieces fit together, who said what and when, and
+  what the numbers mean – so that someone who has not followed the story can
+  follow it. This is where the length goes. Attribute assessments.
+- `items`: only for lists that really are lists (a set of measures, a set of
+  names). Never as a substitute for prose.
+- `charts`: zero or more diagrams (below).
+
+Aim for four to six blocks per story. Keep the older blocks when the facts have
+not changed; edit only what has.
+
+### Charts (`charts`)
+
+A chart is drawn from numbers that are in the sources – never from estimates
+presented as data. Anything you calculate yourself (a difference, a share) must
+be labelled as your own calculation in the label or the caption. Every chart has
+`type`, `title`, optional `unit`, `data`, and a `caption` that carries the
+`[n]` source references.
+
+- `"bars"`: `data: [ { "label", "value", "tone"?, "hl"? } ]`. Optional `dec`
+  (decimals) and `max`. For comparisons: polls, amounts, thresholds.
+- `"change"`: `data: [ { "label", "from", "to", "unit"? } ]`. Before and after.
+- `"dots"`: `data: [ { "label", "count", "tone"? } ]`. One dot per person or
+  seat, grouped by category – votes, delegations, parliamentary groups.
+- `"stack"`: `data: [ { "label", "value", "tone"? } ]`. How a total is made up.
+- `"matrix"`: `columns: [..]`, `data: [ { "label", "cells": [ "text" |
+  { "t", "tone"? } ] } ]`. Who stands where. `tone` in cells: `yes`, `mid`, `no`.
+
+`tone` for bars, dots and stacks is `a`, `b`, `c` or `d` (four fixed colours);
+leave it out for the neutral grey. Use colour to separate categories, not to
+decorate. Add a chart only where it shows something the prose cannot show as
+fast; one to three per story is plenty. When a number changes, change the
+chart in the same run.
 
 `[3]` or `[3, 5]` in running text points to that story's `sources`, counted
 from 1. The page shows it as a small raised number; hovering shows the source in
@@ -157,7 +194,7 @@ settled or dead – write the final state and set `status` to `"closed"`.
    (`+01:00` in winter, `+02:00` in summer).
 2. Check that `bulletin.json` parses as JSON and keeps the shape in section 2:
    every story still has every field, `kind`, `status` and `read` hold only the
-   allowed values, every `[n]` points at an existing source, every note has
+   allowed values, every `[n]` points at an existing source, every chart has a known `type` and numeric values, every note has
    `term`, `kind`, `title` and `text`, dates are `YYYY-MM-DD`, timeline and changelog are newest
    first, and no changelog has more than 30 entries.
 3. Check that no other file is changed.

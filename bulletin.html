@@ -153,6 +153,39 @@ button { font-family: inherit; }
 .br-src li:last-child { border-bottom: none; }
 .br-tag { display: inline-block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; color: var(--muted); background: var(--hover); padding: 3px 8px; border-radius: 5px; margin-left: 8px; white-space: nowrap; vertical-align: 1px; }
 
+/* ── NOTER OG KILDEHENVISNINGER ── */
+.br-wrap { position: relative; }
+.nt { border-bottom: 1px dotted var(--muted); cursor: help; border-radius: 2px; transition: background 0.15s, border-color 0.15s; }
+.nt:hover, .nt.on, .nt:focus-visible { background: var(--stake-bg); border-bottom-color: var(--ink-2); outline: none; }
+.cite { font-family: 'Hanken Grotesk', sans-serif; font-size: 10.5px; font-weight: 600; line-height: 0; vertical-align: super; letter-spacing: 0; white-space: nowrap; margin-left: 1px; }
+.br-sec .cite a { color: var(--muted); text-decoration: none; padding: 2px 1px; border-radius: 3px; font-variant-numeric: tabular-nums; }
+.br-sec .cite a:hover, .br-sec .cite a.on, .br-sec .cite a:focus-visible { color: var(--ink); background: var(--stake-bg); outline: none; }
+.cite a + a::before { content: ','; color: var(--faint); margin-right: 1px; }
+.br-src-n { display: inline-block; min-width: 22px; font-size: 11.5px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.note {
+  position: absolute; top: 0; left: 0; width: 272px; z-index: 40;
+  background: var(--panel); border: 1px solid var(--line-2); border-radius: 10px;
+  padding: 14px 16px 15px; box-shadow: 0 10px 30px rgba(20, 18, 14, 0.10);
+  font-size: 13.5px; line-height: 1.58; color: var(--ink-2);
+  opacity: 0; visibility: hidden; transform: translateX(8px);
+  transition: opacity 0.16s ease, transform 0.16s ease, visibility 0s linear 0.16s;
+}
+.note.show { opacity: 1; visibility: visible; transform: none; transition: opacity 0.16s ease, transform 0.16s ease; }
+.note-k { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; color: var(--muted); }
+.note-t { font-family: 'Newsreader', serif; font-size: 18.5px; line-height: 1.22; color: var(--ink); margin-top: 5px; letter-spacing: 0; }
+.note-b { margin-top: 7px; }
+.note-b b { font-weight: 600; color: var(--ink); }
+.note-s { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.note-s a { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
+.note-s a:hover { color: var(--ink); text-decoration-color: var(--ink); }
+.note-s .br-tag { margin-left: 0; margin-right: 6px; }
+/* Bred skærm: noten står i en margen til højre for teksten. */
+@media (min-width: 1240px) {
+  .br-wrap { max-width: 1028px; }
+  .br { max-width: min(720px, calc(100% - 308px)); }
+}
+
 /* ── TELEFON (samme breakpoint som index.html) ── */
 @media (max-width: 820px) {
   body { height: auto; min-height: 100vh; overflow: auto; }
@@ -170,6 +203,8 @@ button { font-family: inherit; }
   .br-title { font-size: 30px; }
   .br-latest p { font-size: 18.5px; }
   .br-row, .br-row.date { grid-template-columns: 1fr; gap: 3px; }
+  /* Noten ligger som et ark i bunden af skærmen. */
+  .note { position: fixed; top: auto !important; left: 12px !important; right: 12px; bottom: 12px; width: auto; transform: translateY(8px); box-shadow: 0 10px 40px rgba(20, 18, 14, 0.22); }
 }
 </style>
 </head>
@@ -231,6 +266,55 @@ function link(url, label, cls) {
   return '<a' + (cls ? ' class="' + cls + '"' : '') + ' href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + rich(label || u) + '</a>';
 }
 function arr(v) { return Array.isArray(v) ? v : []; }
+
+// ── Noter og kildehenvisninger ───────────────────────────────────────────────
+// [3] eller [3, 5] i teksten henviser til historiens kilder, talt fra 1.
+// Ord, der står som "term" eller "aliases" i historiens "notes", får en note,
+// første gang de optræder i hvert afsnit.
+var LETTER = '0-9A-Za-zÀ-ÖØ-öø-ÿ';
+var CUR = null;     // den viste historie
+var TERMS = null;   // { re, map } for den viste historie
+function buildTerms(s) {
+  var map = {}, keys = [];
+  arr(s && s.notes).forEach(function(n, i) {
+    if (!n || !has(n.text)) return;
+    [n.term].concat(arr(n.aliases)).forEach(function(t) {
+      if (!has(t)) return;
+      var k = esc(String(t).trim());
+      if (!(k in map)) { map[k] = i; keys.push(k); }
+    });
+  });
+  if (!keys.length) return null;
+  keys.sort(function(a, b){ return b.length - a.length; });
+  var alt = keys.map(function(k){ return k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|');
+  return { map: map, re: new RegExp('(^|[^' + LETTER + '])(' + alt + ')(?=s?(?:[^' + LETTER + ']|$))', 'g') };
+}
+// seen: et objekt pr. afsnit, så samme note kun markeres én gang i afsnittet.
+function note(v, seen) {
+  var html = rich(v);
+  var nsrc = arr(CUR && CUR.sources).length;
+  html = html.replace(/\s*\[(\d+(?:\s*,\s*\d+)*)\]/g, function(m, list) {
+    var nums = list.split(',').map(function(x){ return parseInt(x, 10); }).sort(function(a, b){ return a - b; });
+    if (nums.some(function(n){ return n < 1 || n > nsrc; })) return m;
+    return '<sup class="cite">' + nums.map(function(n) {
+      var u = safeUrl(CUR.sources[n - 1] && CUR.sources[n - 1].url);
+      return '<a data-c="' + n + '"' + (u ? ' href="' + esc(u) + '" target="_blank" rel="noopener noreferrer"' : ' tabindex="0"') + '>' + n + '</a>';
+    }).join('') + '</sup>';
+  });
+  if (!TERMS) return html;
+  seen = seen || {};
+  var inCite = false;
+  return html.split(/(<[^>]+>)/).map(function(part) {
+    if (part.charAt(0) === '<') { if (/^<sup/.test(part)) inCite = true; else if (/^<\/sup/.test(part)) inCite = false; return part; }
+    if (inCite) return part;
+    return part.replace(TERMS.re, function(m, pre, term) {
+      var i = TERMS.map[term];
+      if (seen[i]) return m;
+      seen[i] = true;
+      return pre + '<span class="nt" tabindex="0" data-n="' + i + '">' + term + '</span>';
+    });
+  }).join('');
+}
 function has(v) { return typeof v === 'string' ? v.trim() !== '' : v != null; }
 
 // ── Datoer ───────────────────────────────────────────────────────────────────
@@ -307,17 +391,20 @@ function renderList(activeId) {
 // ── Brief ────────────────────────────────────────────────────────────────────
 function sec(title, body) { return '<section class="br-sec"><h2 class="br-h">' + title + '</h2>' + body + '</section>'; }
 function ul(items) {
-  return '<ul class="br-ul">' + items.map(function(i){ return '<li>' + rich(i) + '</li>'; }).join('') + '</ul>';
+  return '<ul class="br-ul">' + items.map(function(i){ return '<li>' + note(i) + '</li>'; }).join('') + '</ul>';
 }
 
 function renderBrief(s) {
   var main = document.getElementById('bl-main');
+  hideNote(true);
+  CUR = s || null;
+  TERMS = buildTerms(s);
   if (!s) { main.innerHTML = '<div class="bl-msg">Der er ingen historier i Bulletin endnu.</div>'; return; }
   var latest = s.latest || {};
   var paras = arr(latest.paragraphs).filter(has);
   var closed = s.status === 'closed';
 
-  var h = '<article class="br">';
+  var h = '<div class="br-wrap"><article class="br">';
   h += '<div class="br-eyebrow">' + (s.kind === 'long' ? 'Langt forløb' : 'Kort forløb') + '</div>';
   h += '<h1 class="br-title">' + rich(s.title) + '</h1>';
   h += '<div class="br-meta"><span class="br-pill' + (closed ? ' closed' : '') + '">' + (closed ? 'Afsluttet' : 'Følges') + '</span>';
@@ -325,21 +412,21 @@ function renderBrief(s) {
   h += '</div>';
 
   if (!paras.length) {
-    h += '<p class="br-empty">Briefet skrives ved første morgenkørsel.</p></article>';
+    h += '<p class="br-empty">Briefet skrives ved første morgenkørsel.</p></article></div>';
     main.innerHTML = h;
     return;
   }
 
-  h += sec('Her står sagen', '<div class="br-latest">' + paras.map(function(p){ return '<p>' + rich(p) + '</p>'; }).join('') + '</div>');
+  h += sec('Her står sagen', '<div class="br-latest">' + paras.map(function(p){ return '<p>' + note(p) + '</p>'; }).join('') + '</div>');
 
-  if (has(s.delta)) h += sec('Nyt siden sidst', '<div class="br-delta">' + rich(s.delta) + '</div>');
+  if (has(s.delta)) h += sec('Nyt siden sidst', '<div class="br-delta">' + note(s.delta) + '</div>');
 
   var subs = arr(s.substance).filter(function(b){ return b && (has(b.heading) || has(b.body) || arr(b.items).length); });
   if (subs.length) {
     h += sec('Substansen', subs.map(function(b) {
       var x = '<div class="br-sub">';
       if (has(b.heading)) x += '<h3>' + rich(b.heading) + '</h3>';
-      if (has(b.body)) x += '<p>' + rich(b.body) + '</p>';
+      if (has(b.body)) x += '<p>' + note(b.body) + '</p>';
       var items = arr(b.items).filter(has);
       if (items.length) x += ul(items);
       return x + '</div>';
@@ -349,8 +436,9 @@ function renderBrief(s) {
   var players = arr(s.players).filter(function(p){ return p && has(p.name); });
   if (players.length) {
     h += sec('Aktørerne', players.map(function(p) {
-      return '<div class="br-row"><div class="br-row-k">' + rich(p.name) + '</div><div class="br-row-v">' + rich(p.wants) +
-        (has(p.latest) ? '<span class="br-row-sub">Senest: ' + rich(p.latest) + '</span>' : '') + '</div></div>';
+      var seen = {};
+      return '<div class="br-row"><div class="br-row-k">' + note(p.name, seen) + '</div><div class="br-row-v">' + note(p.wants, seen) +
+        (has(p.latest) ? '<span class="br-row-sub">Senest: ' + note(p.latest, seen) + '</span>' : '') + '</div></div>';
     }).join(''));
   }
 
@@ -359,7 +447,7 @@ function renderBrief(s) {
     h += sec('Tidslinje', tl.map(function(t) {
       var src = safeUrl(t.url) ? link(t.url, has(t.outlet) ? t.outlet : 'Kilde', 'br-outlet')
               : (has(t.outlet) ? '<span class="br-outlet">' + rich(t.outlet) + '</span>' : '');
-      return '<div class="br-row date"><div class="br-row-k">' + esc(fmtDay(t.date)) + '</div><div class="br-row-v">' + rich(t.text) + ' ' + src + '</div></div>';
+      return '<div class="br-row date"><div class="br-row-k">' + esc(fmtDay(t.date)) + '</div><div class="br-row-v">' + note(t.text) + ' ' + src + '</div></div>';
     }).join(''));
   }
 
@@ -375,14 +463,109 @@ function renderBrief(s) {
 
   var srcs = arr(s.sources).filter(function(x){ return x && (has(x.title) || has(x.url)); });
   if (srcs.length) {
-    h += sec('Kilder', '<ul class="br-src">' + srcs.map(function(x) {
-      var tag = x.read === 'full' ? 'læst i fuld længde' : (x.read === 'excerpt' ? 'læst i uddrag' : '');
-      return '<li>' + link(x.url, has(x.title) ? x.title : x.url) + (tag ? '<span class="br-tag">' + tag + '</span>' : '') + '</li>';
+    // Nummeret er kildens plads i JSON-listen – det samme tal, som [n] i teksten peger på.
+    h += sec('Kilder', '<ul class="br-src">' + arr(s.sources).map(function(x, i) {
+      if (!x || !(has(x.title) || has(x.url))) return '';
+      return '<li><span class="br-src-n">' + (i + 1) + '</span>' + link(x.url, has(x.title) ? x.title : x.url) + (readTag(x) ? '<span class="br-tag">' + readTag(x) + '</span>' : '') + '</li>';
     }).join('') + '</ul>');
   }
 
-  main.innerHTML = h + '</article>';
+  main.innerHTML = h + '</article><aside class="note" id="note" role="note" aria-live="polite"></aside></div>';
 }
+function readTag(x) { return x.read === 'full' ? 'læst i fuld længde' : (x.read === 'excerpt' ? 'læst i uddrag' : ''); }
+
+// ── Notekortet ───────────────────────────────────────────────────────────────
+// Bred skærm: i margenen til højre, ud for ordet. Smallere: under ordet.
+// Telefon: som et ark i bunden (styres af CSS).
+var NOTE_FOR = null, NOTE_TIMER = null, NOTE_AT = 0;
+var KINDS = { person: 'Person', fakta: 'Fakta', begreb: 'Begreb', sted: 'Sted', organisation: 'Organisation' };
+function noteHtml(el) {
+  if (!CUR) return '';
+  if (el.hasAttribute('data-c')) {
+    var n = +el.getAttribute('data-c'), x = arr(CUR.sources)[n - 1];
+    if (!x) return '';
+    return '<div class="note-k">Kilde ' + n + '</div><div class="note-t">' + rich(has(x.title) ? x.title : x.url) + '</div>' +
+      '<div class="note-s">' + (readTag(x) ? '<span class="br-tag">' + readTag(x) + '</span>' : '') + (safeUrl(x.url) ? link(x.url, 'Åbn kilden') : '') + '</div>';
+  }
+  var t = arr(CUR.notes)[+el.getAttribute('data-n')];
+  if (!t) return '';
+  var out = '<div class="note-k">' + esc(KINDS[t.kind] || 'Note') + '</div>' +
+    '<div class="note-t">' + rich(has(t.title) ? t.title : t.term) + '</div><div class="note-b">' + rich(t.text) + '</div>';
+  if (safeUrl(t.url)) out += '<div class="note-s">Kilde: ' + link(t.url, has(t.outlet) ? t.outlet : t.url) + '</div>';
+  return out;
+}
+function showNote(el) {
+  var card = document.getElementById('note');
+  if (!card) return;
+  clearTimeout(NOTE_TIMER);
+  if (NOTE_FOR === el && card.classList.contains('show')) return;
+  var html = noteHtml(el);
+  if (!html) return;
+  if (NOTE_FOR) NOTE_FOR.classList.remove('on');
+  NOTE_FOR = el; NOTE_AT = Date.now(); el.classList.add('on');
+  card.innerHTML = html;
+  var wrap = card.parentNode, art = wrap.querySelector('.br');
+  var w = wrap.getBoundingClientRect(), r = el.getBoundingClientRect();
+  var top, left;
+  if (wrap.clientWidth - art.offsetWidth >= card.offsetWidth + 28) {       // margen
+    left = art.offsetWidth + 36;
+    top = r.top - w.top - 16;
+  } else {                                                                  // under ordet
+    left = Math.max(0, Math.min(r.left - w.left, wrap.clientWidth - card.offsetWidth));
+    top = r.bottom - w.top + 9;
+  }
+  top = Math.max(0, Math.min(top, wrap.clientHeight - card.offsetHeight));
+  card.style.left = left + 'px';
+  card.style.top = top + 'px';
+  card.classList.add('show');
+}
+function hideNote(now) {
+  clearTimeout(NOTE_TIMER);
+  var go = function() {
+    var card = document.getElementById('note');
+    if (card) card.classList.remove('show');
+    if (NOTE_FOR) NOTE_FOR.classList.remove('on');
+    NOTE_FOR = null;
+  };
+  if (now) go(); else NOTE_TIMER = setTimeout(go, 240);
+}
+(function() {
+  var main = document.getElementById('bl-main');
+  var SEL = '.nt, .cite a';
+  var hover = window.matchMedia('(hover: hover)');
+  main.addEventListener('mouseover', function(e) {
+    if (!hover.matches) return;
+    var el = e.target.closest(SEL);
+    if (el) showNote(el);
+    else if (e.target.closest('.note')) clearTimeout(NOTE_TIMER);
+  });
+  main.addEventListener('mouseout', function(e) {
+    if (!hover.matches) return;
+    if (e.target.closest(SEL) || e.target.closest('.note')) hideNote();
+  });
+  main.addEventListener('focusin', function(e) { var el = e.target.closest(SEL); if (el) showNote(el); });
+  main.addEventListener('focusout', function(e) { if (e.target.closest(SEL)) hideNote(); });
+  // Berøring: første tryk viser noten, kilden åbnes fra kortet.
+  main.addEventListener('click', function(e) {
+    var el = e.target.closest(SEL);
+    if (el) {
+      var link = el.hasAttribute('href');
+      if (NOTE_FOR === el && document.getElementById('note').classList.contains('show')) {
+        // Et tryk giver først fokus (som viser noten) og så klik: luk kun, hvis den har stået lidt.
+        if (!link && !hover.matches && Date.now() - NOTE_AT > 400) hideNote(true);
+      } else {
+        if (link && !hover.matches) e.preventDefault();
+        showNote(el);
+      }
+      if (link && !hover.matches && Date.now() - NOTE_AT < 400) {
+        e.preventDefault();   // første tryk på et kildetal viser kortet; linket åbnes derfra
+      }
+      return;
+    }
+    if (!e.target.closest('.note')) hideNote(true);
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') hideNote(true); });
+})();
 
 function render() {
   var id = currentId();
